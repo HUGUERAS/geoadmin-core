@@ -114,18 +114,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
     def _servir_arquivo(self) -> None:
         caminho = self.path.split("?", 1)[0]
         caminho_normalizado = posixpath.normpath(caminho).lstrip("/")
-        if caminho_normalizado in ("", "."):
-            caminho_normalizado = "index.html"
-
-        candidato = self.diretorio_web / Path(caminho_normalizado)
-        if candidato.is_dir():
-            candidato = candidato / "index.html"
-
-        if not candidato.exists() and not candidato.suffix:
-            candidato = self.diretorio_web / caminho_normalizado / "index.html"
-
-        if not candidato.exists():
-            candidato = self.diretorio_web / "index.html"
+        candidato = self._resolver_arquivo_web(caminho_normalizado)
 
         try:
             conteudo = candidato.read_bytes()
@@ -139,6 +128,72 @@ class GatewayHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(conteudo)))
         self.end_headers()
         self.wfile.write(conteudo)
+
+    def _resolver_arquivo_web(self, caminho_normalizado: str) -> Path:
+        if caminho_normalizado in ("", "."):
+            return self.diretorio_web / "index.html"
+
+        candidato = self.diretorio_web / Path(caminho_normalizado)
+        if candidato.is_file():
+            return candidato
+
+        if candidato.is_dir():
+            index_diretorio = candidato / "index.html"
+            if index_diretorio.exists():
+                return index_diretorio
+
+        if not candidato.suffix:
+            index_aninhado = self.diretorio_web / caminho_normalizado / "index.html"
+            if index_aninhado.exists():
+                return index_aninhado
+
+            dinamico = self._resolver_rota_dinamica(caminho_normalizado)
+            if dinamico is not None:
+                return dinamico
+
+        return self.diretorio_web / "index.html"
+
+    def _resolver_rota_dinamica(self, caminho_normalizado: str) -> Path | None:
+        segmentos = [segmento for segmento in caminho_normalizado.split("/") if segmento]
+        if not segmentos:
+            return None
+
+        diretorio_atual = self.diretorio_web
+        for indice, segmento in enumerate(segmentos):
+            ultimo_segmento = indice == len(segmentos) - 1
+
+            candidato_direto = diretorio_atual / segmento
+            if candidato_direto.is_dir():
+                diretorio_atual = candidato_direto
+                continue
+
+            if ultimo_segmento:
+                arquivo_direto = diretorio_atual / f"{segmento}.html"
+                if arquivo_direto.exists():
+                    return arquivo_direto
+
+                arquivos_dinamicos = sorted(diretorio_atual.glob("[[]*[]].html"))
+                if arquivos_dinamicos:
+                    return arquivos_dinamicos[0]
+
+            diretorios_dinamicos = sorted(
+                item for item in diretorio_atual.glob("[[]*[]]") if item.is_dir()
+            )
+            if diretorios_dinamicos:
+                diretorio_atual = diretorios_dinamicos[0]
+                continue
+
+            return None
+
+        index_diretorio = diretorio_atual / "index.html"
+        if index_diretorio.exists():
+            return index_diretorio
+
+        arquivos_dinamicos = sorted(diretorio_atual.glob("[[]*[]].html"))
+        if arquivos_dinamicos:
+            return arquivos_dinamicos[0]
+
+        return None
 
 
 def main() -> None:

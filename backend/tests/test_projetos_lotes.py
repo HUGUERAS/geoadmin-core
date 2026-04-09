@@ -30,6 +30,49 @@ def test_resumo_lotes_agrega_status_e_prontos():
     assert resumo['por_status_documental']['pendente'] == 1
 
 
+def test_resumo_confrontacoes_agrega_status_e_externos():
+    resumo = projetos_mod._resumo_confrontacoes(
+        [
+            {'status_revisao': 'confirmada', 'tipo': 'sobreposicao', 'tipo_relacao': 'interna'},
+            {'status_revisao': 'pendente', 'tipo': 'divisa', 'tipo_relacao': 'interna'},
+            {'status': 'descartada', 'tipo': 'divisa', 'tipo_relacao': 'externa'},
+        ],
+        [
+            {'id': 'conf-1'},
+            {'id': 'conf-2'},
+        ],
+    )
+
+    assert resumo['total'] == 3
+    assert resumo['confirmadas'] == 1
+    assert resumo['descartadas'] == 1
+    assert resumo['pendentes'] == 1
+    assert resumo['internas'] == 2
+    assert resumo['externas'] == 2
+    assert resumo['sobreposicoes'] == 1
+    assert resumo['divisas'] == 2
+
+
+def test_prontidao_piloto_sintetiza_marcos_do_projeto():
+    prontidao = projetos_mod._prontidao_piloto(
+        {
+            'cliente_nome': 'Cliente A',
+            'total_pontos': 12,
+            'participantes': [{'nome': 'Cliente A', 'formulario_ok': True}],
+            'resumo_lotes': {'total': 2, 'prontos': 2, 'pendentes': 0},
+            'arquivos_resumo': {'base_oficial_total': 1},
+            'confrontacoes_resumo': {'total': 1, 'confirmadas': 1, 'pendentes': 0},
+            'formulario': {'formulario_ok': True},
+        }
+    )
+
+    assert prontidao['status'] == 'pronto_para_piloto'
+    assert prontidao['percentual'] == 100
+    assert prontidao['formularios_recebidos'] == 1
+    assert prontidao['base_oficial_total'] == 1
+    assert prontidao['confrontacoes_confirmadas'] == 1
+
+
 class FakeResponse:
     def __init__(self, data):
         self.data = data
