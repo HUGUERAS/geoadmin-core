@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -552,7 +553,7 @@ def gerar_magic_link_participante(
     if not participante:
         return None
 
-    token = str(uuid.uuid4())
+    token = secrets.token_urlsafe(32)
     expira = datetime.now(timezone.utc) + timedelta(days=dias)
     if participante.get('id'):
         try:

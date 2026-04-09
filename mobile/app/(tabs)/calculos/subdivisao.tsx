@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import { ScreenHeader } from '../../../components/ScreenHeader'
@@ -18,6 +19,7 @@ const VAZIO: VertexLinha = { norte: '', este: '' }
 
 export default function SubdivisaoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [vertices, setVertices] = useState<VertexLinha[]>([VAZIO, VAZIO, VAZIO, VAZIO])
   const [areaAlvo, setAreaAlvo] = useState('')
   const [resultado, setResultado] = useState<Resultado | null>(null)
@@ -67,7 +69,7 @@ export default function SubdivisaoScreen() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Subdivisão" subtitulo="Divisão de polígono por área alvo (bisseção)" />
+      <ScreenHeader titulo="Subdivisão" subtitulo="Divisão de polígono por área alvo (bisseção)" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={s.body}>
         <Text style={[s.secao, { color: C.primary }]}>Área Alvo</Text>

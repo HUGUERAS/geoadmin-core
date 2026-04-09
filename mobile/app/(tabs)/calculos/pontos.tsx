@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import { Feather } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 
@@ -16,6 +17,7 @@ function novoPonto(n: number): Ponto {
 
 export default function PontosScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [pontos, setPontos] = useState<Ponto[]>([novoPonto(1)])
   const [copiado, setCopiado] = useState(false)
 
@@ -55,7 +57,7 @@ export default function PontosScreen() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Pontos" subtitulo="Lista de pontos UTM — bloco de notas de campo" />
+      <ScreenHeader titulo="Pontos" subtitulo="Lista de pontos UTM — bloco de notas de campo" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={s.body}>
         <View style={s.topBar}>

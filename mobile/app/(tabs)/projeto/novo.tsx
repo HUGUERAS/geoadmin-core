@@ -111,6 +111,21 @@ function normalizarCpf(valor: string) {
   return valor.replace(/\D+/g, '').slice(0, 11)
 }
 
+function mascararCpf(valor: string): string {
+  const digitos = valor.replace(/\D+/g, '').slice(0, 11)
+  if (digitos.length <= 3) return digitos
+  if (digitos.length <= 6) return `${digitos.slice(0, 3)}.${digitos.slice(3)}`
+  if (digitos.length <= 9) return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6)}`
+  return `${digitos.slice(0, 3)}.${digitos.slice(3, 6)}.${digitos.slice(6, 9)}-${digitos.slice(9)}`
+}
+
+function mascararTelefone(valor: string): string {
+  const digitos = valor.replace(/\D+/g, '').slice(0, 11)
+  if (digitos.length <= 2) return digitos.length ? `(${digitos}` : ''
+  if (digitos.length <= 7) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`
+  return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`
+}
+
 function inferirMimeTypeArquivo(nome: string, mimeType?: string | null) {
   if (mimeType) return mimeType
 
@@ -406,22 +421,24 @@ export default function NovoProjetoScreen() {
                   <Text style={[s.label, { color: C.muted }]}>CPF</Text>
                   <TextInput
                     style={[s.input, { color: C.text, borderColor: C.cardBorder, backgroundColor: C.card }]}
-                    value={participante.cpf}
-                    onChangeText={(v) => atualizarParticipante(participante.id, 'cpf', v)}
+                    value={mascararCpf(participante.cpf)}
+                    onChangeText={(v) => atualizarParticipante(participante.id, 'cpf', normalizarCpf(v))}
                     placeholder="000.000.000-00"
                     placeholderTextColor={C.muted}
                     keyboardType="number-pad"
+                    maxLength={14}
                   />
                 </View>
                 <View style={[s.field, s.flex]}>
                   <Text style={[s.label, { color: C.muted }]}>Telefone</Text>
                   <TextInput
                     style={[s.input, { color: C.text, borderColor: C.cardBorder, backgroundColor: C.card }]}
-                    value={participante.telefone}
-                    onChangeText={(v) => atualizarParticipante(participante.id, 'telefone', v)}
+                    value={mascararTelefone(participante.telefone)}
+                    onChangeText={(v) => atualizarParticipante(participante.id, 'telefone', v.replace(/\D+/g, '').slice(0, 11))}
                     placeholder="(00) 00000-0000"
                     placeholderTextColor={C.muted}
                     keyboardType="phone-pad"
+                    maxLength={15}
                   />
                 </View>
               </View>

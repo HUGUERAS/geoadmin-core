@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import { ScreenHeader } from '../../../components/ScreenHeader'
@@ -19,6 +20,7 @@ const VAZIO: PontoState = { norte: '', este: '' }
 
 export default function InversoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [p1, setP1] = useState<PontoState>(VAZIO)
   const [p2, setP2] = useState<PontoState>(VAZIO)
   const [resultado, setResultado] = useState<Resultado | null>(null)
@@ -49,7 +51,7 @@ export default function InversoScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Inverso" subtitulo="Distância e azimute entre dois pontos UTM" />
+      <ScreenHeader titulo="Inverso" subtitulo="Distância e azimute entre dois pontos UTM" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
 

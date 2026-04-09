@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, Platform, Switch } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import type { JsonObject } from '../../../lib/api'
@@ -13,6 +14,7 @@ const PONTO_VAZIO: PontoLinha = { norte: '', este: '' }
 
 export default function RotacaoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [pontos, setPontos] = useState<PontoLinha[]>([PONTO_VAZIO, PONTO_VAZIO])
   const [angulo, setAngulo] = useState('')
   const [usarOrigem, setUsarOrigem] = useState(false)
@@ -73,7 +75,7 @@ export default function RotacaoScreen() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Rotação" subtitulo="Rotação de pontos UTM em torno de uma origem" />
+      <ScreenHeader titulo="Rotação" subtitulo="Rotação de pontos UTM em torno de uma origem" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={s.body}>
         <Text style={[s.secao, { color: C.primary }]}>Ângulo de Rotação</Text>

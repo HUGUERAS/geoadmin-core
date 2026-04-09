@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -29,6 +30,7 @@ function novoId() { return String(++_idSeq) }
 
 export default function PolilinhaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [pontos, setPontos] = useState<Ponto[]>([
     { id: novoId(), nome: 'P-01', norte: '', este: '' },
     { id: novoId(), nome: 'P-02', norte: '', este: '' },
@@ -83,7 +85,7 @@ export default function PolilinhaScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Polilinha" subtitulo="Distância e azimute de cada segmento de uma sequência de pontos" />
+      <ScreenHeader titulo="Polilinha" subtitulo="Distância e azimute de cada segmento de uma sequência de pontos" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <Text style={[s.secao, { color: C.primary }]}>Pontos</Text>

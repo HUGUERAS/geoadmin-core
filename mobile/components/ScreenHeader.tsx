@@ -9,18 +9,22 @@
  * Uso com ação no canto direito:
  *   <ScreenHeader titulo="Projetos" direita={<BotaoNovo />} />
  */
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors } from '../constants/Colors'
 
 interface Props {
   titulo: string
   subtitulo?: string
+  /** Texto de contexto exibido acima do titulo (ex: "Calculos") */
+  contexto?: string
+  /** Callback ao tocar no contexto — navega de volta */
+  aoVoltarContexto?: () => void
   /** Elemento renderizado no lado direito do header (ex: botão Novo, SyncBadge) */
   direita?: React.ReactNode
 }
 
-export function ScreenHeader({ titulo, subtitulo, direita }: Props) {
+export function ScreenHeader({ titulo, subtitulo, contexto, aoVoltarContexto, direita }: Props) {
   const C = Colors.dark
   const insets = useSafeAreaInsets()
   const paddingTop = Math.max(insets.top + 12, 20)
@@ -38,6 +42,11 @@ export function ScreenHeader({ titulo, subtitulo, direita }: Props) {
     >
       <View style={s.row}>
         <View style={s.textos}>
+          {contexto ? (
+            <TouchableOpacity onPress={aoVoltarContexto} disabled={!aoVoltarContexto} accessibilityRole="link">
+              <Text style={[s.contexto, { color: C.primary }]}>{'‹ '}{contexto}</Text>
+            </TouchableOpacity>
+          ) : null}
           <Text style={[s.titulo, { color: C.text }]}>{titulo}</Text>
           {subtitulo ? (
             <Text style={[s.sub, { color: C.muted }]}>{subtitulo}</Text>
@@ -61,6 +70,7 @@ const s = StyleSheet.create({
     gap: 12,
   },
   textos: { flex: 1 },
+  contexto: { fontSize: 13, fontWeight: '600', marginBottom: 2, lineHeight: 18 },
   titulo: { fontSize: 24, fontWeight: '700', lineHeight: 30 },
   sub:    { fontSize: 13, marginTop: 2, lineHeight: 18 },
   direitaWrap: { flexShrink: 0, paddingTop: 2 },

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import { ScreenHeader } from '../../../components/ScreenHeader'
@@ -11,6 +12,7 @@ const PONTO_VAZIO: PontoLinha = { norte: '', este: '' }
 
 export default function AreaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [pontos, setPontos] = useState<PontoLinha[]>([PONTO_VAZIO, PONTO_VAZIO, PONTO_VAZIO])
   const [resultado, setResultado] = useState<Resultado | null>(null)
   const [loading, setLoading] = useState(false)
@@ -53,7 +55,7 @@ export default function AreaScreen() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Área" subtitulo="Área e perímetro de polígono UTM" />
+      <ScreenHeader titulo="Área" subtitulo="Área e perímetro de polígono UTM" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={s.body}>
         <Text style={[s.secao, { color: C.primary }]}>Vértices do Polígono</Text>

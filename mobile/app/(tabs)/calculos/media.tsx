@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -20,6 +21,7 @@ type Resultado = {
 
 export default function MediaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [pontos, setPontos] = useState<PontoLinha[]>([PONTO_VAZIO, PONTO_VAZIO, PONTO_VAZIO])
   const [resultado, setResultado] = useState<Resultado | null>(null)
 
@@ -61,7 +63,7 @@ export default function MediaScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Média de Pontos" subtitulo="Média e desvio-padrão de medições repetidas" />
+      <ScreenHeader titulo="Média de Pontos" subtitulo="Média e desvio-padrão de medições repetidas" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <Text style={[s.secao, { color: C.primary }]}>Medições</Text>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import { Feather } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -18,6 +19,7 @@ const TIPOS: { id: Tipo; label: string; desc: string; cor: string }[] = [
 
 export default function NomenclaturaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [tipo, setTipo] = useState<Tipo>('M')
   const [inicio, setInicio] = useState('1')
   const [quantidade, setQuantidade] = useState('10')
@@ -46,7 +48,7 @@ export default function NomenclaturaScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Nomenclatura" subtitulo="Gerador de nomes de vértices conforme padrão INCRA/SIGEF" />
+      <ScreenHeader titulo="Nomenclatura" subtitulo="Gerador de nomes de vértices conforme padrão INCRA/SIGEF" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <Text style={[s.secao, { color: C.primary }]}>Tipo de vértice</Text>

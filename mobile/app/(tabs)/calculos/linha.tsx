@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -47,6 +48,7 @@ function calcular(p1: Ponto, p2: Ponto): Resultado | null {
 
 export default function LinhaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [p1, setP1] = useState<Ponto>(VAZIO)
   const [p2, setP2] = useState<Ponto>(VAZIO)
   const [res, setRes] = useState<Resultado | null>(null)
@@ -90,7 +92,7 @@ export default function LinhaScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Linha" subtitulo="Distância e azimute entre dois pontos UTM" />
+      <ScreenHeader titulo="Linha" subtitulo="Distância e azimute entre dois pontos UTM" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <CampoRow titulo="Ponto Inicial" estado={p1} setEstado={setP1} />

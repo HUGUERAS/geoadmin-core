@@ -79,4 +79,7 @@ data/geometrias_referencia_cliente.json
 infra/supabase/supabase/
 infra/supabase/.temp/
 
+# Tipos gerados automaticamente (regenerar via supabase gen types)
+infra/supabase/database.types.ts
+
 .vercel

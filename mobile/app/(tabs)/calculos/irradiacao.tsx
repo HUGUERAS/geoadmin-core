@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -9,6 +10,7 @@ type Resultado = { norte: number; este: number }
 
 export default function IrradiacaoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [estN, setEstN] = useState('')
   const [estE, setEstE] = useState('')
   const [azimute, setAzimute] = useState('')
@@ -40,7 +42,7 @@ export default function IrradiacaoScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Irradiação" subtitulo="Coordenadas de ponto irradiado por azimute e distância" />
+      <ScreenHeader titulo="Irradiação" subtitulo="Coordenadas de ponto irradiado por azimute e distância" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <Text style={[s.secao, { color: C.primary }]}>Estação</Text>

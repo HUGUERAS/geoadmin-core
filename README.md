@@ -16,19 +16,19 @@ Este repositório existe para concentrar:
 
 O documento principal de arquitetura do produto é:
 
-- [ARQUITETURA_OFICIAL_DO_PROJETO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\ARQUITETURA_OFICIAL_DO_PROJETO.md)
+- [ARQUITETURA_OFICIAL_DO_PROJETO.md](./docs/ARQUITETURA_OFICIAL_DO_PROJETO.md)
 
 ## Documentos-base do núcleo
 
-- [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
-- [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\MODELO_DADOS_BASE_CANONICA.md)
-- [BASE_CANONICA_IMPLEMENTACAO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASE_CANONICA_IMPLEMENTACAO.md)
-- [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
-- [GOVERNANCA_SEGURANCA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\GOVERNANCA_SEGURANCA.md)
-- [BASELINE_OFICIAL_AMBIENTE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASELINE_OFICIAL_AMBIENTE.md)
-- [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
-- [HARDENING_MINIMO_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\HARDENING_MINIMO_CORE.md)
-- [PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md)
+- [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](./docs/REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
+- [MODELO_DADOS_BASE_CANONICA.md](./docs/MODELO_DADOS_BASE_CANONICA.md)
+- [BASE_CANONICA_IMPLEMENTACAO.md](./docs/BASE_CANONICA_IMPLEMENTACAO.md)
+- [TASKS_BANCO_FUNCIONAMENTO_REAL.md](./docs/TASKS_BANCO_FUNCIONAMENTO_REAL.md)
+- [GOVERNANCA_SEGURANCA.md](./docs/GOVERNANCA_SEGURANCA.md)
+- [BASELINE_OFICIAL_AMBIENTE.md](./docs/BASELINE_OFICIAL_AMBIENTE.md)
+- [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](./docs/CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
+- [HARDENING_MINIMO_CORE.md](./docs/HARDENING_MINIMO_CORE.md)
+- [PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md](./docs/PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md)
 
 ## Partida rápida local
 

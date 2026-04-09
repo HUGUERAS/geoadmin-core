@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import type { JsonObject } from '../../../lib/api'
@@ -13,6 +14,7 @@ type ResultadoGeoUtm = { norte: number; este: number; fuso: number }
 
 export default function ConversaoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [modo, setModo] = useState<Modo>('utm-geo')
 
   // UTM → Geo
@@ -75,7 +77,7 @@ export default function ConversaoScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Conversão" subtitulo="UTM ↔ Geográfico (SIRGAS 2000)" />
+      <ScreenHeader titulo="Conversão" subtitulo="UTM ↔ Geográfico (SIRGAS 2000)" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         {/* Toggle de modo */}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
@@ -17,6 +18,7 @@ function decimalParaDms(graus: number): string {
 
 export default function DeflexaoScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [azEntrada, setAzEntrada] = useState('')
   const [deflexao, setDeflexao] = useState('')
   const [lado, setLado] = useState<Lado>('D')
@@ -43,7 +45,7 @@ export default function DeflexaoScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Deflexão" subtitulo="Azimute de saída a partir de entrada e deflexão" />
+      <ScreenHeader titulo="Deflexão" subtitulo="Azimute de saída a partir de entrada e deflexão" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <Text style={[s.secao, { color: C.primary }]}>Dados de Entrada</Text>

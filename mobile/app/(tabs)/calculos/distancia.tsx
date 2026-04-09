@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native'
+import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
 import { ScreenHeader } from '../../../components/ScreenHeader'
@@ -17,6 +18,7 @@ const VAZIO: PontoState = { norte: '', este: '' }
 
 export default function DistanciaScreen() {
   const C = Colors.dark
+  const router = useRouter()
   const [ponto, setPonto] = useState<PontoState>(VAZIO)
   const [linhaA, setLinhaA] = useState<PontoState>(VAZIO)
   const [linhaB, setLinhaB] = useState<PontoState>(VAZIO)
@@ -78,7 +80,7 @@ export default function DistanciaScreen() {
 
   return (
     <ScrollView style={[ss.container, { backgroundColor: C.background }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader titulo="Dist. Ponto-Linha" subtitulo="Distância perpendicular de ponto a segmento" />
+      <ScreenHeader titulo="Dist. Ponto-Linha" subtitulo="Distância perpendicular de ponto a segmento" contexto="Cálculos" aoVoltarContexto={() => router.back()} />
 
       <View style={ss.body}>
         <CampoRow titulo="Ponto P" estado={ponto} setEstado={setPonto} />
