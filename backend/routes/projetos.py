@@ -615,6 +615,46 @@ def _resumo_lotes(areas: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 
+def _resumo_confrontacoes(
+    confrontacoes: list[dict[str, Any]],
+    confrontantes: list[dict[str, Any]],
+) -> dict[str, Any]:
+    confirmadas = 0
+    descartadas = 0
+    pendentes = 0
+    sobreposicoes = 0
+    internas = 0
+
+    for item in confrontacoes:
+        status = str(item.get("status_revisao") or item.get("status") or "").strip().lower()
+        tipo_relacao = str(item.get("tipo_relacao") or "interna").strip().lower()
+        tipo = str(item.get("tipo") or "").strip().lower()
+
+        if tipo == "sobreposicao":
+            sobreposicoes += 1
+
+        if tipo_relacao != "externa":
+            internas += 1
+
+        if status == "confirmada":
+            confirmadas += 1
+        elif status == "descartada":
+            descartadas += 1
+        else:
+            pendentes += 1
+
+    return {
+        "total": len(confrontacoes),
+        "confirmadas": confirmadas,
+        "descartadas": descartadas,
+        "pendentes": pendentes,
+        "internas": internas,
+        "externas": len(confrontantes),
+        "sobreposicoes": sobreposicoes,
+        "divisas": max(len(confrontacoes) - sobreposicoes, 0),
+    }
+
+
 def _resumo_lotes_lista(sb, projeto_ids: list[str]) -> dict[str, dict[str, Any]]:
     if not projeto_ids:
         return {}
@@ -873,6 +913,56 @@ def _camadas_cartograficas_v1(projeto: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     return camadas
+
+
+def _prontidao_piloto(projeto: dict[str, Any]) -> dict[str, Any]:
+    resumo_lotes = projeto.get("resumo_lotes") or {}
+    arquivos_resumo = projeto.get("arquivos_resumo") or {}
+    confrontacoes_resumo = projeto.get("confrontacoes_resumo") or {}
+    participantes = projeto.get("participantes") or projeto.get("clientes") or []
+    formulario = projeto.get("formulario") or {}
+
+    total_lotes = int(resumo_lotes.get("total") or 0)
+    lotes_prontos = int(resumo_lotes.get("prontos") or 0)
+    lotes_pendentes = int(resumo_lotes.get("pendentes") or 0)
+    total_pontos = int(projeto.get("total_pontos") or 0)
+    base_oficial_total = int(arquivos_resumo.get("base_oficial_total") or 0)
+    confrontacoes_total = int(confrontacoes_resumo.get("total") or 0)
+    confrontacoes_confirmadas = int(confrontacoes_resumo.get("confirmadas") or 0)
+    formularios_recebidos = sum(1 for item in participantes if item.get("formulario_ok"))
+
+    if formularios_recebidos == 0 and formulario.get("formulario_ok"):
+        formularios_recebidos = 1
+
+    marcos = [
+        bool(_nome_cliente_projeto(projeto)),
+        total_pontos > 0,
+        bool(formularios_recebidos > 0 or not participantes),
+        bool(base_oficial_total > 0 or total_pontos > 0),
+        bool(lotes_pendentes == 0 if total_lotes > 0 else total_pontos > 0),
+        bool(
+            confrontacoes_confirmadas > 0 or confrontacoes_total == 0 or int(confrontacoes_resumo.get("pendentes") or 0) == 0
+        ),
+    ]
+    percentual = round((sum(1 for ok in marcos if ok) / len(marcos)) * 100) if marcos else 0
+
+    if percentual >= 90:
+        status = "pronto_para_piloto"
+    elif percentual >= 50:
+        status = "operacao_assistida"
+    else:
+        status = "preparacao"
+
+    return {
+        "status": status,
+        "percentual": percentual,
+        "formularios_recebidos": formularios_recebidos,
+        "base_oficial_total": base_oficial_total,
+        "confrontacoes_confirmadas": confrontacoes_confirmadas,
+        "lotes_total": total_lotes,
+        "lotes_prontos": lotes_prontos,
+        "lotes_pendentes": lotes_pendentes,
+    }
 
 
 def _montar_resumo_operacional_v1(projeto: dict[str, Any]) -> dict[str, Any]:

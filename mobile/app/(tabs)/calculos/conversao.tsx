@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native'
 import { Colors } from '../../../constants/Colors'
 import { apiPost } from '../../../lib/api'
+import type { JsonObject } from '../../../lib/api'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
 import { CampoInput } from '../../../components/CampoInput'
@@ -59,8 +60,10 @@ export default function ConversaoScreen() {
           Alert.alert('Dados incompletos', 'Preencha Latitude e Longitude.')
           return
         }
-        const body: Record<string, unknown> = { lat: la, lon: lo }
-        if (fusoOpcional) body.fuso = parseInt(fusoOpcional)
+        const body: JsonObject = { lat: la, lon: lo }
+        if (fusoOpcional) {
+          body.fuso = parseInt(fusoOpcional, 10)
+        }
         setResultadoGeoUtm(await apiPost<ResultadoGeoUtm>('/geo/converter/geo-utm', body))
       }
     } catch (e: any) {
