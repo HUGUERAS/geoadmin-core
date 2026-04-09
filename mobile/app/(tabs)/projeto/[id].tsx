@@ -340,6 +340,10 @@ export default function DetalheProjetoScreen() {
   }
 
   const gerarDocumentos = async () => {
+    if (!projeto) {
+      Alert.alert('Projeto indisponível', 'Carregue o projeto novamente antes de gerar os documentos.')
+      return
+    }
     if (!projeto.total_pontos || projeto.total_pontos === 0) {
       Alert.alert('Sem pontos', 'Este projeto ainda não tem pontos suficientes. Lance os vértices antes de gerar as peças.')
       return

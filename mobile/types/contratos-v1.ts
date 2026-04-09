@@ -380,6 +380,32 @@ export interface EventoMagicLinkApiV1 {
   projeto_cliente_id?: string | null
 }
 
+export interface ArquivosResumoProjetoApiV1 {
+  total?: number
+  base_oficial_total?: number
+  eventos_total?: number
+  [key: string]: unknown
+}
+
+export interface MagicLinksResumoProjetoApiV1 {
+  total_eventos?: number
+  consumidos?: number
+  [key: string]: unknown
+}
+
+export interface ConfrontacoesResumoProjetoApiV1 {
+  total?: number
+  confirmadas?: number
+  pendentes?: number
+  externas?: number
+  [key: string]: unknown
+}
+
+export interface DocumentosResumoProjetoApiV1 {
+  total?: number
+  [key: string]: unknown
+}
+
 export interface ProntidaoPilotoApiV1 {
   status?: string | null
   formularios_recebidos?: number
@@ -446,11 +472,12 @@ export interface ProjetoDetalheApiV1 {
   resumo_geo?: ResumoGeoProjetoApiV1
   arquivos_cartograficos?: ArquivoCartograficoApiV1[]
   arquivos_eventos?: EventoAuditoriaApiV1[]
-  arquivos_resumo?: Record<string, unknown>
+  arquivos_resumo?: ArquivosResumoProjetoApiV1
   magic_links_historico?: EventoMagicLinkApiV1[]
-  magic_links_resumo?: Record<string, unknown>
-  confrontacoes_resumo?: Record<string, unknown>
+  magic_links_resumo?: MagicLinksResumoProjetoApiV1
+  confrontacoes_resumo?: ConfrontacoesResumoProjetoApiV1
   prontidao_piloto?: ProntidaoPilotoApiV1
+  documentos_resumo?: DocumentosResumoProjetoApiV1
   perimetro_ativo?: { tipo?: string | null; vertices?: { lon: number; lat: number; nome?: string | null }[] } | null
   projeto_oficial_v1?: ProjetoOficialV1 | null
   painel_documental_v1?: PainelDocumentalProjetoV1 | null
