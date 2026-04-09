@@ -14,6 +14,7 @@ from pyproj import Transformer
 from shapely.geometry import MultiPolygon, Polygon, shape
 from shapely.ops import transform
 
+from integracoes.arquivos_projeto import validar_lote_uploads, validar_upload_formulario
 from integracoes.projeto_clientes import listar_participantes_area, salvar_participantes_area
 from integracoes.referencia_cliente import importar_vertices_por_formato, resumir_vertices
 
@@ -748,8 +749,14 @@ def anexar_arquivos_area(
     pasta_cliente = UPLOADS_DIR / (cliente_id or "sem-cliente") / area_id
     pasta_cliente.mkdir(parents=True, exist_ok=True)
     anexos = list(area.get("anexos") or [])
+    total_arquivos = 0
+    total_bytes = 0
 
     for nome_original, conteudo, content_type in arquivos:
+        validar_upload_formulario(nome_original, conteudo)
+        total_arquivos += 1
+        total_bytes += len(conteudo)
+        validar_lote_uploads(total_arquivos=total_arquivos, total_bytes=total_bytes)
         extensao = Path(nome_original or "arquivo.bin").suffix or ".bin"
         nome_seguro = f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{uuid4().hex[:8]}{extensao}"
         destino = pasta_cliente / nome_seguro

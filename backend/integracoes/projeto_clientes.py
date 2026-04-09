@@ -589,6 +589,33 @@ def obter_vinculo_por_token(sb, token: str) -> dict[str, Any] | None:
     return dados[0] if dados else None
 
 
+def invalidar_magic_link_participante(
+    sb,
+    *,
+    projeto_cliente_id: str | None = None,
+    token: str | None = None,
+) -> bool:
+    if not projeto_cliente_id and not token:
+        return False
+
+    try:
+        consulta = (
+            sb.table('projeto_clientes')
+            .update({'magic_link_token': None, 'magic_link_expira': None})
+            .is_('deleted_at', 'null')
+        )
+        if projeto_cliente_id:
+            consulta = consulta.eq('id', projeto_cliente_id)
+        else:
+            consulta = consulta.eq('magic_link_token', token)
+        consulta.execute()
+        return True
+    except Exception as exc:
+        if 'projeto_clientes' in str(exc).lower():
+            return False
+        raise
+
+
 def registrar_evento_magic_link(
     sb,
     *,

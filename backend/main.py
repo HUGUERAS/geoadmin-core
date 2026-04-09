@@ -38,18 +38,7 @@ _origens_padrao = [
     "http://127.0.0.1:8000",
 ]
 _origens_permitidas = os.getenv("ALLOWED_ORIGINS", ",".join(_origens_padrao)).split(",")
-_origem_permitida_regex = (
-    r"^https?://("
-    # Rede local (dev)
-    r"localhost|"
-    r"127\.0\.0\.1|"
-    r"10(?:\.\d{1,3}){3}|"
-    r"192\.168(?:\.\d{1,3}){2}|"
-    r"172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}|"
-    # Vercel (preview + production)
-    r"[a-z0-9\-]+\.vercel\.app"
-    r")(:\d+)?$"
-)
+_origem_permitida_regex = (os.getenv("ALLOWED_ORIGIN_REGEX") or "").strip() or None
 _hosts_padrao = [
     "localhost",
     "127.0.0.1",
@@ -96,13 +85,15 @@ app.add_middleware(
     allowed_hosts=_hosts_permitidos,
 )
 
-app.add_middleware(
-  CORSMiddleware,
-  allow_origins=[origem.strip() for origem in _origens_permitidas],
-  allow_origin_regex=_origem_permitida_regex,
-  allow_methods=["*"],
-  allow_headers=["*"],
-)
+_cors_kwargs = {
+    "allow_origins": [origem.strip() for origem in _origens_permitidas],
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+if _origem_permitida_regex:
+    _cors_kwargs["allow_origin_regex"] = _origem_permitida_regex
+
+app.add_middleware(CORSMiddleware, **_cors_kwargs)
 
 
 def _proxy_dev_ativo() -> bool:

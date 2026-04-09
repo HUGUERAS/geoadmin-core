@@ -65,6 +65,11 @@ class FakeQuery:
     def execute(self):
         return FakeResponse(self.supabase.resolver(self))
 
+    def update(self, payload):
+        self.action = 'update'
+        self.payload = payload
+        return self
+
 
 class FakeSupabase:
     def __init__(self, resolver):
@@ -208,3 +213,25 @@ def test_salvar_participantes_projeto_em_lote_mescla_projeto_e_area():
 
     assert len(resultado['participantes_projeto']) == 2
     assert resultado['participantes_area']['area-1'][0]['cliente_id'] == 'cli-2'
+
+
+def test_invalidar_magic_link_limpa_token_do_participante():
+    updates = []
+
+    def resolver(query: FakeQuery):
+        if query.table != 'projeto_clientes':
+            raise AssertionError(f'Tabela inesperada: {query.table}')
+        if query.action != 'update':
+            raise AssertionError(f'Ação inesperada: {query.action}')
+        updates.append((query.payload, query.filters))
+        return []
+
+    ok = projeto_clientes_mod.invalidar_magic_link_participante(
+        FakeSupabase(resolver),
+        projeto_cliente_id='pc-1',
+    )
+
+    assert ok is True
+    assert updates[0][0]['magic_link_token'] is None
+    assert updates[0][0]['magic_link_expira'] is None
+    assert ('eq', 'id', 'pc-1') in updates[0][1]

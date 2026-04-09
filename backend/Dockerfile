@@ -12,15 +12,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libproj-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN addgroup --system geoadmin && adduser --system --ingroup geoadmin geoadmin
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-RUN useradd -m -u 1000 appuser
+COPY --chown=geoadmin:geoadmin . .
 
-COPY --chown=appuser:appuser . .
-
-USER appuser
+USER geoadmin
 
 EXPOSE 8080
 

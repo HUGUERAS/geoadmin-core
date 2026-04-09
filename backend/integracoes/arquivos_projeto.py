@@ -39,6 +39,188 @@ EVENTOS_CARTOGRAFICOS_VALIDOS = {
     "exportacao",
 }
 
+MAX_UPLOAD_BYTES_PADRAO = 10 * 1024 * 1024
+MAX_UPLOAD_TOTAL_BYTES_PADRAO = 25 * 1024 * 1024
+MAX_UPLOAD_ARQUIVOS_PADRAO = 8
+
+EXTENSOES_UPLOAD_PERMITIDAS = {
+    ".csv",
+    ".dbf",
+    ".doc",
+    ".docx",
+    ".dwg",
+    ".dxf",
+    ".geojson",
+    ".gpkg",
+    ".jpeg",
+    ".jpg",
+    ".json",
+    ".kml",
+    ".kmz",
+    ".pdf",
+    ".png",
+    ".prj",
+    ".shp",
+    ".shx",
+    ".txt",
+    ".xls",
+    ".xlsx",
+    ".zip",
+}
+EXTENSOES_FORMULARIO_PERMITIDAS = {
+    ".csv",
+    ".doc",
+    ".docx",
+    ".geojson",
+    ".jpeg",
+    ".jpg",
+    ".json",
+    ".kml",
+    ".kmz",
+    ".pdf",
+    ".png",
+    ".txt",
+    ".zip",
+}
+
+
+class UploadValidationError(ValueError):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int = 422,
+        codigo: str = "upload_invalido",
+        extras: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.codigo = codigo
+        self.extras = extras or {}
+
+
+def _env_int(nome: str, padrao: int) -> int:
+    bruto = str(os.getenv(nome, "")).strip()
+    if not bruto:
+        return padrao
+    try:
+        valor = int(bruto)
+    except ValueError:
+        return padrao
+    return valor if valor > 0 else padrao
+
+
+def _formatar_tamanho_bytes(valor: int) -> str:
+    if valor >= 1024 * 1024:
+        return f"{valor / (1024 * 1024):.1f} MB"
+    if valor >= 1024:
+        return f"{valor / 1024:.1f} KB"
+    return f"{valor} B"
+
+
+def _normalizar_extensoes(extensoes: set[str] | None) -> set[str]:
+    origem = extensoes or EXTENSOES_UPLOAD_PERMITIDAS
+    normalizadas = set()
+    for extensao in origem:
+        chave = str(extensao or "").strip().lower()
+        if not chave:
+            continue
+        normalizadas.add(chave if chave.startswith(".") else f".{chave}")
+    return normalizadas
+
+
+def detalhe_upload_invalido(exc: UploadValidationError) -> dict[str, Any]:
+    return {
+        "erro": str(exc),
+        "codigo": exc.codigo,
+        **exc.extras,
+    }
+
+
+def limite_upload_bytes() -> int:
+    return _env_int("MAX_UPLOAD_BYTES", MAX_UPLOAD_BYTES_PADRAO)
+
+
+def limite_upload_total_bytes() -> int:
+    return _env_int("MAX_UPLOAD_TOTAL_BYTES", MAX_UPLOAD_TOTAL_BYTES_PADRAO)
+
+
+def limite_upload_arquivos() -> int:
+    return _env_int("MAX_UPLOAD_FILES", MAX_UPLOAD_ARQUIVOS_PADRAO)
+
+
+def validar_upload(
+    nome_arquivo: str,
+    conteudo: bytes,
+    *,
+    extensoes_permitidas: set[str] | None = None,
+    limite_bytes: int | None = None,
+) -> None:
+    extensoes = _normalizar_extensoes(extensoes_permitidas)
+    extensao = Path(nome_arquivo or "arquivo").suffix.lower()
+    tamanho = len(conteudo)
+    limite = limite_bytes or limite_upload_bytes()
+
+    if not tamanho:
+        raise UploadValidationError(
+            "Arquivo vazio.",
+            codigo="upload_vazio",
+            status_code=422,
+        )
+
+    if tamanho > limite:
+        raise UploadValidationError(
+            f"Arquivo excede o limite de {_formatar_tamanho_bytes(limite)}.",
+            codigo="upload_tamanho_excedido",
+            status_code=413,
+            extras={"limite_bytes": limite, "tamanho_bytes": tamanho},
+        )
+
+    if extensao not in extensoes:
+        raise UploadValidationError(
+            "Tipo de arquivo não permitido.",
+            codigo="upload_tipo_nao_permitido",
+            status_code=422,
+            extras={"extensao": extensao or None},
+        )
+
+
+def validar_upload_arquivo_projeto(nome_arquivo: str, conteudo: bytes) -> None:
+    validar_upload(
+        nome_arquivo,
+        conteudo,
+        extensoes_permitidas=EXTENSOES_UPLOAD_PERMITIDAS,
+    )
+
+
+def validar_upload_formulario(nome_arquivo: str, conteudo: bytes) -> None:
+    validar_upload(
+        nome_arquivo,
+        conteudo,
+        extensoes_permitidas=EXTENSOES_FORMULARIO_PERMITIDAS,
+    )
+
+
+def validar_lote_uploads(*, total_arquivos: int, total_bytes: int) -> None:
+    max_arquivos = limite_upload_arquivos()
+    max_total = limite_upload_total_bytes()
+
+    if total_arquivos > max_arquivos:
+        raise UploadValidationError(
+            f"Quantidade de anexos excede o limite de {max_arquivos} arquivos por envio.",
+            codigo="upload_quantidade_excedida",
+            status_code=413,
+            extras={"limite_arquivos": max_arquivos, "arquivos_recebidos": total_arquivos},
+        )
+
+    if total_bytes > max_total:
+        raise UploadValidationError(
+            f"Volume total de anexos excede o limite de {_formatar_tamanho_bytes(max_total)} por envio.",
+            codigo="upload_volume_excedido",
+            status_code=413,
+            extras={"limite_total_bytes": max_total, "tamanho_total_bytes": total_bytes},
+        )
+
 
 def _dados(resposta: Any) -> list[dict[str, Any]]:
     return getattr(resposta, "data", None) or []
@@ -226,6 +408,7 @@ def salvar_arquivo_projeto(
 ) -> dict[str, Any]:
     arquivo_id = str(uuid.uuid4())
     nome_original = nome_arquivo or "arquivo"
+    validar_upload_arquivo_projeto(nome_original, conteudo)
     mime = mime_type or mimetypes.guess_type(nome_original)[0] or "application/octet-stream"
 
     try:

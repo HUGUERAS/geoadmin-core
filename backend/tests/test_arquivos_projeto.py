@@ -153,3 +153,19 @@ def test_salvar_arquivo_projeto_falha_quando_storage_indisponivel(monkeypatch, t
         )
 
     assert not any(uploads_dir.rglob("*"))
+
+
+def test_validar_upload_rejeita_svg_do_usuario():
+    with pytest.raises(arquivos_mod.UploadValidationError) as excinfo:
+        arquivos_mod.validar_upload_formulario("croqui.svg", b"<svg><script>alert(1)</script></svg>")
+
+    assert excinfo.value.codigo == "upload_tipo_nao_permitido"
+
+
+def test_validar_upload_rejeita_arquivo_maior_que_o_limite():
+    limite = arquivos_mod.limite_upload_bytes()
+
+    with pytest.raises(arquivos_mod.UploadValidationError) as excinfo:
+        arquivos_mod.validar_upload_arquivo_projeto("base.geojson", b"x" * (limite + 1))
+
+    assert excinfo.value.codigo == "upload_tamanho_excedido"
