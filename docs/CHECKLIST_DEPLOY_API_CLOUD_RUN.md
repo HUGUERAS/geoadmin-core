@@ -17,6 +17,7 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 - `GCP_REGION`
 - `GCP_ARTIFACT_REGISTRY_REPOSITORY`
 - `CLOUD_RUN_SERVICE`
+- `CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT`
 - `SUPABASE_URL`
 - `SUPABASE_BUCKET_ARQUIVOS_PROJETO`
 - `ALLOWED_ORIGINS`
@@ -36,8 +37,9 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 2. Habilitar `Cloud Run`, `Cloud Build`, `Artifact Registry` e `Secret Manager`
 3. Configurar `Workload Identity Federation` para o GitHub Actions
 4. Criar ou validar a service account do deploy
-5. Preencher as `vars` e `secrets` do repositório
-6. Rodar o workflow manual `Deploy API (Cloud Run)`
+5. Criar ou validar a service account de runtime do `Cloud Run`
+6. Preencher as `vars` e `secrets` do repositório
+7. Rodar o workflow manual `Deploy API (Cloud Run)`
 
 ## Tarefas do responsavel de aplicacao
 
@@ -59,6 +61,7 @@ $env:GCP_PROJECT_ID="seu-project-id"
 $env:GCP_REGION="us-central1"
 $env:GCP_ARTIFACT_REGISTRY_REPOSITORY="geoadmin"
 $env:CLOUD_RUN_SERVICE="geoadmin-api"
+$env:CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT="geoadmin-api@seu-project-id.iam.gserviceaccount.com"
 $env:SUPABASE_URL="https://SEU_PROJECT_ID.supabase.co"
 $env:SUPABASE_KEY="SUA_SERVICE_ROLE_KEY"
 $env:SUPABASE_BUCKET_ARQUIVOS_PROJETO="arquivos-projeto"

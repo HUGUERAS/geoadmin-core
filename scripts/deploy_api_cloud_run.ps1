@@ -4,6 +4,7 @@ param(
     [string]$Region = $env:GCP_REGION,
     [string]$ArtifactRegistryRepository = $env:GCP_ARTIFACT_REGISTRY_REPOSITORY,
     [string]$ServiceName = $env:CLOUD_RUN_SERVICE,
+    [string]$RuntimeServiceAccount = $env:CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT,
     [string]$SupabaseUrl = $env:SUPABASE_URL,
     [string]$SupabaseKey = $env:SUPABASE_KEY,
     [string]$SupabaseBucket = $env:SUPABASE_BUCKET_ARQUIVOS_PROJETO,
@@ -48,6 +49,7 @@ Assert-RequiredValue -Name "ProjectId" -Value $ProjectId
 Assert-RequiredValue -Name "Region" -Value $Region
 Assert-RequiredValue -Name "ArtifactRegistryRepository" -Value $ArtifactRegistryRepository
 Assert-RequiredValue -Name "ServiceName" -Value $ServiceName
+Assert-RequiredValue -Name "RuntimeServiceAccount" -Value $RuntimeServiceAccount
 Assert-RequiredValue -Name "SupabaseUrl" -Value $SupabaseUrl
 Assert-RequiredValue -Name "SupabaseKey" -Value $SupabaseKey
 Assert-RequiredValue -Name "SupabaseBucket" -Value $SupabaseBucket
@@ -99,6 +101,13 @@ try {
         "--project", $ProjectId
     )
 
+    Invoke-GCloud -Arguments @(
+        "secrets", "add-iam-policy-binding", $SupabaseKeySecretName,
+        "--member=serviceAccount:$RuntimeServiceAccount",
+        "--role=roles/secretmanager.secretAccessor",
+        "--project", $ProjectId
+    )
+
     Push-Location $repoRoot
     try {
         Invoke-GCloud -Arguments @(
@@ -117,6 +126,7 @@ try {
         "--project", $ProjectId,
         "--platform", "managed",
         "--quiet",
+        "--service-account", $RuntimeServiceAccount,
         "--set-env-vars", $envVars,
         "--update-secrets", "SUPABASE_KEY=${SupabaseKeySecretName}:latest",
         "--min-instances", "$MinInstances",
