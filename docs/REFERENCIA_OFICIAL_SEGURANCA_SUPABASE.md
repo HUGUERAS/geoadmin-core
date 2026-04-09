@@ -19,11 +19,14 @@ Após qualquer compactação de contexto, o **primeiro documento a ser lido** de
 Só depois dele devem ser lidos, conforme necessário:
 
 - [AGENTS.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\AGENTS.md)
+- [BASELINE_OFICIAL_AMBIENTE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASELINE_OFICIAL_AMBIENTE.md)
+- [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
 - [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\MODELO_DADOS_BASE_CANONICA.md)
 - [ESTRUTURA_OFICIAL_GEOADMIN_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\ESTRUTURA_OFICIAL_GEOADMIN_CORE.md)
 - [PERFIL_AGENTE_BANCO_DADOS.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\PERFIL_AGENTE_BANCO_DADOS.md)
 - [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
 - [GOVERNANCA_SEGURANCA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\GOVERNANCA_SEGURANCA.md)
+- [HARDENING_MINIMO_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\HARDENING_MINIMO_CORE.md)
 - artefatos ativos da sprint atual
 
 ## Regra Operacional de Banco
@@ -63,11 +66,14 @@ Objetivo:
 Estado atual do projeto:
 
 - o backend `FastAPI` está funcional localmente
-- a web local está funcional em `http://127.0.0.1:8000`
-- o backend local está funcional em `http://127.0.0.1:8001`
+- a web local do `GeoAdmin Core` está funcional em `http://127.0.0.1:8000`
+- a trilha web local validou `GET /projeto`, `GET /health` e `GET /projetos` via gateway
+- o backend local do `GeoAdmin Core` ainda depende de `Python 3.12.x` ou `3.13.x`
 - o projeto Supabase oficial foi vinculado ao CLI em `infra`
 - os tipos do banco já podem ser gerados e foram materializados localmente
 - a base canônica nova já tem diretrizes explícitas para `registro_imobiliario_ampliado`, `responsavel_tecnico_oficial` e separação entre `endereco_residencial_ou_correspondencia` e `endereco_do_imovel_rural`
+- a baseline oficial de ambiente foi registrada em [BASELINE_OFICIAL_AMBIENTE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASELINE_OFICIAL_AMBIENTE.md)
+- a subida local do núcleo foi formalizada em [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
 
 Principais riscos atuais:
 
@@ -77,6 +83,7 @@ Principais riscos atuais:
 - fluxo de `magic link` ainda precisa de endurecimento estrutural
 - trilha de migrations local e remoto ainda não está reconciliada
 - existem fallbacks locais e stubs que precisam sair da trilha de produção, consolidados em [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
+- o backend do núcleo não instala com `Python 3.14.2` por bloqueio de `pyproj==3.7.1`
 
 ## Onde Estamos
 

@@ -25,6 +25,21 @@ O documento principal de arquitetura do produto é:
 - [BASE_CANONICA_IMPLEMENTACAO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASE_CANONICA_IMPLEMENTACAO.md)
 - [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
 - [GOVERNANCA_SEGURANCA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\GOVERNANCA_SEGURANCA.md)
+- [BASELINE_OFICIAL_AMBIENTE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASELINE_OFICIAL_AMBIENTE.md)
+- [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
+- [HARDENING_MINIMO_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\HARDENING_MINIMO_CORE.md)
+
+## Partida rápida local
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap_local.ps1
+```
+
+Depois:
+
+- backend local: `.\scripts\start_backend.ps1`
+- web local: `.\scripts\start_web_gateway.ps1`
+- expo: `.\scripts\start_expo.ps1`
 
 ## Escopo do núcleo
 

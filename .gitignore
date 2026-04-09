@@ -37,6 +37,7 @@ wheels/
 !mobile/lib/**
 
 # Ambientes virtuais
+.venv/
 venv/
 env/
 ENV/
@@ -53,6 +54,7 @@ node_modules/
 .expo/
 .expo-shared/
 mobile/node_modules/
+mobile/dist/
 npm-debug.*
 
 # Sistema operacional
@@ -74,5 +76,6 @@ data/geometrias_referencia_cliente.json
 .claude/settings.local.json
 # Metadados locais do Supabase CLI
 infra/supabase/supabase/
+infra/supabase/.temp/
 
 .vercel

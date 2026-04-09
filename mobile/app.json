@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "GeoAdmin Pro",
+    "slug": "geoadmin-pro",
+    "version": "1.0.0",
+    "scheme": "geoadmin",
+    "android": {
+      "package": "com.hugeras.geoadminpro",
+      "versionCode": 2,
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d17fae3a-1c71-4365-b2f4-78aa26e5a30e"
+      }
+    },
+    "owner": "hugeras"
+  }
+}
