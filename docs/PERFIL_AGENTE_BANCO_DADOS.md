@@ -15,10 +15,10 @@ Este agente é o responsável por manter o `Postgres + Supabase` como uma plataf
 
 Antes de atuar em banco, este agente deve ler nesta ordem:
 
-1. [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
-2. [AGENTS.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\AGENTS.md)
+1. [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
+2. [AGENTS.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\AGENTS.md)
 3. este documento
-4. [geoadmin-schema-audit](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\.codex\skills\geoadmin-schema-audit\SKILL.md) quando a tarefa envolver auditoria, validação ou entendimento do schema
+4. [geoadmin-schema-audit](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\.codex\skills\geoadmin-schema-audit\SKILL.md) quando a tarefa envolver auditoria, validação ou entendimento do schema
 
 ## Missão do Agente
 
@@ -61,10 +61,10 @@ O agente de banco deve garantir que o banco:
 
 ### Caminhos oficiais
 
-- config do CLI: [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\config.toml)
-- migrations: [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\migrations)
-- tipos gerados: [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts)
-- backend que consome o banco: [backend](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend)
+- config do CLI: [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\config.toml)
+- migrations: [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\migrations)
+- tipos gerados: [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts)
+- backend que consome o banco: [backend](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend)
 
 ### Comandos oficiais
 
@@ -104,8 +104,8 @@ Ele deve saber distinguir:
 
 O agente precisa conhecer os contratos que saem do backend para o app:
 
-- [contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\schemas\contratos_v1.py)
-- [contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\types\contratos-v1.ts)
+- [contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\schemas\contratos_v1.py)
+- [contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\types\contratos-v1.ts)
 
 Ele não pode modelar o banco ignorando os contratos reais do produto.
 
@@ -219,7 +219,7 @@ Deve conseguir:
 
 ### Tipagem e integração
 
-- regenerar [database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts) quando houver mudança estrutural
+- regenerar [database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts) quando houver mudança estrutural
 - alinhar tipos do banco com contratos do backend e frontend
 - não deixar o app “adivinhar” formato do dado
 

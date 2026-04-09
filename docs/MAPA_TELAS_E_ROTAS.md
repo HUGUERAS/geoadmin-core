@@ -49,7 +49,7 @@ Registrados em `backend/main.py`:
 Rotas especiais:
 
 - `GET /health` e o healthcheck da API
-- `backend/routes/rag.py` existe, mas nao esta montado no `main.py`
+- a trilha de `RAG Topografia` foi removida do core e fica fora do escopo deste repositório
 
 ## Telas e fluxos
 

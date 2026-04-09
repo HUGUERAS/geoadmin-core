@@ -14,27 +14,27 @@ Este documento passa a ser a referência principal para:
 
 Após qualquer compactação de contexto, o **primeiro documento a ser lido** deve ser este:
 
-- [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
+- [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
 
 Só depois dele devem ser lidos, conforme necessário:
 
-- [AGENTS.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\AGENTS.md)
-- [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\MODELO_DADOS_BASE_CANONICA.md)
-- [ESTRUTURA_OFICIAL_GEOADMIN_CORE.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\ESTRUTURA_OFICIAL_GEOADMIN_CORE.md)
-- [PERFIL_AGENTE_BANCO_DADOS.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\PERFIL_AGENTE_BANCO_DADOS.md)
-- [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
-- [GOVERNANCA_SEGURANCA.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\GOVERNANCA_SEGURANCA.md)
+- [AGENTS.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\AGENTS.md)
+- [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\MODELO_DADOS_BASE_CANONICA.md)
+- [ESTRUTURA_OFICIAL_GEOADMIN_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\ESTRUTURA_OFICIAL_GEOADMIN_CORE.md)
+- [PERFIL_AGENTE_BANCO_DADOS.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\PERFIL_AGENTE_BANCO_DADOS.md)
+- [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
+- [GOVERNANCA_SEGURANCA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\GOVERNANCA_SEGURANCA.md)
 - artefatos ativos da sprint atual
 
 ## Regra Operacional de Banco
 
 Sempre que a tarefa tocar banco de dados, persistência, schema, migrations, `Supabase`, `database.types.ts`, contratos dependentes do banco ou qualquer entidade persistida do domínio, o agente padrão obrigatório é:
 
-- [db-manager.agent.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\.github\agents\db-manager.agent.md)
+- [db-manager.agent.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\.github\agents\db-manager.agent.md)
 
 E, para auditoria, entendimento ou validação de schema, a skill obrigatória é:
 
-- [geoadmin-schema-audit](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\.codex\skills\geoadmin-schema-audit\SKILL.md)
+- [geoadmin-schema-audit](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\.codex\skills\geoadmin-schema-audit\SKILL.md)
 
 Regra prática:
 
@@ -76,7 +76,7 @@ Principais riscos atuais:
 - rate limiting ainda é em memória e não serve como proteção de produção
 - fluxo de `magic link` ainda precisa de endurecimento estrutural
 - trilha de migrations local e remoto ainda não está reconciliada
-- existem fallbacks locais e stubs que precisam sair da trilha de produção, consolidados em [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
+- existem fallbacks locais e stubs que precisam sair da trilha de produção, consolidados em [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
 
 ## Onde Estamos
 
@@ -84,11 +84,11 @@ Principais riscos atuais:
 
 Arquivos centrais:
 
-- [backend/main.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\main.py)
-- [backend/middleware/auth.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\auth.py)
-- [backend/middleware/limiter.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\limiter.py)
-- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\documentos.py)
-- [backend/routes/projetos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\projetos.py)
+- [backend/main.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\main.py)
+- [backend/middleware/auth.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\auth.py)
+- [backend/middleware/limiter.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\limiter.py)
+- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\documentos.py)
+- [backend/routes/projetos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\projetos.py)
 
 Hardening já aplicado:
 
@@ -101,10 +101,10 @@ Hardening já aplicado:
 
 Arquivos centrais:
 
-- [mobile/lib/api.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\api.ts)
-- [mobile/lib/db.web.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\db.web.ts)
-- [mobile/app/(tabs)/projeto/index.tsx](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\app\(tabs)\projeto\index.tsx)
-- [mobile/app/(tabs)/projeto/[id].tsx](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\app\(tabs)\projeto\[id].tsx)
+- [mobile/lib/api.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\api.ts)
+- [mobile/lib/db.web.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\db.web.ts)
+- [mobile/app/(tabs)/projeto/index.tsx](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\app\(tabs)\projeto\index.tsx)
+- [mobile/app/(tabs)/projeto/[id].tsx](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\app\(tabs)\projeto\[id].tsx)
 
 Estado atual:
 
@@ -117,10 +117,10 @@ Estado atual:
 Configuração oficial:
 
 - workdir do CLI: `infra`
-- config do CLI: [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\config.toml)
-- vínculo do projeto: [infra/supabase/.temp/project-ref](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\.temp\project-ref)
-- migrations versionadas: [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\migrations)
-- tipos gerados do banco: [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts)
+- config do CLI: [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\config.toml)
+- vínculo do projeto: [infra/supabase/.temp/project-ref](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\.temp\project-ref)
+- migrations versionadas: [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\migrations)
+- tipos gerados do banco: [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts)
 
 Estado atual:
 
@@ -134,7 +134,7 @@ Estado atual:
 
 O que temos:
 
-- dependência central em [auth.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\auth.py)
+- dependência central em [auth.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\auth.py)
 - possibilidade de desligar auth em dev com `AUTH_OBRIGATORIO=false`
 - validação atual via `supabase.auth.get_user(token)`
 
@@ -208,7 +208,7 @@ Ferramentas:
 
 O que temos:
 
-- limitador customizado em memória em [limiter.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\limiter.py)
+- limitador customizado em memória em [limiter.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\limiter.py)
 
 Risco:
 

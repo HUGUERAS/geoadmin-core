@@ -23,10 +23,10 @@ Este documento responde, com base em evidência local, se o modelo atual de banc
 
 ### Schema e contratos comparados
 
-- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts)
-- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\schemas\contratos_v1.py)
-- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\types\contratos-v1.ts)
-- [backend/integracoes/gerador_documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\gerador_documentos.py)
+- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts)
+- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\schemas\contratos_v1.py)
+- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\types\contratos-v1.ts)
+- [backend/integracoes/gerador_documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\gerador_documentos.py)
 
 ## Resposta curta
 
@@ -224,7 +224,7 @@ Cobertura atual: **Parcial**
 
 Base de evidência:
 
-- [gerador_documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\gerador_documentos.py) tenta ler:
+- [gerador_documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\gerador_documentos.py) tenta ler:
   - `tecnico.nome`
   - `tecnico.cpf`
   - `tecnico.crt`

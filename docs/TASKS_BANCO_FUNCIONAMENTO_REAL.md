@@ -14,34 +14,34 @@ A premissa aqui é explícita:
 
 ### Supabase e schema
 
-- [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\config.toml)
-- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts)
-- [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\migrations)
+- [infra/supabase/config.toml](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\config.toml)
+- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts)
+- [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\migrations)
 
 ### Backend que influencia banco, storage e auth
 
-- [backend/main.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\main.py)
-- [backend/middleware/auth.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\auth.py)
-- [backend/routes/projetos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\projetos.py)
-- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\documentos.py)
-- [backend/routes/pontos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\pontos.py)
-- [backend/routes/perimetros.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\perimetros.py)
-- [backend/routes/clientes/routes.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\clientes\routes.py)
-- [backend/routes/clientes/crud.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\clientes\crud.py)
-- [backend/routes/importar.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\importar.py)
-- [backend/integracoes/areas_projeto.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\areas_projeto.py)
-- [backend/integracoes/referencia_cliente.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\referencia_cliente.py)
-- [backend/integracoes/arquivos_projeto.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\arquivos_projeto.py)
-- [backend/integracoes/projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\projeto_clientes.py)
-- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\schemas\contratos_v1.py)
+- [backend/main.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\main.py)
+- [backend/middleware/auth.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\auth.py)
+- [backend/routes/projetos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\projetos.py)
+- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\documentos.py)
+- [backend/routes/pontos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\pontos.py)
+- [backend/routes/perimetros.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\perimetros.py)
+- [backend/routes/clientes/routes.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\clientes\routes.py)
+- [backend/routes/clientes/crud.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\clientes\crud.py)
+- [backend/routes/importar.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\importar.py)
+- [backend/integracoes/areas_projeto.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\areas_projeto.py)
+- [backend/integracoes/referencia_cliente.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\referencia_cliente.py)
+- [backend/integracoes/arquivos_projeto.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\arquivos_projeto.py)
+- [backend/integracoes/projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\projeto_clientes.py)
+- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\schemas\contratos_v1.py)
 
 ### Mobile/Web que influencia persistência e sync
 
-- [mobile/lib/api.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\api.ts)
-- [mobile/lib/db.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\db.ts)
-- [mobile/lib/db.web.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\db.web.ts)
-- [mobile/lib/sync.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\sync.ts)
-- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\types\contratos-v1.ts)
+- [mobile/lib/api.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\api.ts)
+- [mobile/lib/db.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\db.ts)
+- [mobile/lib/db.web.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\db.web.ts)
+- [mobile/lib/sync.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\sync.ts)
+- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\types\contratos-v1.ts)
 
 ## Verificações executadas
 
@@ -66,7 +66,7 @@ Conclusão operacional:
 
 ### Banco real confirmado pelos tipos gerados
 
-O schema atual confirmado em [database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts) inclui, entre outras, as tabelas e views:
+O schema atual confirmado em [database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts) inclui, entre outras, as tabelas e views:
 
 - `areas_projeto`
 - `arquivos_projeto`
@@ -109,7 +109,7 @@ Hoje o app **funciona**, mas ainda depende de mecanismos que não podem ser a ba
 
 ## Premissas da nova base canônica
 
-As próximas mudanças estruturais do banco precisam respeitar as decisões já fechadas em [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\docs\MODELO_DADOS_BASE_CANONICA.md):
+As próximas mudanças estruturais do banco precisam respeitar as decisões já fechadas em [MODELO_DADOS_BASE_CANONICA.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\MODELO_DADOS_BASE_CANONICA.md):
 
 - `registro_imobiliario_ampliado` entra na base oficial
 - `responsavel_tecnico_oficial` entra na base oficial
@@ -147,7 +147,7 @@ Para a trilha abaixo, passa a valer:
 
 **Arquivos / superfícies**
 
-- [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\migrations)
+- [infra/supabase/migrations](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\migrations)
 - histórico remoto do projeto `jrlrlsotwsiidglcbifo`
 
 **Risco**
@@ -182,7 +182,7 @@ Para a trilha abaixo, passa a valer:
 
 **Achado**
 
-[areas_projeto.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\areas_projeto.py) ainda usa:
+[areas_projeto.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\areas_projeto.py) ainda usa:
 
 - `backend/data/areas_projeto.json`
 - `_carregar_store_local`
@@ -219,7 +219,7 @@ Para a trilha abaixo, passa a valer:
 
 **Achado**
 
-[referencia_cliente.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\referencia_cliente.py) ainda usa:
+[referencia_cliente.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\referencia_cliente.py) ainda usa:
 
 - `backend/data/geometrias_referencia_cliente.json`
 - `_registro_local_mais_recente`
@@ -252,7 +252,7 @@ Para a trilha abaixo, passa a valer:
 
 **Achado**
 
-[arquivos_projeto.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\arquivos_projeto.py) ainda grava em filesystem local quando o upload ao Storage falha:
+[arquivos_projeto.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\arquivos_projeto.py) ainda grava em filesystem local quando o upload ao Storage falha:
 
 - `UPLOADS_DIR = backend/uploads/arquivos_projeto`
 - `LOCAL_STORAGE_PREFIX = "local://"`
@@ -287,7 +287,7 @@ Para a trilha abaixo, passa a valer:
 
 **Achado**
 
-[db.web.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\db.web.ts) hoje é stub:
+[db.web.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\db.web.ts) hoje é stub:
 
 - `salvarPonto` só retorna o id
 - `listarPendentes` retorna `[]`
@@ -297,7 +297,7 @@ Para a trilha abaixo, passa a valer:
 **Risco**
 
 - a web aparenta ter sync/offline, mas não tem
-- [sync.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\lib\sync.ts) fica funcional no nativo e fake na web
+- [sync.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\sync.ts) fica funcional no nativo e fake na web
 
 **Task**
 
@@ -322,9 +322,9 @@ Há dois modelos convivendo:
 
 Arquivos centrais:
 
-- [backend/integracoes/projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\projeto_clientes.py)
-- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\documentos.py)
-- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts)
+- [backend/integracoes/projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\projeto_clientes.py)
+- [backend/routes/documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\documentos.py)
+- [infra/supabase/database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts)
 
 **Risco**
 
@@ -341,7 +341,7 @@ Arquivos centrais:
 **Estado atual**
 
 - backend e testes já foram ajustados para tratar `projeto_clientes` como fonte operacional
-- foi preparada a migration local [025_magic_link_canonico.sql](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\migrations\025_magic_link_canonico.sql)
+- foi preparada a migration local [025_magic_link_canonico.sql](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\migrations\025_magic_link_canonico.sql)
 - ainda falta aplicar essa consolidação na trilha oficial de migrations reconciliada
 - o legado em `clientes.magic_link_*` continua existindo só como compatibilidade de banco, não mais como fonte operacional do runtime
 
@@ -359,14 +359,14 @@ Arquivos centrais:
 
 **Achado**
 
-[projetos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\projetos.py) ainda carrega compatibilidades como:
+[projetos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\projetos.py) ainda carrega compatibilidades como:
 
 - `_payload_cliente_compativel`
 - `_criar_cliente_compativel`
 - `_inserir_projeto_compativel`
 - `_atualizar_projeto_compativel`
 
-Além disso, [documentos.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\routes\documentos.py) e [projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\integracoes\projeto_clientes.py) ainda lidam com colunas antigas.
+Além disso, [documentos.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\routes\documentos.py) e [projeto_clientes.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\integracoes\projeto_clientes.py) ainda lidam com colunas antigas.
 
 **Risco**
 
@@ -417,7 +417,7 @@ O domínio rural do projeto exige distinguir dois contextos que hoje ainda apare
 
 **Achado**
 
-[auth.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\middleware\auth.py) usa `supabase.auth.get_user(token)` a cada requisição protegida.
+[auth.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\middleware\auth.py) usa `supabase.auth.get_user(token)` a cada requisição protegida.
 
 **Risco**
 
@@ -497,14 +497,14 @@ O `db lint` não está limpo.
 
 Os contratos em:
 
-- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\backend\schemas\contratos_v1.py)
-- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\mobile\types\contratos-v1.ts)
+- [backend/schemas/contratos_v1.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\schemas\contratos_v1.py)
+- [mobile/types/contratos-v1.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\types\contratos-v1.ts)
 
 já avançaram bastante, mas ainda precisam ser revalidados após a estabilização do schema oficial.
 
 **Task**
 
-- regenerar [database.types.ts](C:\Users\User\.codex\worktrees\db9b\GeoAdmin-Pro\infra\supabase\database.types.ts) após reconciliação
+- regenerar [database.types.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\infra\supabase\database.types.ts) após reconciliação
 - revisar contratos V1 contra o banco real
 - revisar rotas que serializam `ProjetoOficialV1`, `PainelDocumentalProjetoV1` e `EstadoPortalClienteV1`
 
