@@ -1377,7 +1377,6 @@ def arquivos_do_projeto(projeto_id: str):
 
 
 @router.post("/{projeto_id}/arquivos", summary="Enviar arquivo para a base cartografica", status_code=201)
-@limiter.limit("10/minute")
 async def enviar_arquivo_projeto(
     request: Request,
     projeto_id: str,
@@ -1390,6 +1389,7 @@ async def enviar_arquivo_projeto(
     cliente_id: str | None = Form(None),
     area_id: str | None = Form(None),
 ):
+    limiter._check_limit(request, 10, 60, scope="routes.projetos.enviar_arquivo_projeto")
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
     try:
@@ -1485,7 +1485,6 @@ def importar_areas_json(projeto_id: str, payload: ImportacaoLotesRequest):
 
 
 @router.post("/{projeto_id}/areas/importar-arquivo", summary="Importar arquivo de lotes/areas", status_code=201)
-@limiter.limit("5/minute")
 async def importar_areas_arquivo(
     request: Request,
     projeto_id: str,
@@ -1495,6 +1494,7 @@ async def importar_areas_arquivo(
     salvar_na_bandeja: bool = Form(True),
     autor: str | None = Form(None),
 ):
+    limiter._check_limit(request, 5, 60, scope="routes.projetos.importar_areas_arquivo")
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
     try:
