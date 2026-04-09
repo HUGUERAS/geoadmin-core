@@ -67,6 +67,8 @@ from schemas.contratos_v1 import (
 )
 from fastapi import Depends
 from middleware.auth import verificar_token
+from middleware.limiter import limiter
+from fastapi import Request
 
 router = APIRouter(prefix="/projetos", tags=["Projetos"], dependencies=[Depends(verificar_token)])
 
@@ -566,13 +568,13 @@ def _gerar_magic_links_iniciais(sb, projeto_id: str, participantes: list[dict[st
     if not participantes:
         return []
 
-    from routes.documentos import gerar_magic_link
+    from routes.documentos import gerar_magic_link_interno
 
     links: list[dict[str, Any]] = []
     participantes_ativos = [item for item in participantes if item.get("recebe_magic_link")]
     for participante in participantes_ativos:
         try:
-            link = gerar_magic_link(
+            link = gerar_magic_link_interno(
                 projeto_id,
                 cliente_id=participante.get("cliente_id"),
                 projeto_cliente_id=participante.get("id"),
@@ -1375,7 +1377,9 @@ def arquivos_do_projeto(projeto_id: str):
 
 
 @router.post("/{projeto_id}/arquivos", summary="Enviar arquivo para a base cartografica", status_code=201)
+@limiter.limit("10/minute")
 async def enviar_arquivo_projeto(
+    request: Request,
     projeto_id: str,
     arquivo: UploadFile = File(...),
     nome: str | None = Form(None),
@@ -1481,7 +1485,9 @@ def importar_areas_json(projeto_id: str, payload: ImportacaoLotesRequest):
 
 
 @router.post("/{projeto_id}/areas/importar-arquivo", summary="Importar arquivo de lotes/areas", status_code=201)
+@limiter.limit("5/minute")
 async def importar_areas_arquivo(
+    request: Request,
     projeto_id: str,
     arquivo: UploadFile = File(...),
     formato: str | None = Form(None),

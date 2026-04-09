@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
@@ -161,6 +162,7 @@ def test_gerar_magic_link_participante_registra_evento(monkeypatch):
         "principal": True,
         "recebe_magic_link": True,
         "area_id": "area-1",
+        "telefone": "62999999999",
         "magic_link_token": None,
     }])
     monkeypatch.setattr(documentos_mod, "gerar_magic_link_participante", lambda _sb, _projeto_id, **_kwargs: {
@@ -171,6 +173,7 @@ def test_gerar_magic_link_participante_registra_evento(monkeypatch):
         "principal": True,
         "recebe_magic_link": True,
         "area_id": "area-1",
+        "telefone": "62999999999",
         "magic_link_token": "token-pc-1",
         "magic_link_expira": "2099-01-01T00:00:00+00:00",
     })
@@ -184,7 +187,7 @@ def test_gerar_magic_link_participante_registra_evento(monkeypatch):
             return {"id": "cli-1", "nome": "Hugo Henrique"}
         raise AssertionError(f"Consulta inesperada: {query.table} {query.filters}")
 
-    resposta = documentos_mod.gerar_magic_link("proj-1", projeto_cliente_id="pc-1", supabase=FakeSupabase(resolver))
+    resposta = documentos_mod.gerar_magic_link_interno("proj-1", projeto_cliente_id="pc-1", supabase=FakeSupabase(resolver))
 
     assert resposta["projeto_cliente_id"] == "pc-1"
     assert resposta["area_id"] == "area-1"
@@ -206,6 +209,7 @@ def test_gerar_magic_link_promove_cliente_principal_para_participante(monkeypatc
         "principal": True,
         "recebe_magic_link": True,
         "area_id": None,
+        "telefone": "62999999999",
         "magic_link_token": None,
     })
     monkeypatch.setattr(documentos_mod, "gerar_magic_link_participante", lambda _sb, _projeto_id, **_kwargs: {
@@ -216,6 +220,7 @@ def test_gerar_magic_link_promove_cliente_principal_para_participante(monkeypatc
         "principal": True,
         "recebe_magic_link": True,
         "area_id": None,
+        "telefone": "62999999999",
         "magic_link_token": "token-canonico",
         "magic_link_expira": "2099-01-01T00:00:00+00:00",
     })
@@ -229,9 +234,56 @@ def test_gerar_magic_link_promove_cliente_principal_para_participante(monkeypatc
             return {"id": "cli-1", "nome": "Titular Canonico"}
         raise AssertionError(f"Consulta inesperada: {query.table} {query.filters}")
 
-    resposta = documentos_mod.gerar_magic_link("proj-1", supabase=FakeSupabase(resolver))
+    resposta = documentos_mod.gerar_magic_link_interno("proj-1", supabase=FakeSupabase(resolver))
 
     assert resposta["projeto_cliente_id"] == "pc-1"
     assert resposta["cliente_id"] == "cli-1"
     assert garantir_chamadas == [("proj-1", "cli-1")]
     assert eventos
+
+
+def test_validar_destino_magic_link_exige_telefone_para_whatsapp():
+    with pytest.raises(HTTPException) as excinfo:
+        documentos_mod._validar_destino_magic_link(
+            {
+                "id": "pc-1",
+                "cliente_id": "cli-1",
+                "nome": "Sem Telefone",
+                "telefone": None,
+                "email": "cliente@example.com",
+            },
+            canal="whatsapp",
+        )
+
+    assert excinfo.value.status_code == 422
+    assert "telefone" in excinfo.value.detail["erro"].lower()
+
+
+def test_gerar_magic_links_lote_rejeita_participante_sem_destino(monkeypatch):
+    monkeypatch.setattr(documentos_mod, "listar_participantes_projeto", lambda _sb, _projeto_id: [{
+        "id": "pc-1",
+        "cliente_id": "cli-1",
+        "nome": "Sem Telefone",
+        "papel": "principal",
+        "principal": True,
+        "recebe_magic_link": True,
+        "area_id": None,
+        "telefone": None,
+        "email": None,
+    }])
+
+    def resolver(query: FakeQuery):
+        if query.table == "vw_projetos_completo":
+            return {"id": "proj-1", "projeto_nome": "Projeto Boa Vista"}
+        raise AssertionError(f"Consulta inesperada: {query.table}")
+
+    with pytest.raises(HTTPException) as excinfo:
+        documentos_mod.gerar_magic_links_lote(
+            request=SimpleNamespace(client=SimpleNamespace(host="127.0.0.1")),
+            projeto_id="proj-1",
+            payload=documentos_mod.GerarMagicLinksLotePayload(),
+            supabase=FakeSupabase(resolver),
+        )
+
+    assert excinfo.value.status_code == 422
+    assert excinfo.value.detail["participantes"][0]["projeto_cliente_id"] == "pc-1"

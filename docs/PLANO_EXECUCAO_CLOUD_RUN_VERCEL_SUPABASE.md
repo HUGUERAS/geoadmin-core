@@ -15,6 +15,8 @@ Ao final da migracao:
 
 - `web` e `APK` chamam a mesma API publica
 - a URL da API entra por ambiente, sem `proxy` hardcoded para `Railway`
+- builds publicados falham cedo se `EXPO_PUBLIC_API_BASE_URL` nao estiver definida
+- os fallbacks de URL ficam restritos ao desenvolvimento local
 - o backend sobe por container em `Cloud Run`
 - `Supabase` continua como fonte oficial de banco, auth e storage
 
@@ -175,11 +177,19 @@ Dependencias:
 - garantir `VERCEL_TOKEN`
 - definir `EXPO_PUBLIC_API_BASE_URL` com a URL publica do `Cloud Run`
 - reexecutar workflow `Deploy Web (Vercel)`
+- confirmar que a web publicada nao carrega mais fallback para `Railway`
 
 ### EAS
 
 - definir `EXPO_PUBLIC_API_BASE_URL`
+- garantir o valor no ambiente `preview` e `production`
 - gerar novo build `preview`
+
+## Observacoes operacionais
+
+- `mobile/lib/api.ts` agora aceita fallback automatico so em runtime local (`Expo Go`, emulador Android e gateway web local)
+- web publicada sem `EXPO_PUBLIC_API_BASE_URL` passa a falhar com erro explicito em vez de voltar para a `Railway`
+- build mobile publicado sem `EXPO_PUBLIC_API_BASE_URL` passa a falhar com erro explicito em vez de chamar `localhost`
 
 ## Comandos base
 

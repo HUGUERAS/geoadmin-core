@@ -20,6 +20,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from middleware.auth import verificar_token
+from middleware.limiter import limiter
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
@@ -110,6 +111,76 @@ def _erro_documento_duplicado(exc: Exception) -> bool:
 
 def _normalizar_documento(valor: str | None) -> str:
     return ''.join(ch for ch in str(valor or '') if ch.isdigit())
+
+
+def _normalizar_canal_magic_link(valor: str | None) -> str:
+    return (valor or "whatsapp").strip().lower() or "whatsapp"
+
+
+def _telefone_magic_link(valor: Any) -> str | None:
+    telefone = _normalizar_documento(str(valor or ""))
+    return telefone if len(telefone) >= 10 else None
+
+
+def _email_magic_link(valor: Any) -> str | None:
+    email = str(valor or "").strip()
+    return email or None
+
+
+def _detalhe_destino_magic_link(
+    participante: dict[str, Any] | None,
+    *,
+    canal: str,
+    erro: str,
+) -> dict[str, Any]:
+    return {
+        "erro": erro,
+        "codigo": 422,
+        "canal": canal,
+        "projeto_cliente_id": (participante or {}).get("id"),
+        "cliente_id": (participante or {}).get("cliente_id"),
+        "nome": (participante or {}).get("nome"),
+    }
+
+
+def _validar_destino_magic_link(participante: dict[str, Any] | None, *, canal: str) -> None:
+    canal_normalizado = _normalizar_canal_magic_link(canal)
+    if not participante:
+        raise HTTPException(
+            422,
+            _detalhe_destino_magic_link(
+                participante,
+                canal=canal_normalizado,
+                erro="Nenhum participante elegível foi encontrado para receber o magic link.",
+            ),
+        )
+    if not participante.get("cliente_id"):
+        raise HTTPException(
+            422,
+            _detalhe_destino_magic_link(
+                participante,
+                canal=canal_normalizado,
+                erro="O participante selecionado ainda não possui um cliente vinculado para receber o magic link.",
+            ),
+        )
+    if canal_normalizado in {"whatsapp", "sms"} and not _telefone_magic_link(participante.get("telefone")):
+        raise HTTPException(
+            422,
+            _detalhe_destino_magic_link(
+                participante,
+                canal=canal_normalizado,
+                erro="O participante selecionado não possui telefone válido para envio do magic link.",
+            ),
+        )
+    if canal_normalizado == "email" and not _email_magic_link(participante.get("email")):
+        raise HTTPException(
+            422,
+            _detalhe_destino_magic_link(
+                participante,
+                canal=canal_normalizado,
+                erro="O participante selecionado não possui e-mail válido para envio do magic link.",
+            ),
+        )
 
 
 def _resolver_app_url() -> str:
@@ -628,8 +699,7 @@ def _sincronizar_confrontantes_formulario(sb, projeto_id: str, cliente_id: str, 
         sb.table("confrontantes").insert(novos).execute()
 
 
-@router.post("/projetos/{projeto_id}/magic-link", summary="Gerar link do formulário para o cliente")
-def gerar_magic_link(
+def gerar_magic_link_interno(
     projeto_id: str,
     cliente_id: str | None = None,
     projeto_cliente_id: str | None = None,
@@ -652,6 +722,7 @@ def gerar_magic_link(
         participante_base = garantir_participante_principal_projeto(sb, projeto_id, cliente_id=cliente_id or projeto.get("cliente_id"))
         participantes = listar_participantes_projeto(sb, projeto_id)
         participante_base = participante_base or _participante_base(participantes, projeto_cliente_id=projeto_cliente_id, cliente_id=cliente_id)
+    _validar_destino_magic_link(participante_base, canal=canal)
 
     participante = None
     token: str | None = None
@@ -728,9 +799,33 @@ def gerar_magic_link(
     }
 
 
+@router.post("/projetos/{projeto_id}/magic-link", summary="Gerar link do formulário para o cliente")
+@limiter.limit("10/minute")
+def gerar_magic_link(
+    request: Request,
+    projeto_id: str,
+    cliente_id: str | None = None,
+    projeto_cliente_id: str | None = None,
+    dias: int = 7,
+    canal: str = "whatsapp",
+    autor: str | None = None,
+    supabase=None,
+):
+    return gerar_magic_link_interno(
+        projeto_id,
+        cliente_id=cliente_id,
+        projeto_cliente_id=projeto_cliente_id,
+        dias=dias,
+        canal=canal,
+        autor=autor,
+        supabase=supabase,
+    )
+
+
 
 @router.post("/projetos/{projeto_id}/magic-links/lote", summary="Gerar magic links em lote por participante/lote")
-def gerar_magic_links_lote(projeto_id: str, payload: GerarMagicLinksLotePayload, supabase=None):
+@limiter.limit("3/minute")
+def gerar_magic_links_lote(request: Request, projeto_id: str, payload: GerarMagicLinksLotePayload, supabase=None):
     sb = supabase or _get_supabase()
     try:
         projeto = sb.table("vw_projetos_completo").select("id, projeto_nome").eq("id", projeto_id).single().execute().data
@@ -770,9 +865,26 @@ def gerar_magic_links_lote(projeto_id: str, payload: GerarMagicLinksLotePayload,
     if not selecionados:
         raise HTTPException(422, {"erro": "Nenhum participante elegível encontrado para geração em lote.", "codigo": 422})
 
+    falhas_destino = []
+    for participante in selecionados:
+        try:
+            _validar_destino_magic_link(participante, canal=payload.canal)
+        except HTTPException as exc:
+            falhas_destino.append(exc.detail)
+
+    if falhas_destino:
+        raise HTTPException(
+            422,
+            {
+                "erro": "Existem participantes sem destino válido para o canal escolhido.",
+                "codigo": 422,
+                "participantes": falhas_destino,
+            },
+        )
+
     links = []
     for participante in selecionados:
-        link = gerar_magic_link(
+        link = gerar_magic_link_interno(
             projeto_id,
             cliente_id=participante.get("cliente_id"),
             projeto_cliente_id=participante.get("id"),
@@ -799,13 +911,15 @@ def listar_historico_magic_links(projeto_id: str, projeto_cliente_id: str | None
 
 
 @router.get("/formulario/cliente/contexto", summary="Obter contexto do magic link")
-def contexto_formulario_cliente(token: str = Query(...)):
+@limiter.limit("60/minute")
+def contexto_formulario_cliente(request: Request, token: str = Query(...)):
     sb = _get_supabase()
     return _contexto_token(sb, token)
 
 
 @router.get("/formulario/cliente", response_class=HTMLResponse, summary="Formulário HTML para o cliente preencher")
-def formulario_cliente(token: str = Query(...)):
+@limiter.limit("60/minute")
+def formulario_cliente(request: Request, token: str = Query(...)):
     sb = _get_supabase()
     _contexto_token(sb, token)
     html_path = _arquivo_formulario_path()
@@ -817,6 +931,7 @@ def formulario_cliente(token: str = Query(...)):
 
 
 @router.post("/formulario/cliente", summary="Receber dados preenchidos pelo cliente")
+@limiter.limit("20/minute")
 async def receber_formulario(request: Request, token: str = Query(...), supabase=None):
     sb = supabase or _get_supabase()
     cliente, projeto_id, vinculo = _validar_token(sb, token)
@@ -959,7 +1074,8 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
 
 
 @router.post("/projetos/{projeto_id}/gerar-documentos", summary="Gerar ZIP com os 7 documentos GPRF", response_class=Response)
-def gerar_documentos(projeto_id: str, supabase=None):
+@limiter.limit("10/minute")
+def gerar_documentos(request: Request, projeto_id: str, supabase=None):
     from integracoes.gerador_documentos import gerar_todos_documentos
 
     sb = supabase or _get_supabase()
