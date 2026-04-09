@@ -127,6 +127,29 @@ def test_token_fora_do_vinculo_canonico_pede_novo_link(monkeypatch):
     assert excinfo.value.detail["codigo"] == 601
 
 
+def test_token_expirado_e_invalidado(monkeypatch):
+    invalidados = []
+
+    monkeypatch.setattr(documentos_mod, "obter_vinculo_por_token", lambda _sb, _token: {
+        "id": "pc-1",
+        "projeto_id": "proj-1",
+        "cliente_id": "cli-1",
+        "magic_link_expira": "2000-01-01T00:00:00+00:00",
+    })
+    monkeypatch.setattr(
+        documentos_mod,
+        "invalidar_magic_link_participante",
+        lambda _sb, **payload: invalidados.append(payload) or True,
+    )
+
+    with pytest.raises(HTTPException) as excinfo:
+        documentos_mod._validar_token(FakeSupabase(lambda _query: None), "token-expirado")
+
+    assert excinfo.value.status_code == 401
+    assert excinfo.value.detail["codigo"] == 602
+    assert invalidados[0]["projeto_cliente_id"] == "pc-1"
+
+
 def test_gerar_magic_link_participante_registra_evento(monkeypatch):
     eventos = []
 

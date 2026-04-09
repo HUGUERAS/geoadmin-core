@@ -219,3 +219,15 @@ def test_sincronizar_confrontantes_formulario_substitui_envio_anterior_do_mesmo_
     assert len(inserts) == 1
     assert len(inserts[0]) == 2
     assert all(item["origem"] == "formulario_cliente:cli-1" for item in inserts[0])
+
+
+def test_gerar_svg_croqui_seguro_usa_apenas_vertices():
+    svg = documentos_mod._gerar_svg_croqui_seguro([
+        {"lon": -49.0, "lat": -14.0},
+        {"lon": -49.0, "lat": -14.001},
+        {"lon": -48.999, "lat": -14.001},
+    ])
+
+    assert svg.startswith("<svg")
+    assert "<script" not in svg.lower()
+    assert "polyline" in svg

@@ -26,8 +26,18 @@ jobs:
             echo "EXPO_PUBLIC_API_BASE_URL secret is required for the production web build."
             exit 1
           fi
+          if [ -z "${VERCEL_ORG_ID}" ]; then
+            echo "VERCEL_ORG_ID repository variable is required."
+            exit 1
+          fi
+          if [ -z "${VERCEL_PROJECT_ID}" ]; then
+            echo "VERCEL_PROJECT_ID repository variable is required."
+            exit 1
+          fi
         env:
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
 
       - name: Build Expo web
         working-directory: mobile
@@ -47,5 +57,5 @@ jobs:
       - name: Deploy to Vercel
         run: npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_ORG_ID: team_oaCykP4pfWw7HegnYgYuGBE9
-          VERCEL_PROJECT_ID: prj_DKKk6gazT6StFTMYe5Bgvj1DwFYg
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}

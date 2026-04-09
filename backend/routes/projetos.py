@@ -26,7 +26,10 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from integracoes.arquivos_projeto import (
+    UploadValidationError,
+    detalhe_upload_invalido,
     exportar_arquivos_projeto_zip,
+    limite_upload_bytes,
     listar_arquivos_projeto,
     listar_eventos_cartograficos,
     migrar_arquivos_locais_para_storage,
@@ -230,6 +233,35 @@ class RevisoesConfrontacaoRequest(BaseModel):
 def _get_supabase():
     from main import get_supabase
     return get_supabase()
+
+
+async def _ler_upload_limitado(arquivo: UploadFile) -> bytes:
+    limite = limite_upload_bytes()
+    total = 0
+    partes: list[bytes] = []
+
+    while True:
+        bloco = await arquivo.read(1024 * 1024)
+        if not bloco:
+            break
+        total += len(bloco)
+        if total > limite:
+            raise UploadValidationError(
+                "Arquivo excede o limite permitido para upload.",
+                status_code=413,
+                codigo="upload_tamanho_excedido",
+                extras={"limite_bytes": limite, "tamanho_bytes": total},
+            )
+        partes.append(bloco)
+
+    if not partes:
+        raise UploadValidationError(
+            "Arquivo vazio.",
+            status_code=422,
+            codigo="upload_vazio",
+        )
+
+    return b"".join(partes)
 
 
 
@@ -1356,21 +1388,25 @@ async def enviar_arquivo_projeto(
 ):
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
-    conteudo = await arquivo.read()
-    if not conteudo:
-        raise HTTPException(status_code=422, detail={"erro": "Arquivo vazio", "codigo": 422})
+    try:
+        conteudo = await _ler_upload_limitado(arquivo)
+    except UploadValidationError as exc:
+        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
 
-    registro = salvar_arquivo_projeto(
-        sb,
-        projeto_id=projeto_id,
-        nome_arquivo=nome_arquivo or nome or arquivo.filename or "arquivo",
-        conteudo=conteudo,
-        origem=origem,
-        classificacao=classificacao,
-        cliente_id=cliente_id,
-        area_id=area_id,
-        mime_type=mime_type or arquivo.content_type,
-    )
+    try:
+        registro = salvar_arquivo_projeto(
+            sb,
+            projeto_id=projeto_id,
+            nome_arquivo=nome_arquivo or nome or arquivo.filename or "arquivo",
+            conteudo=conteudo,
+            origem=origem,
+            classificacao=classificacao,
+            cliente_id=cliente_id,
+            area_id=area_id,
+            mime_type=mime_type or arquivo.content_type,
+        )
+    except UploadValidationError as exc:
+        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
     return registro
 
 
@@ -1455,9 +1491,10 @@ async def importar_areas_arquivo(
 ):
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
-    conteudo = await arquivo.read()
-    if not conteudo:
-        raise HTTPException(status_code=422, detail={"erro": "Arquivo vazio", "codigo": 422})
+    try:
+        conteudo = await _ler_upload_limitado(arquivo)
+    except UploadValidationError as exc:
+        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
 
     formato_arquivo = (formato or (arquivo.filename or '').split('.')[-1]).lower()
     try:
@@ -1467,16 +1504,19 @@ async def importar_areas_arquivo(
 
     registro_arquivo = None
     if salvar_na_bandeja:
-        registro_arquivo = salvar_arquivo_projeto(
-            sb,
-            projeto_id=projeto_id,
-            nome_arquivo=arquivo.filename or f'importacao-lotes.{formato_arquivo}',
-            conteudo=conteudo,
-            origem='topografo',
-            classificacao='camada_auxiliar',
-            mime_type=arquivo.content_type,
-            autor=autor,
-        )
+        try:
+            registro_arquivo = salvar_arquivo_projeto(
+                sb,
+                projeto_id=projeto_id,
+                nome_arquivo=arquivo.filename or f'importacao-lotes.{formato_arquivo}',
+                conteudo=conteudo,
+                origem='topografo',
+                classificacao='camada_auxiliar',
+                mime_type=arquivo.content_type,
+                autor=autor,
+            )
+        except UploadValidationError as exc:
+            raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
 
     resultado = importar_areas_projeto_em_lote(
         projeto_id=projeto_id,

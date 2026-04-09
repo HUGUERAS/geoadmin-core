@@ -24,9 +24,16 @@ from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
 from integracoes.areas_projeto import anexar_arquivos_area, salvar_area_projeto
+from integracoes.arquivos_projeto import (
+    UploadValidationError,
+    detalhe_upload_invalido,
+    validar_lote_uploads,
+    validar_upload_formulario,
+)
 from integracoes.projeto_clientes import (
     garantir_participante_principal_projeto,
     gerar_magic_link_participante,
+    invalidar_magic_link_participante,
     listar_eventos_magic_link,
     listar_participantes_projeto,
     obter_vinculo_por_token,
@@ -82,7 +89,6 @@ class DadosFormulario(BaseModel):
     car: Optional[str] = ""
     observacoes: Optional[str] = ""
     croqui_coords: Optional[str] = ""
-    croqui_svg: Optional[str] = ""
 
 
 def _get_supabase():
@@ -324,6 +330,14 @@ def _validar_token(sb, token: str) -> tuple[dict[str, Any], str | None, dict[str
     if vinculo:
         expira = vinculo.get("magic_link_expira")
         if expira and datetime.fromisoformat(str(expira).replace("Z", "+00:00")) < datetime.now(timezone.utc):
+            try:
+                invalidar_magic_link_participante(
+                    sb,
+                    projeto_cliente_id=vinculo.get("id"),
+                    token=token,
+                )
+            except Exception as exc:
+                logger.warning("Falha ao invalidar magic link expirado: %s", exc)
             raise HTTPException(401, {"erro": "[ERRO-602] Link expirado. Solicite um novo link.", "codigo": 602})
 
         cliente_res = (
@@ -445,6 +459,51 @@ def _extensao_para_formato(filename: str | None) -> str | None:
     return None
 
 
+def _gerar_svg_croqui_seguro(vertices: list[dict[str, Any]]) -> str:
+    pontos: list[tuple[float, float]] = []
+    for item in vertices:
+        try:
+            pontos.append((float(item["lon"]), float(item["lat"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    if len(pontos) < 2:
+        return ""
+
+    lons = [lon for lon, _ in pontos]
+    lats = [lat for _, lat in pontos]
+    min_lon = min(lons)
+    max_lon = max(lons)
+    min_lat = min(lats)
+    max_lat = max(lats)
+    range_lon = max(max_lon - min_lon, 1e-9)
+    range_lat = max(max_lat - min_lat, 1e-9)
+
+    pontos_svg: list[str] = []
+    for lon, lat in pontos:
+        x = 5 + ((lon - min_lon) / range_lon) * 90
+        y = 95 - ((lat - min_lat) / range_lat) * 90
+        pontos_svg.append(f"{x:.2f},{y:.2f}")
+
+    if pontos_svg[0] != pontos_svg[-1]:
+        pontos_svg.append(pontos_svg[0])
+
+    circulos = []
+    for ponto in pontos_svg[:-1]:
+        x, y = ponto.split(",")
+        circulos.append(f'<circle cx="{x}" cy="{y}" r="1.5" fill="#B45309" />')
+
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" '
+        'preserveAspectRatio="xMidYMid meet">'
+        '<rect x="0" y="0" width="100" height="100" fill="#FFF7ED" />'
+        f'<polyline points="{" ".join(pontos_svg)}" fill="rgba(245,158,11,0.12)" '
+        'stroke="#B45309" stroke-width="1.8" stroke-linejoin="round" />'
+        f'{"".join(circulos)}'
+        '</svg>'
+    )
+
+
 async def _extrair_payload_request(request: Request) -> tuple[dict[str, Any], list[tuple[str, bytes, str | None]], tuple[str, bytes, str | None] | None]:
     content_type = request.headers.get("content-type", "")
     if "application/json" in content_type:
@@ -455,12 +514,20 @@ async def _extrair_payload_request(request: Request) -> tuple[dict[str, Any], li
     payload: dict[str, Any] = {}
     uploads: list[tuple[str, bytes, str | None]] = []
     geo_upload: tuple[str, bytes, str | None] | None = None
+    total_uploads = 0
+    total_bytes = 0
 
     for chave, valor in form.multi_items():
+        if chave == "croqui_svg":
+            continue
         if hasattr(valor, "filename"):
             conteudo = await valor.read()
             if not conteudo:
                 continue
+            validar_upload_formulario(valor.filename or chave, conteudo)
+            total_uploads += 1
+            total_bytes += len(conteudo)
+            validar_lote_uploads(total_arquivos=total_uploads, total_bytes=total_bytes)
             item = (valor.filename or chave, conteudo, getattr(valor, "content_type", None))
             if chave == "arquivo_geometria":
                 geo_upload = item
@@ -755,7 +822,10 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
     cliente, projeto_id, vinculo = _validar_token(sb, token)
     cliente_id = cliente["id"]
 
-    payload_raw, uploads, geo_upload = await _extrair_payload_request(request)
+    try:
+        payload_raw, uploads, geo_upload = await _extrair_payload_request(request)
+    except UploadValidationError as exc:
+        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
     try:
         dados = _normalizar_payload(payload_raw)
     except ValidationError as exc:
@@ -810,10 +880,14 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
         area_id=(vinculo or {}).get("area_id"),
     )
 
-    if dados.croqui_svg:
-        uploads.append(("croqui_cliente.svg", dados.croqui_svg.encode("utf-8"), "image/svg+xml"))
+    svg_seguro = _gerar_svg_croqui_seguro(vertices)
+    if svg_seguro:
+        uploads.append(("croqui_cliente.svg", svg_seguro.encode("utf-8"), "image/svg+xml"))
 
-    anexos = anexar_arquivos_area(area_id=area["id"], cliente_id=cliente_id, arquivos=uploads)
+    try:
+        anexos = anexar_arquivos_area(area_id=area["id"], cliente_id=cliente_id, arquivos=uploads)
+    except UploadValidationError as exc:
+        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
 
     if vinculo and vinculo.get("id") and not vinculo.get("area_id") and projeto_id:
         try:
@@ -851,6 +925,16 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
             )
         except Exception as exc:
             logger.warning("Falha ao registrar consumo do magic link: %s", exc)
+
+    if vinculo:
+        try:
+            invalidar_magic_link_participante(
+                sb,
+                projeto_cliente_id=vinculo.get("id"),
+                token=token,
+            )
+        except Exception as exc:
+            logger.warning("Falha ao invalidar magic link consumido: %s", exc)
 
     logger.info(
         "Formulario recebido do cliente %s — projeto=%s confrontantes=%s anexos=%s vertices=%s",

@@ -19,6 +19,38 @@ _seguranca = HTTPBearer(auto_error=False)
 
 # Endpoints que não exigem autenticação
 ROTAS_PUBLICAS = {"/health", "/docs", "/openapi.json", "/redoc"}
+AMBIENTES_PRODUCAO = {"prod", "production", "staging", "preview"}
+SINAIS_IMPLANTACAO = (
+    "K_SERVICE",
+    "K_REVISION",
+    "K_CONFIGURATION",
+    "CLOUD_RUN_JOB",
+    "CLOUD_RUN_EXECUTION",
+    "RAILWAY_ENVIRONMENT",
+    "VERCEL_ENV",
+)
+
+
+def _ambiente_producao() -> bool:
+    ambiente = (
+        os.getenv("APP_ENV")
+        or os.getenv("ENVIRONMENT")
+        or os.getenv("FASTAPI_ENV")
+        or ""
+    ).strip().lower()
+    if ambiente in AMBIENTES_PRODUCAO:
+        return True
+    return any((os.getenv(chave) or "").strip() for chave in SINAIS_IMPLANTACAO)
+
+
+def _auth_obrigatoria() -> bool:
+    auth_obrigatorio = os.getenv("AUTH_OBRIGATORIO", "true").lower() == "true"
+    if auth_obrigatorio:
+        return True
+    if _ambiente_producao():
+        logger.warning("AUTH_OBRIGATORIO=false ignorado em ambiente de implantação")
+        return True
+    return False
 
 
 async def verificar_token(
@@ -34,9 +66,8 @@ async def verificar_token(
     if request.url.path in ROTAS_PUBLICAS:
         return {"sub": "anonimo", "role": "anon"}
 
-    # Por PADRÃO (default = 'true'), a autenticação é OBRIGATÓRIA.
-    # Evita que contêineres e deployments subam expostos à internet.
-    auth_obrigatorio = os.getenv("AUTH_OBRIGATORIO", "true").lower() == "true"
+    # AUTH_OBRIGATORIO=false só é aceito fora de ambientes de implantação.
+    auth_obrigatorio = _auth_obrigatoria()
 
     if not credenciais:
         if not auth_obrigatorio:
