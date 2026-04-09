@@ -43,6 +43,16 @@ Depois:
 - web local: `.\scripts\start_web_gateway.ps1`
 - expo: `.\scripts\start_expo.ps1`
 
+## Validacao de deploy
+
+Antes de publicar, rode:
+
+```powershell
+python .\scripts\validate_deploy_config.py
+```
+
+Essa auditoria valida a configuracao ativa de `Cloud Run`, `Vercel` e `EAS`, e falha se encontrar residuos de infraestrutura antiga ou guards obrigatorios faltando.
+
 ## Escopo do núcleo
 
 Entra aqui:

@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate deploy configuration
+        run: python3 scripts/validate_deploy_config.py
+
       - name: Validate required GitHub configuration
         run: |
           required_vars=(

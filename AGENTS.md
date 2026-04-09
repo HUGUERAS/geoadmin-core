@@ -93,7 +93,7 @@ Rotas:
 
 **Rotas de cálculo** definidas em `backend/routes/geo.py` e registradas em `main.py`.
 
-**Deploy:** Railway — configurado via `backend/railway.json` e `backend/Procfile`
+**Deploy:** Cloud Run para a API e Vercel para a web, com `Supabase` como banco/storage
 
 **Variáveis de ambiente necessárias:**
 ```
