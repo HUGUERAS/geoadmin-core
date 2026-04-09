@@ -29,6 +29,7 @@ O documento principal de arquitetura do produto é:
 - [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
 - [HARDENING_MINIMO_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\HARDENING_MINIMO_CORE.md)
 - [PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md)
+- [CHECKLIST_DEPLOY_API_CLOUD_RUN.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_DEPLOY_API_CLOUD_RUN.md)
 
 ## Partida rápida local
 
