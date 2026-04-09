@@ -39,6 +39,7 @@ Ao final da migracao:
 
 ### Cloud Run
 
+- `PUBLIC_APP_URL`
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 - `SUPABASE_BUCKET_ARQUIVOS_PROJETO`
@@ -75,6 +76,7 @@ Escopo:
 - publicar no `Artifact Registry`
 - subir `Cloud Run`
 - configurar variaveis e segredos
+- configurar `PUBLIC_APP_URL` para os magic links
 - validar `/health`
 
 Responsavel sugerido:
@@ -175,6 +177,7 @@ Dependencias:
 ### Vercel / GitHub
 
 - garantir `VERCEL_TOKEN`
+- definir `PUBLIC_APP_URL` no backend com a URL pública do frontend
 - definir `EXPO_PUBLIC_API_BASE_URL` com a URL publica do `Cloud Run`
 - reexecutar workflow `Deploy Web (Vercel)`
 - confirmar que a web publicada nao carrega mais fallback para `Railway`
@@ -210,7 +213,7 @@ gcloud run deploy geoadmin-api `
   --region REGION `
   --platform managed `
   --allow-unauthenticated `
-  --set-env-vars SUPABASE_URL=...,SUPABASE_BUCKET_ARQUIVOS_PROJETO=arquivos-projeto,ALLOWED_ORIGINS=https://SEU-WEB.vercel.app,ALLOWED_HOSTS=localhost,127.0.0.1,*.run.app,EXPOSE_API_DOCS=false,DEBUG_ERRORS=false `
+  --set-env-vars SUPABASE_URL=...,SUPABASE_BUCKET_ARQUIVOS_PROJETO=arquivos-projeto,PUBLIC_APP_URL=https://SEU-WEB.vercel.app,ALLOWED_ORIGINS=https://SEU-WEB.vercel.app,ALLOWED_HOSTS=localhost,127.0.0.1,*.run.app,EXPOSE_API_DOCS=false,DEBUG_ERRORS=false `
   --set-secrets SUPABASE_KEY=SUPABASE_KEY:latest
 ```
 
@@ -220,4 +223,5 @@ gcloud run deploy geoadmin-api `
 - `GET /projetos` responde na web publicada
 - `GET /projetos/{id}` responde na web publicada
 - `preview APK` aponta para a mesma API
+- magic links do backend apontam para a web publica correta
 - nenhuma chamada de producao depende de `Railway`

@@ -5,6 +5,7 @@ param(
     [string]$ArtifactRegistryRepository = $env:GCP_ARTIFACT_REGISTRY_REPOSITORY,
     [string]$ServiceName = $env:CLOUD_RUN_SERVICE,
     [string]$RuntimeServiceAccount = $env:CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT,
+    [string]$PublicAppUrl = $env:PUBLIC_APP_URL,
     [string]$SupabaseUrl = $env:SUPABASE_URL,
     [string]$SupabaseKey = $env:SUPABASE_KEY,
     [string]$SupabaseBucket = $env:SUPABASE_BUCKET_ARQUIVOS_PROJETO,
@@ -78,6 +79,7 @@ Assert-RequiredValue -Name "Region" -Value $Region
 Assert-RequiredValue -Name "ArtifactRegistryRepository" -Value $ArtifactRegistryRepository
 Assert-RequiredValue -Name "ServiceName" -Value $ServiceName
 Assert-RequiredValue -Name "RuntimeServiceAccount" -Value $RuntimeServiceAccount
+Assert-RequiredValue -Name "PublicAppUrl" -Value $PublicAppUrl
 Assert-RequiredValue -Name "SupabaseUrl" -Value $SupabaseUrl
 Assert-RequiredValue -Name "SupabaseKey" -Value $SupabaseKey
 Assert-RequiredValue -Name "SupabaseBucket" -Value $SupabaseBucket
@@ -87,7 +89,7 @@ Assert-RequiredValue -Name "AllowedHosts" -Value $AllowedHosts
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendDir = Join-Path $repoRoot "backend"
 $imageUri = "{0}-docker.pkg.dev/{1}/{2}/{3}:latest" -f $Region, $ProjectId, $ArtifactRegistryRepository, $ServiceName
-$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
+$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##PUBLIC_APP_URL=$PublicAppUrl##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
 $secretFile = Join-Path ([System.IO.Path]::GetTempPath()) "geoadmin-supabase-key.txt"
 
 try {

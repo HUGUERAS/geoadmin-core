@@ -130,10 +130,18 @@ def main() -> int:
         ".github/workflows/deploy-api-cloud-run.yml",
         [
             "CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT",
+            "PUBLIC_APP_URL",
             "SUPABASE_URL",
             "ALLOWED_ORIGINS",
             "ALLOWED_HOSTS",
             "Smoke test /health",
+        ],
+    )
+    ensure_contains(
+        errors,
+        "backend/.env.example",
+        [
+            "PUBLIC_APP_URL=",
         ],
     )
     ensure_contains(

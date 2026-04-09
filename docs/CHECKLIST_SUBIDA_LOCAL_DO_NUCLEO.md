@@ -71,7 +71,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\start_web_gateway.ps1
 Usando backend remoto atual:
 
 ```powershell
-.\.venv\Scripts\python.exe .\scripts\dev_web_gateway.py --host 127.0.0.1 --port 8000 --upstream https://geoadmin-pro-production.up.railway.app
+.\.venv\Scripts\python.exe .\scripts\dev_web_gateway.py --host 127.0.0.1 --port 8000 --upstream https://SEU-SERVICO.run.app
 ```
 
 ## 7. Validar a web local
@@ -108,4 +108,4 @@ npm start
 
 - se o bootstrap acusar `Python 3.14`, trocar a versão do Python antes de seguir
 - se o backend não subir por credencial, revisar `backend/.env`
-- se a web abrir mas a API falhar, testar o gateway apontando explicitamente para o backend remoto
+- se a web abrir mas a API falhar, testar o gateway apontando explicitamente para o backend remoto oficial

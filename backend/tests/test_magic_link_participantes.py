@@ -287,3 +287,18 @@ def test_gerar_magic_links_lote_rejeita_participante_sem_destino(monkeypatch):
 
     assert excinfo.value.status_code == 422
     assert excinfo.value.detail["participantes"][0]["projeto_cliente_id"] == "pc-1"
+
+
+def test_resolver_app_url_exige_public_app_url_em_cloud_run(monkeypatch):
+    monkeypatch.delenv("APP_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_APP_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_BASE_URL", raising=False)
+    monkeypatch.delenv("RAILWAY_PUBLIC_DOMAIN", raising=False)
+    monkeypatch.delenv("VERCEL_URL", raising=False)
+    monkeypatch.setenv("K_SERVICE", "geoadmin-api")
+
+    with pytest.raises(HTTPException) as excinfo:
+        documentos_mod._resolver_app_url()
+
+    assert excinfo.value.status_code == 500
+    assert "PUBLIC_APP_URL" in excinfo.value.detail["erro"]

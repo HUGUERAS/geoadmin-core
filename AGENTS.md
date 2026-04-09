@@ -14,7 +14,8 @@
 ## Arquitetura
 - `GeoAdmin Core` é o repositório oficial do produto, e o banco oficial + storage oficial são a **fonte única de verdade** — não replicar dados em múltiplos sistemas
 - Credenciais **exclusivamente em `.env`** — nunca commitar
-- URL do backend via `mobile/constants/Api.ts` (`API_URL`) — dev aponta para IP local, prod para Railway
+- URL do backend via [mobile/lib/api.ts](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile\lib\api.ts) — fallbacks só no desenvolvimento local; builds publicados exigem `EXPO_PUBLIC_API_BASE_URL`
+- Arquitetura oficial de produção: `Vercel` para web, `Cloud Run` para API e `Supabase` para banco/auth/storage
 - `RAG Topografia` fica fora do escopo deste repositório por enquanto
 
 ## Governança de Segurança
@@ -99,6 +100,7 @@ Rotas:
 ```
 SUPABASE_URL=https://jrlrlsotwsiidglcbifo.supabase.co
 SUPABASE_KEY=<service_key>
+PUBLIC_APP_URL=https://SEU-FRONT.vercel.app
 ```
 
 ## Mobile (Expo)
@@ -140,7 +142,7 @@ Consequência direta: qualquer nova ferramenta deve ser projetada pensando em **
 
 **Componentes reutilizáveis:** `ProjetoCard`, `StatusBadge`, `FerramentaBtn`
 
-**Constantes:** `Colors.ts` (paleta dark), `Api.ts` (URL do backend)
+**Constantes:** `Colors.ts` (paleta dark), `mobile/lib/api.ts` (resolução da URL do backend)
 
 **EAS Build:**
 - Perfil `preview` → APK Android para instalação direta

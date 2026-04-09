@@ -44,9 +44,9 @@ Inferência operacional:
 - [backend/main.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\main.py)
 - [backend/requirements.txt](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\requirements.txt)
 - [backend/.env.example](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\.env.example)
+- [backend/Dockerfile](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\Dockerfile)
+- [backend/.gcloudignore](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\.gcloudignore)
 - `backend/.env` local, não versionado
-- [backend/Procfile](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\Procfile)
-- [backend/railway.json](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\railway.json)
 
 ### Mobile / Web
 
@@ -73,12 +73,18 @@ Inferência operacional:
 
 ## Linha oficial atual
 
-Enquanto o `GeoAdmin Core` ainda não tem seu próprio backend publicado:
+Linha oficial de produção:
+
+- `Vercel` para a web publicada
+- `Cloud Run` para a API publicada
+- `Supabase` como banco, auth e storage oficiais
+
+No desenvolvimento local:
 
 - o backend local usa o `Supabase` oficial configurado em `backend/.env`
 - a web local pode apontar para:
   - backend local em `http://127.0.0.1:8001`
-  - ou backend remoto atual do Railway, de forma explícita
+  - ou backend remoto oficial, de forma explícita
 
 ## Restrições atuais conhecidas
 
