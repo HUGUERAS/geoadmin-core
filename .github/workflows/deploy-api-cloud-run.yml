@@ -14,6 +14,7 @@ jobs:
       GCP_REGION: ${{ vars.GCP_REGION }}
       GCP_ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.GCP_ARTIFACT_REGISTRY_REPOSITORY }}
       CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT: ${{ vars.CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT }}
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_BUCKET_ARQUIVOS_PROJETO: ${{ vars.SUPABASE_BUCKET_ARQUIVOS_PROJETO }}
       ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
@@ -30,6 +31,7 @@ jobs:
             GCP_REGION
             GCP_ARTIFACT_REGISTRY_REPOSITORY
             CLOUD_RUN_SERVICE
+            CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT
             SUPABASE_URL
             SUPABASE_BUCKET_ARQUIVOS_PROJETO
             ALLOWED_ORIGINS
@@ -88,6 +90,10 @@ jobs:
           gcloud secrets versions add SUPABASE_KEY \
             --data-file=supabase-key.txt \
             --project "$GCP_PROJECT_ID"
+          gcloud secrets add-iam-policy-binding SUPABASE_KEY \
+            --member="serviceAccount:${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}" \
+            --role="roles/secretmanager.secretAccessor" \
+            --project "$GCP_PROJECT_ID"
           rm -f supabase-key.txt
         env:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -109,6 +115,7 @@ jobs:
             --project "${GCP_PROJECT_ID}" \
             --platform managed \
             --allow-unauthenticated \
+            --service-account "${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}" \
             --min-instances "${CLOUD_RUN_MIN_INSTANCES}" \
             --max-instances "${CLOUD_RUN_MAX_INSTANCES}" \
             --set-env-vars "${ENV_VARS}" \
