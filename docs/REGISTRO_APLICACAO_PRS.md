@@ -82,11 +82,57 @@ Resolver erro 500 na rota de detalhe do projeto e estabilizar o roteamento web l
 
 ---
 
+## PR #3 — Add Cloud Run deployment automation
+
+- **Branch origem:** `codex/cloud-run-api-automation`
+- **Metodo:** Cherry-pick de 3 commits (`cae020e`, `9e311d1`, `7a6773c`) sobre o branch acumulado
+- **Commits locais:** `43e237b`, `0ae3aaa`, `2c5fe7a`
+- **Data de aplicacao:** 2026-04-09
+- **Conflito resolvido:** README.md (links Windows vs relativos — mantidos relativos, adicionado checklist)
+
+### Motivacao
+
+Automatizar o deploy da API no Google Cloud Run com workflow GitHub Actions manual e script PowerShell local.
+
+### Arquivos introduzidos/modificados
+
+| Arquivo | Tipo | Descricao |
+|---|---|---|
+| `.github/workflows/deploy-api-cloud-run.yml` | Novo | Workflow manual: build Docker, push Artifact Registry, deploy Cloud Run, smoke test /health |
+| `backend/.gcloudignore` | Novo | Exclui .env, .venv, tests, uploads do contexto Cloud Build |
+| `scripts/deploy_api_cloud_run.ps1` | Novo | Script PowerShell local com -WhatIf, healthcheck, Secret Manager |
+| `docs/CHECKLIST_DEPLOY_API_CLOUD_RUN.md` | Novo | Checklist operacional com vars, secrets, permissoes e validacao |
+| `README.md` | Modificado | Adicionado link para checklist Cloud Run |
+
+### Detalhes tecnicos
+
+**Workflow deploy-api-cloud-run.yml:**
+- Trigger manual (workflow_dispatch)
+- Workload Identity Federation (sem chave de servico)
+- Upsert SUPABASE_KEY no Secret Manager + bind IAM na runtime SA
+- Build via Cloud Build, deploy via gcloud run deploy
+- Smoke test /health com 5 retries
+- Summary no GitHub com URL do servico
+
+**Script deploy_api_cloud_run.ps1:**
+- Suporte a -WhatIf (dry-run)
+- Mesma logica do workflow mas para execucao local via gcloud
+- Cleanup do arquivo temporario de secret
+
+### Validacao
+
+- Arquivos presentes e consistentes
+- Links corrigidos para caminhos relativos
+- README sem conflitos
+
+---
+
 ## Proxima aplicacao pendente
 
-### PR #3 — Add Cloud Run deployment automation
+### PR #4 — fix: harden auth uploads and magic links
 
-- **Branch:** `codex/cloud-run-api-automation`
-- **Base:** `codex/cloud-run-cutover-foundation` (branch do PR #1)
-- **Status:** Aguardando aplicacao
-- **Conteudo esperado:** Workflow GitHub Actions para deploy Cloud Run, script PowerShell local, .gcloudignore, checklist operacional
+- **Branch:** `codex/security-critical-hardening`
+- **Base:** `codex/cloud-run-api-automation` (branch do PR #3)
+- **Commit:** `b5b90a1`
+- **Status:** Draft, aguardando aplicacao
+- **Conteudo:** Pacote critico de seguranca (SEC-01 a SEC-07, EST-01, CORS)
