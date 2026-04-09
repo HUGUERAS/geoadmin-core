@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoAdmin Pro - Pack de Telas Modelo</title>
+  <style>
+    :root {
+      --bg: #07131b;
+      --surface: #0d1e29;
+      --surface-2: #112432;
+      --line: #183445;
+      --line-strong: #24506a;
+      --text: #f3fbf7;
+      --muted: #8fa4b2;
+      --primary: #28c76f;
+      --primary-ink: #04110a;
+      --info: #38bdf8;
+      --warning: #fbbf24;
+      --purple: #7c6cf2;
+      --danger: #ef4444;
+      --shadow: 0 30px 100px rgba(0, 0, 0, 0.35);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 25%),
+        radial-gradient(circle at top right, rgba(40, 199, 111, 0.1), transparent 25%),
+        linear-gradient(180deg, #07131b 0%, #0a1822 100%);
+      color: var(--text);
+      font-family: "Aptos", "Segoe UI", sans-serif;
+    }
+
+    body {
+      padding: 28px;
+    }
+
+    .page {
+      display: grid;
+      gap: 28px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 14px;
+      max-width: 980px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.24);
+      background: rgba(13, 30, 41, 0.72);
+      color: var(--info);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-family: "Bahnschrift", "Aptos", sans-serif;
+      font-size: clamp(36px, 5vw, 68px);
+      line-height: 0.97;
+      letter-spacing: -0.05em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 17px;
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+    }
+
+    .panel {
+      border: 1px solid rgba(36, 80, 106, 0.72);
+      border-radius: var(--radius-xl);
+      background: rgba(13, 30, 41, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .panel-body {
+      padding: 24px;
+    }
+
+    .panel h2,
+    .panel h3,
+    .screen-header h3 {
+      margin: 0;
+      font-family: "Bahnschrift", "Aptos", sans-serif;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-copy {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .tag-row,
+    .mini-grid,
+    .toolbar,
+    .tab-row,
+    .list-row,
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag,
+    .pill,
+    .ghost,
+    .primary {
+      border: 0;
+      border-radius: 999px;
+      font: inherit;
+    }
+
+    .tag,
+    .pill,
+    .ghost {
+      padding: 8px 12px;
+    }
+
+    .tag {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--info);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .pill {
+      background: rgba(40, 199, 111, 0.1);
+      color: #bdf6d3;
+      border: 1px solid rgba(40, 199, 111, 0.24);
+    }
+
+    .ghost {
+      background: rgba(7, 19, 27, 0.72);
+      color: var(--muted);
+      border: 1px solid rgba(24, 52, 69, 0.9);
+    }
+
+    .primary {
+      padding: 11px 16px;
+      background: var(--primary);
+      color: var(--primary-ink);
+      font-weight: 700;
+      border-radius: 14px;
+    }
+
+    .mini-card {
+      flex: 1 1 180px;
+      min-width: 180px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(7, 19, 27, 0.66);
+      border: 1px solid rgba(24, 52, 69, 0.92);
+    }
+
+    .mini-card strong,
+    .mini-card span {
+      display: block;
+    }
+
+    .mini-card strong {
+      margin-bottom: 8px;
+      font-size: 24px;
+      letter-spacing: -0.03em;
+    }
+
+    .mini-card span {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .screen-pack {
+      display: grid;
+      gap: 28px;
+    }
+
+    .screen-card {
+      border: 1px solid rgba(36, 80, 106, 0.72);
+      border-radius: 36px;
+      overflow: hidden;
+      background: rgba(13, 30, 41, 0.95);
+      box-shadow: var(--shadow);
+    }
+
+    .screen-headline {
+      display: grid;
+      gap: 10px;
+      padding: 24px 28px;
+      border-bottom: 1px solid rgba(24, 52, 69, 0.95);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.06), rgba(13, 30, 41, 0.4));
+    }
+
+    .screen-kicker {
+      color: var(--info);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-headline p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 860px;
+      line-height: 1.7;
+    }
+
+    .screen-body {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .shell {
+      border: 1px solid rgba(24, 52, 69, 0.92);
+      border-radius: 28px;
+      background: linear-gradient(180deg, #0a1720 0%, #0d1e29 100%);
+      overflow: hidden;
+    }
+
+    .shell-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(24, 52, 69, 0.95);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .shell-main {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .section {
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      background: rgba(7, 19, 27, 0.6);
+    }
+
+    .section h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .section p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 0.8fr 1fr;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(13, 30, 41, 0.9);
+      border: 1px solid rgba(24, 52, 69, 0.9);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-row strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .stack-col {
+      display: grid;
+      gap: 16px;
+    }
+
+    .signal-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(7, 19, 27, 0.72);
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      display: grid;
+      gap: 10px;
+    }
+
+    .signal-card strong {
+      font-size: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .signal-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .signal-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .signal-badge {
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      color: var(--text);
+      background: rgba(13, 30, 41, 0.92);
+    }
+
+    .signal-badge.warning {
+      color: #fce7a8;
+      border-color: rgba(251, 191, 36, 0.28);
+      background: rgba(251, 191, 36, 0.1);
+    }
+
+    .signal-badge.danger {
+      color: #fecaca;
+      border-color: rgba(239, 68, 68, 0.28);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .signal-badge.info {
+      color: #bce9ff;
+      border-color: rgba(56, 189, 248, 0.28);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .section-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .map-box {
+      min-height: 320px;
+      border-radius: 24px;
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      background:
+        linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 30%),
+        linear-gradient(180deg, rgba(124, 108, 242, 0.08), transparent 35%),
+        rgba(8, 20, 30, 0.96);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-box::before,
+    .map-box::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+
+    .map-box::before {
+      background-image:
+        linear-gradient(rgba(143, 164, 178, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(143, 164, 178, 0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .map-box::after {
+      clip-path: polygon(14% 28%, 42% 18%, 72% 32%, 84% 64%, 54% 84%, 24% 72%);
+      background: rgba(40, 199, 111, 0.16);
+      border: 2px solid rgba(40, 199, 111, 0.6);
+      inset: 18px;
+    }
+
+    .cad-stage {
+      min-height: 360px;
+      border-radius: 24px;
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08), transparent 20%),
+        linear-gradient(180deg, rgba(124, 108, 242, 0.08), transparent 25%),
+        rgba(8, 20, 30, 0.97);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cad-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(143, 164, 178, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(143, 164, 178, 0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .cad-stage::after {
+      content: "";
+      position: absolute;
+      inset: 28px;
+      clip-path: polygon(10% 24%, 36% 14%, 73% 28%, 82% 58%, 64% 82%, 22% 76%);
+      border: 2px solid rgba(40, 199, 111, 0.7);
+      background: rgba(40, 199, 111, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.18);
+    }
+
+    .note {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(251, 191, 36, 0.28);
+      background: rgba(251, 191, 36, 0.08);
+      color: #fce7a8;
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .decision-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(7, 19, 27, 0.6);
+      border: 1px solid rgba(24, 52, 69, 0.94);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .decision-item strong {
+      color: var(--text);
+    }
+
+    @media (max-width: 1100px) {
+      .intro-grid,
+      .split,
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .table-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero h1 {
+        font-size: 38px;
+      }
+
+      .screen-headline,
+      .screen-body,
+      .panel-body {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <span class="eyebrow">GeoAdmin Pro . Pack de telas modelo</span>
+      <h1>Telas para discutir o modelo real que o produto precisa atender.</h1>
+      <p>
+        Este arquivo abandona o tom mais conceitual do primeiro prototipo e tenta mostrar um modelo
+        operacional mais fiel ao trabalho de dossie fundiario, gestao documental, camadas cartograficas
+        e exportacao tecnica.
+      </p>
+    </header>
+
+    <section class="intro-grid">
+      <article class="panel">
+        <div class="panel-body">
+          <h2>O que mudou neste pack</h2>
+          <p class="panel-copy">
+            Aqui as telas ja partem da premissa de que o produto final nao e "so projeto + mapa", e sim
+            um sistema de projeto, cliente, processo, areas, confrontacoes, documentos, cadastros oficiais
+            e exportacao tecnica.
+          </p>
+          <div class="decision-list">
+            <div class="decision-item"><strong>Central de Projetos:</strong> entrada operacional com fila, risco e proximos passos.</div>
+            <div class="decision-item"><strong>Dossie do Projeto:</strong> painel unico para projeto, clientes, areas, documentos e protocolo.</div>
+            <div class="decision-item"><strong>Workspace Geoespacial:</strong> um unico ambiente com CAD, satelite, camadas e comparacao.</div>
+            <div class="decision-item"><strong>Cliente & Representacao:</strong> voltado a proponentes, representantes, magic link e anexos.</div>
+            <div class="decision-item"><strong>Documentos & Protocolos:</strong> pensado para entrega real, nao so para download pontual.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-body">
+          <h3>Como usar esta rodada</h3>
+          <p class="panel-copy">
+            O objetivo aqui e voce olhar tela por tela e dizer: "isso se aproxima" ou "isso ainda nao serve".
+            A partir da sua critica, a gente ajusta o modelo antes de virar implementacao.
+          </p>
+          <div class="tag-row" style="margin-top: 16px;">
+            <span class="tag">Projetos</span>
+            <span class="tag">Dossie</span>
+            <span class="tag">Clientes</span>
+            <span class="tag">Areas</span>
+            <span class="tag">Documentos</span>
+            <span class="tag">FreeCAD</span>
+          </div>
+          <div class="mini-grid" style="margin-top: 18px;">
+            <div class="mini-card">
+              <strong>12</strong>
+              <span>Telas-base para discutir o modelo</span>
+            </div>
+            <div class="mini-card">
+              <strong>3</strong>
+              <span>Niveis de leitura: operacional, documental e tecnico</span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="screen-pack">
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 01 . Central de projetos</span>
+          <h3>Entrada do escritorio com prioridade, bloqueio e proximo passo de cada dossie.</h3>
+          <p>
+            Em vez de listar projetos apenas por status, a tela precisa funcionar como cabine de operacao:
+            o que vence hoje, o que esta travado, quem depende de cliente e quais processos pedem decisao agora.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>GeoAdmin Pro . Central operacional</span>
+              <span>Fila do dia . Dossies . Protocolos</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Novo projeto</button>
+                <span class="pill">12 aguardando cliente</span>
+                <span class="pill">07 com protocolo pendente</span>
+                <span class="pill">05 notificacoes sem resposta</span>
+                <span class="ghost">filtro: ETR</span>
+                <span class="ghost">filtro: SEAPA</span>
+                <span class="ghost">filtro: SIGEF</span>
+              </div>
+
+              <div class="mini-grid">
+                <div class="mini-card"><strong>48</strong><span>Projetos ativos</span></div>
+                <div class="mini-card"><strong>09</strong><span>Em medicao e captura</span></div>
+                <div class="mini-card"><strong>05</strong><span>Notificacoes em resposta</span></div>
+                <div class="mini-card"><strong>16</strong><span>Documentos esperando conferencia</span></div>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="stack-col">
+                  <div class="section">
+                    <h4>Fila decisiva do dia</h4>
+                    <p class="section-subtitle">Projetos que pedem acao concreta do escritorio antes de qualquer outra coisa.</p>
+                    <div class="table" style="margin-top: 14px;">
+                      <div class="table-row">
+                        <strong>Fazenda Veadeiros</strong>
+                        <span>SEAPA + SNCR</span>
+                        <span>3 clientes</span>
+                        <span>gerar procuracao, cobrar assinatura e conferir CCIR</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Rua 01 - Chacara 30</strong>
+                        <span>ETR</span>
+                        <span>notificacao</span>
+                        <span>anexar resposta, revisar PU e protocolar oficio</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Gleba 10 Passaros</strong>
+                        <span>SIGEF</span>
+                        <span>planta final</span>
+                        <span>revisar confronto, emitir memorial e fechar prancha</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Maria de Fatima</strong>
+                        <span>SEAPA</span>
+                        <span>cadastro oficial</span>
+                        <span>cruzar CAR, demonstrativo e declaracao de imovel rural</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Fila por bloqueio</h4>
+                    <p class="section-subtitle">Leitura transversal para entender por que a esteira esta travando.</p>
+                    <div class="mini-grid" style="margin-top: 14px;">
+                      <div class="mini-card"><strong>12</strong><span>Dependem de retorno do cliente</span></div>
+                      <div class="mini-card"><strong>7</strong><span>Dependem de protocolo ou comprovante</span></div>
+                      <div class="mini-card"><strong>6</strong><span>Dependem de revisao tecnica</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stack-col">
+                  <div class="section">
+                    <h4>Hoje no escritorio</h4>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>08:30:</strong> emitir memoriais de dois projetos prontos</div>
+                      <div class="decision-item"><strong>10:00:</strong> revisar notificacao ETR n 123/2026</div>
+                      <div class="decision-item"><strong>14:00:</strong> cobrar 4 magic links sem resposta</div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Alertas quentes</h4>
+                    <div class="stack-col" style="margin-top: 14px;">
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Notificacoes sem resposta</strong>
+                          <span class="signal-badge danger">critico</span>
+                        </div>
+                        <p>5 dossies com prazo correndo e sem documento final anexado.</p>
+                      </div>
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Procurações pendentes</strong>
+                          <span class="signal-badge warning">alto</span>
+                        </div>
+                        <p>8 projetos travados por assinatura externa ou procurador sem cadastro completo.</p>
+                      </div>
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Pacotes prontos para emitir</strong>
+                          <span class="signal-badge info">oportunidade</span>
+                        </div>
+                        <p>3 projetos ja podem virar memorial PDF e pacote tecnico hoje.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Protocolos recentes</h4>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>SEAPA:</strong> requerimento da Fazenda Veadeiros protocolado ontem</div>
+                      <div class="decision-item"><strong>CAR:</strong> demonstrativo anexado no projeto Maria de Fatima</div>
+                      <div class="decision-item"><strong>ETR:</strong> resposta em rascunho aguardando revisao interna</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-row">
+                <span class="tag">Fila do dia</span>
+                <span class="ghost">Dossies em risco</span>
+                <span class="ghost">Aguardando cliente</span>
+                <span class="ghost">Protocolos</span>
+                <span class="ghost">Prontos para emitir</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta versao empurra a tela para um papel mais forte: ela deixa de ser uma lista de projetos e passa
+            a ser um quadro de comando do escritorio, com leitura de prazo, bloqueio e decisao operacional.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 02 . Dossie do projeto</span>
+          <h3>O centro do caso: identidade, processo, pessoas, cadastros e proximos atos.</h3>
+          <p>
+            O projeto passa a ser visto como dossie real. Aqui precisam caber a leitura do caso, a fase
+            administrativa, os documentos criticos, os cadastros oficiais, quem esta travando o fluxo e qual
+            e o proximo ato que o escritorio precisa executar.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Dossie . Fazenda Veadeiros</span>
+              <span>fase: resposta a notificacao</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Abrir esteira documental</button>
+                <span class="pill">2 confrontacoes pendentes</span>
+                <span class="pill">1 notificacao aberta</span>
+                <span class="ghost">magic link ativo</span>
+                <span class="ghost">ultimo sync: hoje 08:14</span>
+              </div>
+
+              <div class="section">
+                <h4>Escopo de acesso</h4>
+                <p class="section-subtitle">Esta tela e exclusiva para a operacao interna. O cliente nunca acessa este dossie completo.</p>
+                <div class="tag-row" style="margin-top: 14px;">
+                  <span class="tag">uso interno</span>
+                  <span class="ghost">topografo</span>
+                  <span class="ghost">escritorio</span>
+                  <span class="ghost">responsavel tecnico</span>
+                  <span class="ghost">cliente nao acessa</span>
+                </div>
+              </div>
+
+              <div class="tab-row">
+                <span class="tag">Visao</span>
+                <span class="ghost">Areas</span>
+                <span class="ghost">Clientes</span>
+                <span class="ghost">Confrontacoes</span>
+                <span class="ghost">Documentos</span>
+                <span class="ghost">Protocolos</span>
+                <span class="ghost">Exportacao</span>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="stack-col">
+                  <div class="section">
+                    <h4>Identidade do dossie</h4>
+                    <p class="section-subtitle">Abertura rapida do caso para qualquer pessoa do escritorio entender do que se trata.</p>
+                    <div class="mini-grid" style="margin-top: 14px;">
+                      <div class="mini-card"><strong>SEAPA</strong><span>orgao principal</span></div>
+                      <div class="mini-card"><strong>3</strong><span>proponentes</span></div>
+                      <div class="mini-card"><strong>4</strong><span>areas vinculadas</span></div>
+                      <div class="mini-card"><strong>18</strong><span>documentos ativos</span></div>
+                    </div>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>Imovel:</strong> Fazenda Veadeiros, zona rural, Pirenopolis - GO</div>
+                      <div class="decision-item"><strong>Matricula / CNS:</strong> 12.345 . CNS 00.000-0</div>
+                      <div class="decision-item"><strong>Objeto:</strong> regularizacao fundiaria com apoio SNCR e atualizacao documental</div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Situacao processual</h4>
+                    <p class="section-subtitle">Leitura de fase, prazo e responsabilidade operacional.</p>
+                    <div class="table" style="margin-top: 14px;">
+                      <div class="table-row">
+                        <strong>Fase atual</strong>
+                        <span>resposta a notificacao</span>
+                        <span>critica</span>
+                        <span>prazo estimado: 4 dias uteis</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Ultimo protocolo</strong>
+                        <span>SEAPA</span>
+                        <span>ontem</span>
+                        <span>requerimento inicial registrado</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Responsavel interno</strong>
+                        <span>escritorio</span>
+                        <span>Hugo</span>
+                        <span>aguardando revisao documental</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Proximos atos</h4>
+                    <p class="section-subtitle">O que precisa acontecer para o dossie seguir sem ambiguidade.</p>
+                    <div class="table" style="margin-top: 14px;">
+                      <div class="table-row">
+                        <strong>Cliente principal</strong>
+                        <span>documentacao</span>
+                        <span>alta prioridade</span>
+                        <span>reenviar link e cobrar procuracao assinada</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Resposta a notificacao</strong>
+                        <span>processo</span>
+                        <span>alta prioridade</span>
+                        <span>anexar oficio, declaracao e comprovante relacionado</span>
+                      </div>
+                      <div class="table-row">
+                        <strong>Reserva legal</strong>
+                        <span>cartografia</span>
+                        <span>media</span>
+                        <span>validar camada antes da prancha final</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stack-col">
+                  <div class="section">
+                    <h4>Cadastros oficiais</h4>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>CAR:</strong> ativo . demonstrativo anexado . sem conflito aparente</div>
+                      <div class="decision-item"><strong>CCIR:</strong> vigente . conferir area declarada versus area tecnica</div>
+                      <div class="decision-item"><strong>SNCR:</strong> procuracao pendente de assinatura</div>
+                      <div class="decision-item"><strong>SIGEF:</strong> nao aplicavel nesta etapa</div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Pessoas-chave</h4>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>Proponente principal:</strong> Maria de Fatima</div>
+                      <div class="decision-item"><strong>Procurador:</strong> aguardando documento assinado</div>
+                      <div class="decision-item"><strong>Confrontantes:</strong> 2 aguardando carta ou confirmacao</div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Alertas do dossie</h4>
+                    <div class="stack-col" style="margin-top: 14px;">
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Documento travando o fluxo</strong>
+                          <span class="signal-badge danger">critico</span>
+                        </div>
+                        <p>Procuração DCR/SNCR ainda nao assinada, impedindo fechamento da etapa administrativa.</p>
+                      </div>
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Confrontacao pendente</strong>
+                          <span class="signal-badge warning">alto</span>
+                        </div>
+                        <p>Uma carta ainda precisa ser gerada e outra depende de retorno do confrontante.</p>
+                      </div>
+                      <div class="signal-card">
+                        <div class="signal-row">
+                          <strong>Pacote quase pronto</strong>
+                          <span class="signal-badge info">oportunidade</span>
+                        </div>
+                        <p>Se a procuracao entrar hoje, o memorial e o pacote tecnico podem sair no mesmo dia.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta versao deixa mais explicito que o dossie do projeto nao e um detalhe com atalhos. Ele e o
+            centro do caso: leitura do processo, quem esta envolvido, o que esta bloqueando o fluxo e qual
+            acao o escritorio precisa executar em seguida.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 03 . Workspace geoespacial</span>
+          <h3>Um unico ambiente para CAD, satelite, camadas e comparacao de referencias.</h3>
+          <p>
+            Em vez de duas telas de mapa, o produto pode trabalhar com um workspace unico: alterna entre
+            `CAD` e `Satelite`, abre um sidebar hamburger para camadas e ferramentas, e mantem toda a
+            decisao geometrica no mesmo contexto.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Workspace geoespacial</span>
+              <span>projeto: Rua 01 - Chacara 30</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Salvar nova versao</button>
+                <span class="pill">modo: CAD</span>
+                <span class="ghost">alternar para satelite</span>
+                <span class="ghost">sidebar hamburger</span>
+                <span class="ghost">comparativo ligado</span>
+              </div>
+
+              <div class="split">
+                <div class="cad-stage"></div>
+                <div class="stack-col">
+                  <div class="section">
+                    <h4>Sidebar de camadas e contexto</h4>
+                    <div class="decision-list">
+                      <div class="decision-item"><strong>Perimetro oficial:</strong> visivel e editavel</div>
+                      <div class="decision-item"><strong>Referencia do cliente:</strong> ligada para comparacao</div>
+                      <div class="decision-item"><strong>Reserva legal:</strong> visivel, bloqueada nesta sessao</div>
+                      <div class="decision-item"><strong>Benfeitorias:</strong> ocultas</div>
+                    </div>
+                  </div>
+
+                  <div class="section">
+                    <h4>Ferramentas do hamburger</h4>
+                    <div class="tag-row" style="margin-top: 14px;">
+                      <span class="tag">mover vertice</span>
+                      <span class="tag">inserir ponto</span>
+                      <span class="tag">apagar vertice</span>
+                      <span class="ghost">intersecao</span>
+                      <span class="ghost">irradiacao</span>
+                      <span class="ghost">rotacao</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Painel geometrico</h4>
+                  <div class="table" style="margin-top: 14px;">
+                    <div class="table-row">
+                      <strong>Area principal</strong>
+                      <span>12,54 ha</span>
+                      <span>perimetro oficial</span>
+                      <span>pronta para planta e memorial</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Reserva legal</strong>
+                      <span>2,10 ha</span>
+                      <span>camada tematica</span>
+                      <span>conferir compatibilidade com CAR</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Comparativo cliente</strong>
+                      <span>referencia</span>
+                      <span>apenas apoio visual</span>
+                      <span>nao substitui o perimetro tecnico</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h4>Acoes do topografo</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Salvar versao:</strong> persistir a geometria editada</div>
+                    <div class="decision-item"><strong>Alternar modo:</strong> CAD para edicao, satelite para validacao visual</div>
+                    <div class="decision-item"><strong>Mandar para o dossie:</strong> liberar geometria para prancha e memorial</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta versao assume a decisao que voce sugeriu: um unico ambiente de mapa e melhor do que duas paginas.
+            O operador alterna `CAD / Satelite` dentro da mesma tela e usa um sidebar hamburger para contexto e ferramentas.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 04 . Cliente e representacao</span>
+          <h3>Uma tela para pessoas, papeis, documentos sensiveis e relacionamento com o projeto.</h3>
+          <p>
+            Aqui o foco nao e so "cliente". E proponente, representante, procurador, confrontante e o estado
+            real da documentacao que cada pessoa precisa entregar.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Cliente . Bruno de Souza</span>
+              <span>2 projetos vinculados</span>
+            </div>
+            <div class="shell-main">
+              <div class="split">
+                <div class="section">
+                  <h4>Identificacao</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>CPF:</strong> cadastrado e validado</div>
+                    <div class="decision-item"><strong>Endereco:</strong> confirmado pelo formulario</div>
+                    <div class="decision-item"><strong>Papel atual:</strong> coproponente</div>
+                    <div class="decision-item"><strong>Relacionamento:</strong> possui procurador vinculado</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Status documental</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Magic link:</strong> enviado ha 2 dias</div>
+                    <div class="decision-item"><strong>Procuração:</strong> pendente assinatura</div>
+                    <div class="decision-item"><strong>RG/CPF:</strong> anexados</div>
+                    <div class="decision-item"><strong>Timeline:</strong> ultima interacao via WhatsApp</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h4>Projetos vinculados</h4>
+                <div class="table">
+                  <div class="table-row">
+                    <strong>Fazenda Veadeiros</strong>
+                    <span>SEAPA + SNCR</span>
+                    <span>papel: coproponente</span>
+                    <span>acao: reenviar link e abrir projeto</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Rua 01 - Chacara 30</strong>
+                    <span>ETR</span>
+                    <span>papel: confrontante</span>
+                    <span>acao: revisar declaracao de limites</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar">
+                <button class="primary">Salvar cadastro</button>
+                <span class="ghost">Reenviar magic link</span>
+                <span class="ghost">Abrir projeto</span>
+                <span class="ghost">Ver no mapa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            A principal mudanca aqui e tratar gente de forma mais rica: uma mesma pessoa pode ocupar mais de um
+            papel em projetos diferentes, e isso precisa ficar claro na tela.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 05 . Documentos e protocolos</span>
+          <h3>Uma esteira documental de verdade, nao so um botao de gerar arquivos.</h3>
+          <p>
+            A entrega real de voces parece muito mais um dossie protocolavel. Entao esta tela organiza pecas,
+            pendencias, recibos, comprovantes e historico de emissao.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Documentos . Protocolo . Recibos</span>
+              <span>projeto: Gleba 10 Passaros</span>
+            </div>
+            <div class="shell-main">
+              <div class="mini-grid">
+                <div class="mini-card"><strong>18</strong><span>pecas no dossie</span></div>
+                <div class="mini-card"><strong>05</strong><span>pendencias criticas</span></div>
+                <div class="mini-card"><strong>03</strong><span>protocolos registrados</span></div>
+              </div>
+
+              <div class="section">
+                <h4>Checklist documental</h4>
+                <div class="table">
+                  <div class="table-row">
+                    <strong>Memorial descritivo</strong>
+                    <span>gerado</span>
+                    <span>versao 3</span>
+                    <span>pronto para PDF</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Procuração DCR/SNCR</strong>
+                    <span>pendente</span>
+                    <span>assinatura externa</span>
+                    <span>cobrar cliente principal</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Declaração de limites</strong>
+                    <span>em revisao</span>
+                    <span>confrontante 2</span>
+                    <span>aguarda confirmacao</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>Recibos e protocolos</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>SEAPA:</strong> requerimento protocolado</div>
+                    <div class="decision-item"><strong>CAR:</strong> demonstrativo anexado</div>
+                    <div class="decision-item"><strong>Notificacao:</strong> resposta em montagem</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Acoes rapidas</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Gerar pacote PDF:</strong> memorial, declaracoes e recibos</div>
+                    <div class="decision-item"><strong>Baixar dossie ZIP:</strong> entrega consolidada</div>
+                    <div class="decision-item"><strong>Registrar protocolo:</strong> numero, orgao e data</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar">
+                <button class="primary">Gerar pacote documental</button>
+                <span class="ghost">Registrar protocolo</span>
+                <span class="ghost">Baixar dossie ZIP</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela e importante porque aproxima o produto do que o escritorio realmente entrega: um conjunto
+            protocolavel, rastreavel e revisavel de pecas.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 06 . Exportacao tecnica</span>
+          <h3>Da geometria oficial para pacote tecnico, FreeCAD e dossie final.</h3>
+          <p>
+            Esta tela trata a exportacao como parte do fluxo do projeto. Nao como um utilitario isolado,
+            mas como etapa controlada, versionada e explicita.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Exportacao tecnica</span>
+              <span>Fase 1 . FreeCAD + LibreOffice</span>
+            </div>
+            <div class="shell-main">
+              <div class="split">
+                <div class="section">
+                  <h4>Pacote oficial do projeto</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>projeto.json:</strong> contrato unico do projeto</div>
+                    <div class="decision-item"><strong>perimetro.dxf:</strong> saida tecnica para CAD</div>
+                    <div class="decision-item"><strong>memorial.odt:</strong> base documental editavel</div>
+                    <div class="decision-item"><strong>memorial.pdf:</strong> entrega final consolidada</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Versionamento</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Versao geometrica:</strong> 12</div>
+                    <div class="decision-item"><strong>Versao documental:</strong> 3</div>
+                    <div class="decision-item"><strong>Gerado por:</strong> Hugo . hoje 09:41</div>
+                    <div class="decision-item"><strong>Status:</strong> pronto para enviar ao escritorio</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h4>Saidas disponiveis</h4>
+                <div class="table">
+                  <div class="table-row">
+                    <strong>Pacote FreeCAD</strong>
+                    <span>ZIP</span>
+                    <span>tecnico</span>
+                    <span>projeto.json + dxf + manifesto</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Memorial base</strong>
+                    <span>ODT</span>
+                    <span>documental</span>
+                    <span>editavel no LibreOffice</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Entrega final</strong>
+                    <span>PDF</span>
+                    <span>cliente/protocolo</span>
+                    <span>versao consolidada para envio</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="toolbar">
+                <button class="primary">Gerar pacote FreeCAD</button>
+                <span class="ghost">Baixar JSON oficial</span>
+                <span class="ghost">Emitir memorial PDF</span>
+                <span class="ghost">Ver manifesto</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela aproxima bastante o modelo da spec atual: o GeoAdmin continua sendo a fonte unica de
+            verdade, e FreeCAD/LibreOffice entram como consumidores do contrato oficial.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 07 . Portal do cliente</span>
+          <h3>Fluxo externo simples, acolhedor e limitado ao que o cliente realmente precisa fazer.</h3>
+          <p>
+            Esta e a contraparte externa do dossie. O cliente nao ve risco, protocolo, cadastro oficial nem
+            leitura interna. Ele ve apenas o que precisa preencher, enviar, revisar e acompanhar, com linguagem
+            simples e orientacao suficiente para nao se perder.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Portal do cliente</span>
+              <span>acesso por magic link</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Continuar preenchimento</button>
+                <span class="pill">2 itens pendentes</span>
+                <span class="ghost">projeto: Fazenda Veadeiros</span>
+                <span class="ghost">link valido por 5 dias</span>
+              </div>
+
+              <div class="mini-grid">
+                <div class="mini-card"><strong>3 de 5</strong><span>etapas concluidas</span></div>
+                <div class="mini-card"><strong>4</strong><span>documentos ja recebidos</span></div>
+                <div class="mini-card"><strong>10 min</strong><span>tempo estimado para concluir</span></div>
+              </div>
+
+              <div class="section">
+                <h4>Onde voce esta</h4>
+                <p class="section-subtitle">Mostramos o progresso para o cliente nao sentir que esta enviando documentos "no escuro".</p>
+                <div class="tag-row" style="margin-top: 14px;">
+                  <span class="tag">1. Dados pessoais</span>
+                  <span class="tag">2. Dados do imovel</span>
+                  <span class="tag">3. Documentos</span>
+                  <span class="ghost">4. Croqui / area</span>
+                  <span class="ghost">5. Confirmacao final</span>
+                </div>
+              </div>
+
+              <div class="section">
+                <h4>O que falta de voce</h4>
+                <p class="section-subtitle">Linguagem simples, direta e sem jargao interno.</p>
+                <div class="table" style="margin-top: 14px;">
+                  <div class="table-row">
+                    <strong>Enviar procuracao assinada</strong>
+                    <span>documento</span>
+                    <span>pendente</span>
+                    <span>voce pode anexar foto ou PDF</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Confirmar dados do imovel</strong>
+                    <span>revisao</span>
+                    <span>pendente</span>
+                    <span>conferir nome, localizacao e informacoes basicas</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Desenhar ou enviar croqui</strong>
+                    <span>opcional</span>
+                    <span>aberto</span>
+                    <span>ajuda a equipe, mas nao substitui o trabalho tecnico</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>O que ja recebemos</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Documentos pessoais:</strong> recebidos e conferidos</div>
+                    <div class="decision-item"><strong>Dados do imovel:</strong> recebidos e em revisao pela equipe</div>
+                    <div class="decision-item"><strong>Comprovantes anexados:</strong> 4 arquivos salvos com sucesso</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Precisa de ajuda?</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Anexar documento:</strong> foto, PDF ou arquivo simples</div>
+                    <div class="decision-item"><strong>Mandar recado:</strong> enviar observacao para o escritorio</div>
+                    <div class="decision-item"><strong>Atualizar telefone:</strong> caso a equipe precise falar com voce</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h4>Privacidade e limite do acesso</h4>
+                <p class="section-subtitle">O portal deixa claro que o cliente so ve o necessario para colaborar com o processo.</p>
+                <div class="tag-row" style="margin-top: 14px;">
+                  <span class="tag">sem confrontacoes internas</span>
+                  <span class="tag">sem riscos do processo</span>
+                  <span class="tag">sem cadastros oficiais completos</span>
+                  <span class="tag">sem painel tecnico do dossie</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta versao tenta resolver um ponto delicado: o cliente precisa colaborar bastante, mas nao pode ser
+            jogado dentro da complexidade do escritorio. O portal precisa ser leve, guiado e tranquilizador.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 08 . Confrontacoes</span>
+          <h3>Uma mesa de revisao para cartas, vizinhos, conflitos e decisoes de aceite ou descarte.</h3>
+          <p>
+            Esta tela separa o trabalho de confrontacao do resto do projeto, para que a equipe consiga entender
+            o caso, agir sobre cada vizinho e gerar as cartas sem misturar isso com todo o dossie.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Confrontacoes</span>
+              <span>projeto: Gleba 10 Passaros</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Gerar cartas ZIP</button>
+                <span class="pill">3 confrontacoes abertas</span>
+                <span class="ghost">1 carta aguardando retorno</span>
+                <span class="ghost">1 conflito geometrico</span>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Fila de confrontacoes</h4>
+                  <div class="table" style="margin-top: 14px;">
+                    <div class="table-row">
+                      <strong>Jose Pereira</strong>
+                      <span>lado norte</span>
+                      <span>carta pendente</span>
+                      <span>gerar documento e confirmar endereco</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Maria de Souza</strong>
+                      <span>lado leste</span>
+                      <span>aguardando retorno</span>
+                      <span>carta enviada ha 4 dias</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Area vizinha sem cadastro</strong>
+                      <span>lado sul</span>
+                      <span>conflito</span>
+                      <span>revisar geometria e identificar confrontante</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h4>Painel do caso selecionado</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Confrontante:</strong> Jose Pereira</div>
+                    <div class="decision-item"><strong>Situação:</strong> sem carta gerada</div>
+                    <div class="decision-item"><strong>Dados faltando:</strong> endereco de entrega e telefone</div>
+                    <div class="decision-item"><strong>Acao recomendada:</strong> gerar carta e vincular ao dossie</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>Historico de interacoes</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>ontem:</strong> confronto norte identificado pelo escritorio</div>
+                    <div class="decision-item"><strong>ha 4 dias:</strong> carta enviada para Maria de Souza</div>
+                    <div class="decision-item"><strong>hoje:</strong> pendencia aberta para revisar area sul</div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h4>Acoes da equipe</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Confirmar confrontacao:</strong> manter como valida no dossie</div>
+                    <div class="decision-item"><strong>Descartar:</strong> remover confrontacao sugerida</div>
+                    <div class="decision-item"><strong>Gerar carta:</strong> emitir documento e anexar ao projeto</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela ajuda a transformar confrontacao em fluxo real de trabalho. Em vez de ficar escondida no
+            detalhe do projeto, ela vira uma mesa propria para revisar, gerar cartas e resolver conflitos.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 09 . Gerador de documentos</span>
+          <h3>Uma mesa de montagem para escolher pecas, revisar dados-base e emitir o pacote certo para cada caso.</h3>
+          <p>
+            O produto precisa sair do modelo de "um botao que gera tudo". Esta tela organiza quais pecas entram,
+            de quais dados elas dependem e o que ainda precisa ser confirmado antes da emissao.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Gerador de documentos</span>
+              <span>projeto: Fazenda Veadeiros</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Emitir pacote selecionado</button>
+                <span class="pill">6 pecas prontas</span>
+                <span class="ghost">2 pecas bloqueadas</span>
+                <span class="ghost">template: SEAPA + SNCR</span>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Peças disponiveis</h4>
+                  <div class="table" style="margin-top: 14px;">
+                    <div class="table-row">
+                      <strong>Memorial descritivo</strong>
+                      <span>tecnico</span>
+                      <span>pronto</span>
+                      <span>gera em ODT e PDF</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Declaração de limites</strong>
+                      <span>relacional</span>
+                      <span>pendente</span>
+                      <span>aguarda definicao de confrontante</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Procuração DCR/SNCR</strong>
+                      <span>juridico</span>
+                      <span>rascunho</span>
+                      <span>pronta para emissao e assinatura</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Requerimento SEAPA</strong>
+                      <span>administrativo</span>
+                      <span>pronto</span>
+                      <span>dados basicos completos</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h4>Dependencias da emissao</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Dados pessoais:</strong> completos e consistentes</div>
+                    <div class="decision-item"><strong>Imovel:</strong> matricula e localizacao confirmadas</div>
+                    <div class="decision-item"><strong>Geometria:</strong> versao 12 liberada para memorial</div>
+                    <div class="decision-item"><strong>Procuração:</strong> pode emitir, mas ainda depende de assinatura externa</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>Revisao antes de gerar</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Quem emite:</strong> escritorio interno</div>
+                    <div class="decision-item"><strong>Destino:</strong> dossie interno, cliente e protocolo</div>
+                    <div class="decision-item"><strong>Formato:</strong> ODT, PDF ou ZIP consolidado</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Acoes disponiveis</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Emitir selecionados:</strong> gerar apenas as pecas marcadas</div>
+                    <div class="decision-item"><strong>Pré-visualizar:</strong> revisar campos antes do PDF final</div>
+                    <div class="decision-item"><strong>Enviar ao dossie:</strong> registrar versao e disponibilidade</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela torna a geracao documental mais segura porque mostra o que depende de dado valido e o que
+            ainda esta bloqueado. Isso reduz emissao errada e retrabalho.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 10 . Recibos e protocolos</span>
+          <h3>Um registro vivo de tudo que foi emitido, enviado, protocolado ou recebido de volta.</h3>
+          <p>
+            O dossie precisa de um lugar proprio para recibos, comprovantes e numeros de protocolo. Sem isso,
+            muita informacao critica fica perdida em PDF solto, WhatsApp ou pasta de downloads.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Recibos e protocolos</span>
+              <span>projeto: Maria de Fatima</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Registrar protocolo</button>
+                <span class="pill">3 protocolos ativos</span>
+                <span class="ghost">2 comprovantes pendentes de vinculo</span>
+              </div>
+
+              <div class="section">
+                <h4>Linha de protocolo</h4>
+                <div class="table" style="margin-top: 14px;">
+                  <div class="table-row">
+                    <strong>SEAPA - Requerimento inicial</strong>
+                    <span>protocolado</span>
+                    <span>2026-04-04</span>
+                    <span>numero 2026-675 . comprovante anexado</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>CAR - Demonstrativo</strong>
+                    <span>recebido</span>
+                    <span>2026-04-03</span>
+                    <span>arquivo salvo e vinculado ao dossie</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Notificacao ETR</strong>
+                    <span>em resposta</span>
+                    <span>prazo correndo</span>
+                    <span>aguarda protocolo da resposta final</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Comprovantes anexados</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Recibo de protocolo:</strong> PDF anexado e validado</div>
+                    <div class="decision-item"><strong>Declaração enviada:</strong> comprovante pendente de vinculo</div>
+                    <div class="decision-item"><strong>Comprovante de CAR:</strong> ja associado ao cadastro oficial</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Acoes rapidas</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Registrar novo numero:</strong> orgao, data, descricao e arquivo</div>
+                    <div class="decision-item"><strong>Vincular comprovante:</strong> associar PDF ao evento correto</div>
+                    <div class="decision-item"><strong>Marcar retorno:</strong> atualizar situacao apos resposta do orgao</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela fecha um buraco operacional importante: protocolo nao pode ser apenas um arquivo guardado.
+            Ele precisa virar dado navegavel, relacionado e auditavel dentro do projeto.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 11 . Processo administrativo</span>
+          <h3>Uma leitura clara da fase do caso, prazos, notificacoes e respostas em andamento.</h3>
+          <p>
+            Nem todo projeto esta simplesmente "em andamento". Muitos estao em fase formal, com prazo, oficio,
+            resposta, analise e risco administrativo. Esta tela organiza essa camada.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Processo administrativo</span>
+              <span>ETR . notificacao 123/2026</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Abrir resposta a notificacao</button>
+                <span class="pill">prazo: 4 dias uteis</span>
+                <span class="ghost">status: critica</span>
+                <span class="ghost">orgao: ETR</span>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Fase e risco</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Etapa atual:</strong> resposta a notificacao</div>
+                    <div class="decision-item"><strong>Risco:</strong> alto, por prazo curto e documentos dependentes</div>
+                    <div class="decision-item"><strong>Responsavel interno:</strong> escritorio documental</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Prazo e obrigacoes</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Prazo final:</strong> 2026-04-12</div>
+                    <div class="decision-item"><strong>Obrigatorio anexar:</strong> oficio, declaracao e comprovante</div>
+                    <div class="decision-item"><strong>Observacao:</strong> resposta precisa citar numero da notificacao</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section">
+                <h4>Historico do processo</h4>
+                <div class="table" style="margin-top: 14px;">
+                  <div class="table-row">
+                    <strong>Abertura do processo</strong>
+                    <span>SEAPA</span>
+                    <span>concluido</span>
+                    <span>requerimento inicial protocolado</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Recebimento da notificacao</strong>
+                    <span>ETR</span>
+                    <span>concluido</span>
+                    <span>documento anexado ao dossie</span>
+                  </div>
+                  <div class="table-row">
+                    <strong>Resposta em montagem</strong>
+                    <span>interno</span>
+                    <span>em andamento</span>
+                    <span>aguarda revisar anexos e gerar protocolo</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>Peças relacionadas</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Requerimento base:</strong> ja protocolado</div>
+                    <div class="decision-item"><strong>Resposta a notificacao:</strong> em rascunho</div>
+                    <div class="decision-item"><strong>Comprovantes:</strong> 2 anexados, 1 faltando</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Acoes da equipe</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Montar resposta:</strong> abrir editor orientado</div>
+                    <div class="decision-item"><strong>Revisar prazo:</strong> atualizar risco automaticamente</div>
+                    <div class="decision-item"><strong>Protocolar:</strong> registrar numero e comprovante final</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela ajuda o projeto a lidar com o mundo real dos orgaos: etapa, prazo, risco e resposta.
+            Sem ela, processo administrativo vira apenas comentário solto dentro do projeto.
+          </div>
+        </div>
+      </article>
+
+      <article class="screen-card">
+        <div class="screen-headline">
+          <span class="screen-kicker">Tela 12 . Cadastros oficiais</span>
+          <h3>Uma área própria para consolidar CAR, CCIR, SNCR, SIGEF e dados registrais do imóvel.</h3>
+          <p>
+            O produto precisa ter um ponto de leitura estruturada para os cadastros oficiais. Isso reduz
+            inconsistência, ajuda a gerar documentos e evita que cada dado fique enterrado em PDF diferente.
+          </p>
+        </div>
+        <div class="screen-body">
+          <div class="shell">
+            <div class="shell-top">
+              <span>Cadastros oficiais</span>
+              <span>imovel: Fazenda Veadeiros</span>
+            </div>
+            <div class="shell-main">
+              <div class="toolbar">
+                <button class="primary">Atualizar vinculos</button>
+                <span class="pill">4 cadastros monitorados</span>
+                <span class="ghost">1 divergencia de area</span>
+              </div>
+
+              <div class="dashboard-grid">
+                <div class="section">
+                  <h4>Quadro oficial do imovel</h4>
+                  <div class="table" style="margin-top: 14px;">
+                    <div class="table-row">
+                      <strong>CAR</strong>
+                      <span>ativo</span>
+                      <span>demonstrativo anexado</span>
+                      <span>sem conflito aparente</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>CCIR</strong>
+                      <span>vigente</span>
+                      <span>2025/2026</span>
+                      <span>divergencia de area a revisar</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>SNCR</strong>
+                      <span>dependente</span>
+                      <span>procuracao pendente</span>
+                      <span>nao concluido</span>
+                    </div>
+                    <div class="table-row">
+                      <strong>Registro imobiliario</strong>
+                      <span>matricula ok</span>
+                      <span>CNS vinculado</span>
+                      <span>cartorio identificado</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h4>Alertas de consistencia</h4>
+                  <div class="stack-col" style="margin-top: 14px;">
+                    <div class="signal-card">
+                      <div class="signal-row">
+                        <strong>Area diverge do CCIR</strong>
+                        <span class="signal-badge warning">revisar</span>
+                      </div>
+                      <p>O valor da area declarada no CCIR nao bate com a geometria oficial atual.</p>
+                    </div>
+                    <div class="signal-card">
+                      <div class="signal-row">
+                        <strong>SNCR incompleto</strong>
+                        <span class="signal-badge danger">bloqueio</span>
+                      </div>
+                      <p>A procuracao ainda nao foi assinada, impedindo fechamento da etapa ligada ao cadastro.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="split">
+                <div class="section">
+                  <h4>Documentos vinculados</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Demonstrativo CAR:</strong> anexado e conferido</div>
+                    <div class="decision-item"><strong>CCIR PDF:</strong> anexado e com leitura manual registrada</div>
+                    <div class="decision-item"><strong>Escritura / matricula:</strong> vinculada ao registro do imovel</div>
+                  </div>
+                </div>
+                <div class="section">
+                  <h4>Acoes da equipe</h4>
+                  <div class="decision-list">
+                    <div class="decision-item"><strong>Registrar numero oficial:</strong> salvar codigo e metadados</div>
+                    <div class="decision-item"><strong>Marcar divergencia:</strong> abrir alerta para revisao documental</div>
+                    <div class="decision-item"><strong>Usar nos documentos:</strong> consumir estes dados na geracao automatica</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            Esta tela ajuda a transformar PDF oficial em dado reutilizavel. Ela nao substitui o documento de origem,
+            mas organiza os numeros, estados e vinculos que o escritorio realmente usa.
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</body>
+</html>
