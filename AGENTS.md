@@ -1,7 +1,7 @@
-# GeoAdmin Pro — Contexto para Codex
+# GeoAdmin Core — Contexto para Codex
 
 ## O Projeto
-Sistema de administração geoespacial para topografia, georreferenciamento e gestão de projetos rurais. MVP voltado para uso em campo (Android APK) e desktop (web futura).
+`GeoAdmin Core` é o repositório oficial do produto GeoAdmin. Ele concentra o núcleo operacional do sistema de administração geoespacial para topografia, georreferenciamento e gestão de projetos rurais.
 
 ## Stack
 | Camada | Tecnologia | Diretório |
@@ -12,9 +12,10 @@ Sistema de administração geoespacial para topografia, georreferenciamento e ge
 | Integração | Métrica TOPO via `POST /metrica/txt` | `backend/integracoes/` |
 
 ## Arquitetura
-- GeoAdmin-Pro é a **fonte única de verdade** — não replicar dados em múltiplos sistemas
+- `GeoAdmin Core` é o repositório oficial do produto, e o banco oficial + storage oficial são a **fonte única de verdade** — não replicar dados em múltiplos sistemas
 - Credenciais **exclusivamente em `.env`** — nunca commitar
 - URL do backend via `mobile/constants/Api.ts` (`API_URL`) — dev aponta para IP local, prod para Railway
+- `RAG Topografia` fica fora do escopo deste repositório por enquanto
 
 ## Governança de Segurança
 
@@ -135,7 +136,6 @@ Consequência direta: qualquer nova ferramenta deve ser projetada pensando em **
 | Média Pts | `media.tsx` | frontend | — |
 | Irradiação | `irradiacao.tsx` | frontend | — |
 | Subdivisão | `subdivisao.tsx` | backend | `POST /geo/subdivisao` |
-| Normas INCRA | `rag.tsx` | backend | `POST /rag/consultar` |
 | GNSS BT | `bluetooth.tsx` | nativo | — (Android only) |
 
 **Componentes reutilizáveis:** `ProjetoCard`, `StatusBadge`, `FerramentaBtn`
