@@ -127,12 +127,65 @@ Automatizar o deploy da API no Google Cloud Run com workflow GitHub Actions manu
 
 ---
 
-## Proxima aplicacao pendente
+## PR #4 — fix: harden auth uploads and magic links
 
-### PR #4 — fix: harden auth uploads and magic links
+- **Branch origem:** `codex/security-critical-hardening`
+- **Metodo:** Cherry-pick do commit `b5b90a1` sobre o branch acumulado
+- **Commit local:** `67bd314`
+- **Data de aplicacao:** 2026-04-09
+- **Conflitos resolvidos:**
+  - `README.md` — links: mantido formato `docs/` do PR #4
+  - `backend/Dockerfile` — USER: adotado `geoadmin` do PR #4 (removia `appuser` do nosso commit medio)
 
-- **Branch:** `codex/security-critical-hardening`
-- **Base:** `codex/cloud-run-api-automation` (branch do PR #3)
-- **Commit:** `b5b90a1`
-- **Status:** Draft, aguardando aplicacao
-- **Conteudo:** Pacote critico de seguranca (SEC-01 a SEC-07, EST-01, CORS)
+### Conteudo (pacote critico de seguranca)
+
+| Item | Descricao |
+|---|---|
+| SEC-01 | AUTH_OBRIGATORIO=false ignorado em ambiente de implantacao |
+| SEC-02 | Magic link invalidado apos uso e expiracao |
+| SEC-03 | SVG do usuario substituido por SVG gerado a partir dos vertices |
+| SEC-04 | Uploads com limite de tamanho, total por envio e whitelist de extensoes |
+| SEC-05 | Dockerfile com usuario nao-root (geoadmin) |
+| SEC-06 | .env.example sem formato de segredo real |
+| SEC-07 | VERCEL_ORG_ID e PROJECT_ID como repo vars |
+| EST-01 | README com links relativos validos |
+| CORS | Wildcard vercel.app removido do default |
+
+### Arquivos modificados (16 arquivos, +566/-73 linhas)
+
+| Arquivo | Descricao |
+|---|---|
+| `backend/middleware/auth.py` | Bloqueia bypass de auth em producao |
+| `backend/integracoes/projeto_clientes.py` | `invalidar_magic_link_participante()` novo |
+| `backend/integracoes/areas_projeto.py` | Limite de upload por arquivo |
+| `backend/integracoes/arquivos_projeto.py` | Whitelist de extensoes + limite total |
+| `backend/routes/documentos.py` | SVG seguro gerado internamente, invalidacao de token |
+| `backend/routes/projetos.py` | Validacao fortalecida nos resumos |
+| `backend/main.py` | CORS restrito, wildcard Vercel removido do default |
+| `backend/.env.example` | Placeholders sem formato de segredo |
+| `backend/Dockerfile` | Usuario geoadmin (nao-root) |
+| `.github/workflows/deploy-web.yml` | Vercel IDs como vars/secrets |
+| `README.md` | Links relativos |
+| `backend/tests/test_auth.py` | Novo: testa bloqueio de bypass em producao |
+| + 4 testes atualizados | Upload, magic link, formulario |
+
+### Validacao
+
+- Python syntax: OK (7 arquivos verificados)
+- Testes: 76 passed, 4 pre-existing failures (Supabase nao configurado), 1 skipped
+
+---
+
+## Proxima rodada pendente
+
+### Bloco ALTO (9 itens restantes)
+
+- SEC-09: Magic link validar proprietario do token
+- SEC-10: Whitelist de extensoes + MIME validation
+- SEC-11: Rate limiter aplicado em endpoints criticos
+- EST-02: Dividir projetos.py (1.789 linhas) em sub-modulos
+- EST-03: Extrair hooks das telas mobile gigantes
+- EST-05: Completar mobile/.env.example
+- UX-01: Eliminar 36+ any types no mobile
+- UX-02: Validacao de entrada em tempo real nos calculos
+- UX-03: Offline handling com fila de operacoes
