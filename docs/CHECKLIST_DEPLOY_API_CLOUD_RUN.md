@@ -31,6 +31,20 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 - `GCP_SERVICE_ACCOUNT`
 - `SUPABASE_KEY`
 
+## Permissoes minimas esperadas
+
+### Service account de deploy
+
+- `roles/run.admin`
+- `roles/iam.serviceAccountUser` sobre a runtime service account
+- `roles/artifactregistry.writer` ou superior no repositório
+- `roles/cloudbuild.builds.editor` ou permissao equivalente para disparar build
+- `roles/secretmanager.admin` ou conjunto equivalente para criar segredo, adicionar versao e ajustar IAM
+
+### Service account de runtime
+
+- `roles/secretmanager.secretAccessor` para ler `SUPABASE_KEY`
+
 ## Tarefas do responsavel de cloud
 
 1. Garantir acesso ao projeto `GCP`
@@ -78,6 +92,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy_api_cloud_run.ps1
 3. `GET /projetos/{id}`
 4. upload basico em rota que use storage
 5. geracao documental
+
+## Observacao de automacao
+
+O workflow e o script local fazem smoke test em `/health` logo apos o deploy. Se esse passo falhar, trate o deploy como incompleto mesmo que a imagem ja tenha sido publicada.
 
 ## Observacao
 

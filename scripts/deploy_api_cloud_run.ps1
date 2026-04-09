@@ -13,6 +13,8 @@ param(
     [string]$SupabaseKeySecretName = "SUPABASE_KEY",
     [int]$MinInstances = 0,
     [int]$MaxInstances = 10,
+    [int]$HealthcheckRetries = 5,
+    [int]$HealthcheckDelaySeconds = 5,
     [bool]$AllowUnauthenticated = $true
 )
 
@@ -42,6 +44,32 @@ function Invoke-GCloud {
     & gcloud @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "Falha ao executar: gcloud $rendered"
+    }
+}
+
+function Test-HealthEndpoint {
+    param(
+        [string]$BaseUrl,
+        [int]$Retries,
+        [int]$DelaySeconds
+    )
+
+    $healthUrl = ("{0}/health" -f $BaseUrl.TrimEnd("/"))
+    for ($attempt = 1; $attempt -le $Retries; $attempt++) {
+        Write-Host "> GET $healthUrl (tentativa $attempt/$Retries)"
+        try {
+            $response = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 30
+            if ($response.StatusCode -eq 200) {
+                Write-Host "Healthcheck OK."
+                return
+            }
+        } catch {
+            if ($attempt -eq $Retries) {
+                throw "Healthcheck falhou em ${healthUrl}: $($_.Exception.Message)"
+            }
+        }
+
+        Start-Sleep -Seconds $DelaySeconds
     }
 }
 
@@ -140,12 +168,27 @@ try {
     }
 
     Invoke-GCloud -Arguments $deployArgs
-    Invoke-GCloud -Arguments @(
+
+    $serviceUrlCommand = @(
         "run", "services", "describe", $ServiceName,
         "--region", $Region,
         "--project", $ProjectId,
         "--format=value(status.url)"
     )
+    $serviceUrlRendered = $serviceUrlCommand -join " "
+    Write-Host "> gcloud $serviceUrlRendered"
+
+    if (-not $PSCmdlet.ShouldProcess("gcloud", $serviceUrlRendered)) {
+        return
+    }
+
+    $serviceUrl = (& gcloud @serviceUrlCommand).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        throw "Falha ao consultar URL do servico Cloud Run"
+    }
+
+    Write-Host "Service URL: $serviceUrl"
+    Test-HealthEndpoint -BaseUrl $serviceUrl -Retries $HealthcheckRetries -DelaySeconds $HealthcheckDelaySeconds
 } finally {
     Remove-Item -Path $secretFile -ErrorAction SilentlyContinue
 }
