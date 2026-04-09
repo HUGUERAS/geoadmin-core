@@ -20,9 +20,20 @@ jobs:
         working-directory: mobile
         run: npm ci
 
+      - name: Validate production API URL
+        run: |
+          if [ -z "${EXPO_PUBLIC_API_BASE_URL}" ]; then
+            echo "EXPO_PUBLIC_API_BASE_URL secret is required for the production web build."
+            exit 1
+          fi
+        env:
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+
       - name: Build Expo web
         working-directory: mobile
         run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
 
       - name: Patch fonts (move TTFs out of node_modules path)
         run: node scripts/patch-fonts.js

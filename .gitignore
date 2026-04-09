@@ -4,6 +4,7 @@
 .env.*
 backend/.env
 !backend/.env.example
+!mobile/.env.example
 
 # Credenciais
 mobile/credentials.json

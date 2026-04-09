@@ -9,12 +9,28 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+export type JsonObject = { [key: string]: JsonValue };
+
 // Token de autenticação do Supabase — defina via definirToken()
 let _authToken: string | null = null;
+// Fallback legado até o corte definitivo da Cloud Run em produção.
 const API_PUBLICA_PADRAO = 'https://geoadmin-pro-production.up.railway.app';
 
 export function definirToken(token: string | null): void {
   _authToken = token;
+}
+
+function sanitizeBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, '');
+}
+
+function getExplicitApiBaseUrl(): string | null {
+  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (!explicitUrl) {
+    return null;
+  }
+
+  return sanitizeBaseUrl(explicitUrl);
 }
 
 function extractHostFromExpoConfig(): string | null {
@@ -32,8 +48,10 @@ function extractHostFromExpoConfig(): string | null {
 }
 
 function getApiBaseUrlWeb(): string {
+  const explicitUrl = getExplicitApiBaseUrl();
+
   if (typeof window === 'undefined') {
-    return API_PUBLICA_PADRAO;
+    return explicitUrl ?? API_PUBLICA_PADRAO;
   }
 
   const { hostname, origin, port, protocol } = window.location;
@@ -45,26 +63,26 @@ function getApiBaseUrlWeb(): string {
     hostname.startsWith('10.') ||
     /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
 
-  if (hostLocal && port === '8000') {
-    return origin.replace(/\/+$/, '');
+  if (hostLocal && port === '8001') {
+    return sanitizeBaseUrl(origin);
   }
 
   if (hostLocal && hostname) {
-    return `${protocol}//${hostname}:8000`;
+    return `${protocol}//${hostname}:8001`;
   }
 
-  // Produção (Vercel/CDN): usar proxy relativo para evitar CORS
-  return '/proxy';
+  // Produção: consumir a API definitiva configurada por ambiente.
+  return explicitUrl ?? API_PUBLICA_PADRAO;
 }
 
 export function getApiBaseUrl(): string {
-  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (explicitUrl) {
-    return explicitUrl.replace(/\/+$/, '');
-  }
-
   if (Platform.OS === 'web') {
     return getApiBaseUrlWeb();
+  }
+
+  const explicitUrl = getExplicitApiBaseUrl();
+  if (explicitUrl) {
+    return explicitUrl;
   }
 
   const host = extractHostFromExpoConfig();
