@@ -60,6 +60,11 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           create_credentials_file: true
 
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -109,6 +114,63 @@ jobs:
       - name: Terraform init
         working-directory: infra/gcp
         run: terraform init
+
+      - name: Import bootstrap resources that already exist
+        shell: bash
+        working-directory: infra/gcp
+        run: |
+          import_if_present() {
+            local address="$1"
+            local import_id="$2"
+            shift 2
+
+            if terraform state show "$address" >/dev/null 2>&1; then
+              echo "Resource already in state: $address"
+              return 0
+            fi
+
+            if "$@" >/dev/null 2>&1; then
+              echo "Importing existing resource: $address"
+              terraform import -input=false "$address" "$import_id"
+            else
+              echo "Resource not created yet: $address"
+            fi
+          }
+
+          import_if_present \
+            "google_service_account.deploy_ci" \
+            "projects/${GCP_PROJECT_ID}/serviceAccounts/geoadmin-deploy@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            gcloud iam service-accounts describe "geoadmin-deploy@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            "google_service_account.api_runtime" \
+            "projects/${GCP_PROJECT_ID}/serviceAccounts/geoadmin-api@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            gcloud iam service-accounts describe "geoadmin-api@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            "google_service_account.rag_runtime" \
+            "projects/${GCP_PROJECT_ID}/serviceAccounts/geoadmin-rag@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+            gcloud iam service-accounts describe "geoadmin-rag@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            "google_artifact_registry_repository.imagens" \
+            "projects/${GCP_PROJECT_ID}/locations/${GCP_REGION}/repositories/geoadmin" \
+            gcloud artifacts repositories describe "geoadmin" --location "${GCP_REGION}" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            'google_secret_manager_secret.segredos["SUPABASE_KEY"]' \
+            "projects/${GCP_PROJECT_ID}/secrets/SUPABASE_KEY" \
+            gcloud secrets describe "SUPABASE_KEY" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            'google_secret_manager_secret.segredos["OPENAI_API_KEY"]' \
+            "projects/${GCP_PROJECT_ID}/secrets/OPENAI_API_KEY" \
+            gcloud secrets describe "OPENAI_API_KEY" --project "${GCP_PROJECT_ID}"
+
+          import_if_present \
+            'google_secret_manager_secret.segredos["ANTHROPIC_API_KEY"]' \
+            "projects/${GCP_PROJECT_ID}/secrets/ANTHROPIC_API_KEY" \
+            gcloud secrets describe "ANTHROPIC_API_KEY" --project "${GCP_PROJECT_ID}"
 
       - name: Terraform validate
         working-directory: infra/gcp
