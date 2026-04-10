@@ -108,7 +108,41 @@ terraform apply -var-file=terraform.tfvars
 
 Se a maquina local ainda nao tiver Terraform instalado, use `terraform` via CI ou instale antes de aplicar.
 
+## Fluxo local recomendado
+
+Se a prioridade for reduzir superficie de exposicao, o fluxo mais seguro para o GeoAdmin hoje e operar a GCP a partir da maquina local com `gcloud`, `terraform` e `firebase-tools`, sem depender de `GitHub Actions`.
+
+Sequencia recomendada:
+
+1. bootstrap da infraestrutura base via `terraform`
+2. deploy da API localmente:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy_api_cloud_run.ps1
+```
+
+3. deploy da web localmente, apontando para a URL real da API:
+
+```powershell
+$env:EXPO_PUBLIC_API_BASE_URL = "https://sua-api-cloud-run.run.app"
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy_web_firebase.ps1 -ProjectId "seu-projeto-gcp" -ApiBaseUrl $env:EXPO_PUBLIC_API_BASE_URL
+```
+
+Vantagens praticas:
+
+- nenhum segredo sensivel precisa ficar cadastrado no GitHub para deploy
+- a `SUPABASE_KEY` pode ficar apenas no `.env` local ou no ambiente do operador
+- o repositorio pode permanecer privado sem bloquear o deploy
+- reduz risco operacional de workflow quebrado por permissao, parser YAML ou configuracao de secrets
+
+Recomendacao de seguranca:
+
+- se `SUPABASE_KEY` ja foi cadastrada em `GitHub Secrets`, considere rotacionar essa chave no Supabase antes de seguir com operacao estavel
+- mantenha `GitHub Actions` apenas como opcional, nao como caminho principal de producao
+
 ## Bootstrap do GitHub Actions com GCP
+
+Esta secao e opcional. Use apenas se voce decidir manter automacao de deploy no GitHub.
 
 Antes de rodar os workflows, configure a federacao OIDC do GitHub com:
 
