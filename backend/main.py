@@ -53,7 +53,7 @@ _origem_permitida_regex = (
 _hosts_padrao = [
     "localhost",
     "127.0.0.1",
-    "*.up.railway.app",
+    "*.run.app",
 ]
 _hosts_permitidos = [host.strip() for host in os.getenv("ALLOWED_HOSTS", ",".join(_hosts_padrao)).split(",") if host.strip()]
 _expor_docs_api = os.getenv("EXPOSE_API_DOCS", "false").lower() == "true"

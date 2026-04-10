@@ -9,12 +9,45 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+export type JsonObject = { [key: string]: JsonValue };
+
 // Token de autenticação do Supabase — defina via definirToken()
 let _authToken: string | null = null;
-const API_PUBLICA_PADRAO = 'https://geoadmin-pro-production.up.railway.app';
 
 export function definirToken(token: string | null): void {
   _authToken = token;
+}
+
+function sanitizeBaseUrl(url: string): string {
+  return url.trim().replace(/\/+$/, '');
+}
+
+function getExplicitApiBaseUrl(): string | null {
+  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (!explicitUrl) {
+    return null;
+  }
+
+  return sanitizeBaseUrl(explicitUrl);
+}
+
+function isDevelopmentRuntime(): boolean {
+  if (typeof __DEV__ !== 'undefined') {
+    return __DEV__;
+  }
+
+  return process.env.NODE_ENV !== 'production';
+}
+
+function getRequiredProductionApiBaseUrl(context: string): string {
+  const explicitUrl = getExplicitApiBaseUrl();
+  if (explicitUrl) {
+    return explicitUrl;
+  }
+
+  throw new Error(
+    `EXPO_PUBLIC_API_BASE_URL é obrigatória para ${context}. Defina a URL pública do Cloud Run antes do deploy.`
+  );
 }
 
 function extractHostFromExpoConfig(): string | null {
@@ -32,8 +65,16 @@ function extractHostFromExpoConfig(): string | null {
 }
 
 function getApiBaseUrlWeb(): string {
+  const explicitUrl = getExplicitApiBaseUrl();
+
   if (typeof window === 'undefined') {
-    return API_PUBLICA_PADRAO;
+    if (explicitUrl) {
+      return explicitUrl;
+    }
+    if (isDevelopmentRuntime()) {
+      return 'http://127.0.0.1:8001';
+    }
+    return getRequiredProductionApiBaseUrl('builds web fora do ambiente local');
   }
 
   const { hostname, origin, port, protocol } = window.location;
@@ -45,26 +86,25 @@ function getApiBaseUrlWeb(): string {
     hostname.startsWith('10.') ||
     /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
 
-  if (hostLocal && port === '8000') {
-    return origin.replace(/\/+$/, '');
+  if (hostLocal && port === '8001') {
+    return sanitizeBaseUrl(origin);
   }
 
   if (hostLocal && hostname) {
-    return `${protocol}//${hostname}:8000`;
+    return `${protocol}//${hostname}:8001`;
   }
 
-  // Produção (Vercel/CDN): usar proxy relativo para evitar CORS
-  return '/proxy';
+  return getRequiredProductionApiBaseUrl('publicações web no Vercel');
 }
 
 export function getApiBaseUrl(): string {
-  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (explicitUrl) {
-    return explicitUrl.replace(/\/+$/, '');
-  }
-
   if (Platform.OS === 'web') {
     return getApiBaseUrlWeb();
+  }
+
+  const explicitUrl = getExplicitApiBaseUrl();
+  if (explicitUrl) {
+    return explicitUrl;
   }
 
   const host = extractHostFromExpoConfig();
@@ -72,11 +112,15 @@ export function getApiBaseUrl(): string {
     return `http://${host}:8000`;
   }
 
-  if (Platform.OS === 'android') {
+  if (isDevelopmentRuntime() && Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   }
 
-  return 'http://127.0.0.1:8000';
+  if (isDevelopmentRuntime()) {
+    return 'http://127.0.0.1:8000';
+  }
+
+  return getRequiredProductionApiBaseUrl('builds mobile publicados via EAS/APK');
 }
 
 function formatErrorDetail(detail: JsonValue | undefined): string {
@@ -241,4 +285,3 @@ export async function apiDelete<T>(path: string): Promise<T> {
     throw tratarErroFetch(erro);
   }
 }
-

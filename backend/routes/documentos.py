@@ -112,13 +112,18 @@ def _resolver_app_url() -> str:
         if valor:
             return valor.rstrip("/")
 
-    railway = (os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "").strip()
-    if railway:
-        return f"https://{railway.lstrip('/')}".rstrip("/")
-
     vercel = (os.environ.get("VERCEL_URL") or "").strip()
     if vercel:
         return f"https://{vercel.lstrip('/')}".rstrip("/")
+
+    if any((os.environ.get(chave) or "").strip() for chave in ("K_SERVICE", "K_REVISION", "K_CONFIGURATION", "VERCEL_ENV")):
+        raise HTTPException(
+            500,
+            {
+                "erro": "PUBLIC_APP_URL não configurada no backend implantado. Defina a URL pública do frontend antes de gerar magic links.",
+                "codigo": 500,
+            },
+        )
 
     return "http://127.0.0.1:8000"
 

@@ -1,0 +1,159 @@
+name: Deploy API (Cloud Run)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.GCP_ARTIFACT_REGISTRY_REPOSITORY }}
+      CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }}
+      CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT: ${{ vars.CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT }}
+      PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_BUCKET_ARQUIVOS_PROJETO: ${{ vars.SUPABASE_BUCKET_ARQUIVOS_PROJETO }}
+      ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+      ALLOWED_HOSTS: ${{ vars.ALLOWED_HOSTS }}
+      CLOUD_RUN_MIN_INSTANCES: ${{ vars.CLOUD_RUN_MIN_INSTANCES || '0' }}
+      CLOUD_RUN_MAX_INSTANCES: ${{ vars.CLOUD_RUN_MAX_INSTANCES || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deploy configuration
+        run: python3 scripts/validate_deploy_config.py
+
+      - name: Validate required GitHub configuration
+        run: |
+          required_vars=(
+            GCP_PROJECT_ID
+            GCP_REGION
+            GCP_ARTIFACT_REGISTRY_REPOSITORY
+            CLOUD_RUN_SERVICE
+            CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT
+            PUBLIC_APP_URL
+            SUPABASE_URL
+            SUPABASE_BUCKET_ARQUIVOS_PROJETO
+            ALLOWED_ORIGINS
+            ALLOWED_HOSTS
+          )
+          for key in "${required_vars[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing GitHub variable: $key"
+              exit 1
+            fi
+          done
+
+          required_secrets=(
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+            SUPABASE_KEY
+          )
+          for key in "${required_secrets[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing GitHub secret: $key"
+              exit 1
+            fi
+          done
+        env:
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Ensure Artifact Registry repository exists
+        run: |
+          gcloud artifacts repositories describe "$GCP_ARTIFACT_REGISTRY_REPOSITORY" \
+            --location "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID" >/dev/null 2>&1 || \
+          gcloud artifacts repositories create "$GCP_ARTIFACT_REGISTRY_REPOSITORY" \
+            --repository-format=docker \
+            --location "$GCP_REGION" \
+            --project "$GCP_PROJECT_ID"
+
+      - name: Configure Docker auth
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Upsert SUPABASE_KEY in Secret Manager
+        run: |
+          printf '%s' "${SUPABASE_KEY}" > supabase-key.txt
+          gcloud secrets describe SUPABASE_KEY --project "$GCP_PROJECT_ID" >/dev/null 2>&1 || \
+            gcloud secrets create SUPABASE_KEY --replication-policy=automatic --project "$GCP_PROJECT_ID"
+          gcloud secrets versions add SUPABASE_KEY \
+            --data-file=supabase-key.txt \
+            --project "$GCP_PROJECT_ID"
+          gcloud secrets add-iam-policy-binding SUPABASE_KEY \
+            --member="serviceAccount:${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}" \
+            --role="roles/secretmanager.secretAccessor" \
+            --project "$GCP_PROJECT_ID"
+          rm -f supabase-key.txt
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Build and push backend image
+        run: |
+          IMAGE_URI="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REGISTRY_REPOSITORY}/${CLOUD_RUN_SERVICE}:${GITHUB_SHA}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> "$GITHUB_ENV"
+          gcloud builds submit backend \
+            --tag "${IMAGE_URI}" \
+            --project "$GCP_PROJECT_ID"
+
+      - name: Deploy Cloud Run service
+        run: |
+          ENV_VARS="^##^SUPABASE_URL=${SUPABASE_URL}##SUPABASE_BUCKET_ARQUIVOS_PROJETO=${SUPABASE_BUCKET_ARQUIVOS_PROJETO}##PUBLIC_APP_URL=${PUBLIC_APP_URL}##ALLOWED_ORIGINS=${ALLOWED_ORIGINS}##ALLOWED_HOSTS=${ALLOWED_HOSTS}##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
+          gcloud run deploy "${CLOUD_RUN_SERVICE}" \
+            --image "${IMAGE_URI}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT_ID}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account "${CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT}" \
+            --min-instances "${CLOUD_RUN_MIN_INSTANCES}" \
+            --max-instances "${CLOUD_RUN_MAX_INSTANCES}" \
+            --set-env-vars "${ENV_VARS}" \
+            --update-secrets "SUPABASE_KEY=SUPABASE_KEY:latest" \
+            --quiet
+
+      - name: Show deployed URL
+        run: |
+          SERVICE_URL="$(gcloud run services describe "${CLOUD_RUN_SERVICE}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT_ID}" \
+            --format='value(status.url)')"
+          echo "SERVICE_URL=${SERVICE_URL}" >> "$GITHUB_ENV"
+          echo "${SERVICE_URL}"
+
+      - name: Smoke test /health
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error "${SERVICE_URL}/health"; then
+              exit 0
+            fi
+            echo "Healthcheck attempt ${attempt} failed, retrying..."
+            sleep 5
+          done
+          echo "Cloud Run healthcheck failed after retries."
+          exit 1
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Cloud Run Deploy"
+            echo
+            echo "- Service: \`${CLOUD_RUN_SERVICE}\`"
+            echo "- Region: \`${GCP_REGION}\`"
+            echo "- URL: ${SERVICE_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
