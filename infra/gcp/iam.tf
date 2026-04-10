@@ -1,7 +1,3 @@
-data "google_project" "atual" {
-  project_id = var.id_projeto
-}
-
 resource "google_service_account" "deploy_ci" {
   account_id   = "geoadmin-deploy"
   display_name = "GeoAdmin CI Deploy"
