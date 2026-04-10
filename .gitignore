@@ -83,3 +83,20 @@ infra/supabase/.temp/
 infra/supabase/database.types.ts
 
 .vercel
+
+# Terraform / GCP
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# Firebase local
+.firebaserc

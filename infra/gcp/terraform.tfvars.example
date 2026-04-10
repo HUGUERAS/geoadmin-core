@@ -1,0 +1,37 @@
+id_projeto      = "seu-projeto-gcp"
+ambiente        = "prod"
+regiao          = "us-central1"
+zona_principal  = "us-central1-a"
+
+supabase_url                     = "https://SEU_PROJECT_ID.supabase.co"
+supabase_bucket_arquivos_projeto = "arquivos-projeto"
+
+allowed_origins = [
+  "https://geoadmin-web.web.app",
+]
+
+allowed_hosts = [
+  "localhost",
+  "127.0.0.1",
+  "*.run.app",
+  "*.web.app",
+  "*.firebaseapp.com",
+]
+
+criar_servico_api = false
+criar_job_rag     = false
+agendar_job_rag   = false
+criar_vm_video    = false
+
+# bootstrap_secret_versions = true
+# valor_supabase_key = "colar-apenas-em-tfvars-local-nao-versionado"
+
+segredos_ja_criados = false
+
+variaveis_ambiente_api = {
+  # CATALOGO_DIR = "/workspace/catalogo"
+}
+
+variaveis_ambiente_job_rag = {
+  # RAG_NAMESPACE = "normas-topografia"
+}
