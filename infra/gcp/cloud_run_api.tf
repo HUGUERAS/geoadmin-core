@@ -9,16 +9,16 @@ resource "google_cloud_run_v2_service" "api" {
   invoker_iam_disabled = var.cloud_run_publico
   description          = "API oficial do GeoAdmin Core no Cloud Run"
 
-  scaling {
-    min_instance_count = var.cloud_run_min_instancias
-    max_instance_count = var.cloud_run_max_instancias
-  }
-
   template {
     service_account                  = google_service_account.api_runtime.email
     timeout                          = "${var.cloud_run_timeout_segundos}s"
     max_instance_request_concurrency = var.cloud_run_concorrencia
     execution_environment            = "EXECUTION_ENVIRONMENT_GEN2"
+
+    scaling {
+      min_instance_count = var.cloud_run_min_instancias
+      max_instance_count = var.cloud_run_max_instancias
+    }
 
     containers {
       image = local.imagem_api
