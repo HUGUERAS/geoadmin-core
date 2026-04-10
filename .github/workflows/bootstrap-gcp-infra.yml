@@ -69,6 +69,7 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import textwrap
           from pathlib import Path
 
           def hcl_string(value: str) -> str:
@@ -77,28 +78,29 @@ jobs:
 
           def hcl_list_csv(raw: str) -> str:
               items = [item.strip() for item in raw.split(",") if item.strip()]
-              return "[\n" + "\n".join(f"  {hcl_string(item)}," for item in items) + "\n]"
+              return "[" + ", ".join(hcl_string(item) for item in items) + "]"
 
-          content = f"""id_projeto = {hcl_string(os.environ['GCP_PROJECT_ID'])}
-ambiente = {hcl_string(os.environ['GCP_ENVIRONMENT'])}
-regiao = {hcl_string(os.environ['GCP_REGION'])}
-zona_principal = {hcl_string(os.environ['GCP_ZONE'])}
+          content = textwrap.dedent(f"""\
+              id_projeto = {hcl_string(os.environ['GCP_PROJECT_ID'])}
+              ambiente = {hcl_string(os.environ['GCP_ENVIRONMENT'])}
+              regiao = {hcl_string(os.environ['GCP_REGION'])}
+              zona_principal = {hcl_string(os.environ['GCP_ZONE'])}
 
-supabase_url = {hcl_string(os.environ['SUPABASE_URL'])}
-supabase_bucket_arquivos_projeto = {hcl_string(os.environ['SUPABASE_BUCKET_ARQUIVOS_PROJETO'])}
+              supabase_url = {hcl_string(os.environ['SUPABASE_URL'])}
+              supabase_bucket_arquivos_projeto = {hcl_string(os.environ['SUPABASE_BUCKET_ARQUIVOS_PROJETO'])}
 
-allowed_origins = {hcl_list_csv(os.environ['ALLOWED_ORIGINS'])}
-allowed_hosts = {hcl_list_csv(os.environ['ALLOWED_HOSTS'])}
+              allowed_origins = {hcl_list_csv(os.environ['ALLOWED_ORIGINS'])}
+              allowed_hosts = {hcl_list_csv(os.environ['ALLOWED_HOSTS'])}
 
-bootstrap_secret_versions = true
-segredos_ja_criados = false
-valor_supabase_key = {hcl_string(os.environ['SUPABASE_KEY'])}
+              bootstrap_secret_versions = true
+              segredos_ja_criados = false
+              valor_supabase_key = {hcl_string(os.environ['SUPABASE_KEY'])}
 
-criar_servico_api = false
-criar_job_rag = false
-agendar_job_rag = false
-criar_vm_video = false
-"""
+              criar_servico_api = false
+              criar_job_rag = false
+              agendar_job_rag = false
+              criar_vm_video = false
+              """)
           Path("terraform.auto.tfvars").write_text(content, encoding="utf-8")
           PY
         env:

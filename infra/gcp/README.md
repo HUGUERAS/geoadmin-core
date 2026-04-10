@@ -129,3 +129,20 @@ O script:
 - `.github/workflows/bootstrap-gcp-infra.yml`: bootstrap inicial da GCP sem criar API, RAG ou VM GPU
 - `.github/workflows/deploy-api-cloud-run.yml`: builda a imagem e publica a API no Cloud Run
 - `.github/workflows/deploy-web-firebase.yml`: builda a web do Expo e publica no Firebase Hosting
+
+## Gotcha: heredoc dentro de bloco literal YAML
+
+O step `Build terraform.auto.tfvars` do `bootstrap-gcp-infra.yml` monta o arquivo com um heredoc Python embutido em `run: |`. Na primeira versao o f-string tinha linhas na coluna 0 pra manter o HCL gerado sem indentacao parasita. O parser do GitHub rejeita isso: linhas com indentacao menor que a base do bloco literal encerram o bloco, e o YAML passa a ler o conteudo do f-string como novas chaves de mapping. A run falha instantaneamente, sem jobs, sem logs e sem check-runs.
+
+Regra pra nao repetir:
+
+- toda linha dentro de `run: |` precisa ter indentacao maior ou igual a base do bloco, inclusive linhas internas de heredocs
+- pra gerar arquivos sem indentacao parasita, indente o template uniforme e envolva em `textwrap.dedent(f"""\ ... """)`
+- listas HCL geradas dinamicamente: prefira one-line (`["a", "b"]`) em vez de multilinha, pra nao quebrar o `dedent`
+- scripts embutidos que passarem de ~30 linhas: mova pra `scripts/` e chame com `run: python scripts/nome.py` em vez de embutir
+
+Sintoma classico dessa familia de bug: run com `conclusion: failure`, `total_count: 0` em `/jobs`, `404` em `/logs`, zero check-runs, duracao zero. Sempre que aparecer, valide localmente antes de investigar secrets ou config:
+
+```bash
+python -c "import yaml; yaml.safe_load(open('.github/workflows/arquivo.yml'))"
+```
