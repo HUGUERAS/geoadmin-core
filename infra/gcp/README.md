@@ -107,3 +107,25 @@ terraform apply -var-file=terraform.tfvars
 ```
 
 Se a maquina local ainda nao tiver Terraform instalado, use `terraform` via CI ou instale antes de aplicar.
+
+## Bootstrap do GitHub Actions com GCP
+
+Antes de rodar os workflows, configure a federacao OIDC do GitHub com:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup_github_gcp_oidc.ps1 -ProjetoId "seu-projeto-gcp"
+```
+
+O script:
+
+- habilita APIs base da automacao
+- cria ou reutiliza a service account `geoadmin-deploy`
+- cria o `Workload Identity Pool` e o provider OIDC do GitHub
+- concede os papeis iniciais para bootstrap e deploy
+- imprime os valores de `GitHub Variables` e `GitHub Secrets`
+
+## Workflows do repositorio
+
+- `.github/workflows/bootstrap-gcp-infra.yml`: bootstrap inicial da GCP sem criar API, RAG ou VM GPU
+- `.github/workflows/deploy-api-cloud-run.yml`: builda a imagem e publica a API no Cloud Run
+- `.github/workflows/deploy-web-firebase.yml`: builda a web do Expo e publica no Firebase Hosting

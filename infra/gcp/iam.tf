@@ -1,3 +1,7 @@
+data "google_project" "atual" {
+  project_id = var.id_projeto
+}
+
 resource "google_service_account" "deploy_ci" {
   account_id   = "geoadmin-deploy"
   display_name = "GeoAdmin CI Deploy"
@@ -55,6 +59,12 @@ resource "google_service_account_iam_member" "deploy_ci_assume_rag" {
   service_account_id = google_service_account.rag_runtime.name
   role               = "roles/iam.serviceAccountUser"
   member             = "serviceAccount:${google_service_account.deploy_ci.email}"
+}
+
+resource "google_project_iam_member" "cloud_build_artifact_registry_writer" {
+  project = var.id_projeto
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${data.google_project.atual.number}@cloudbuild.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "vm_video_logs" {
