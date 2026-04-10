@@ -45,9 +45,18 @@ def _ambiente_producao() -> bool:
 
 def _auth_obrigatoria() -> bool:
     auth_obrigatorio = os.getenv("AUTH_OBRIGATORIO", "true").lower() == "true"
+    permitir_bypass_implantacao = (
+        os.getenv("AUTH_PERMITIR_BYPASS_IMPLANTACAO", "false").lower() == "true"
+    )
     if auth_obrigatorio:
         return True
     if _ambiente_producao():
+        if permitir_bypass_implantacao:
+            logger.warning(
+                "AUTH_OBRIGATORIO=false permitido em ambiente de implantação "
+                "por AUTH_PERMITIR_BYPASS_IMPLANTACAO=true"
+            )
+            return False
         logger.warning("AUTH_OBRIGATORIO=false ignorado em ambiente de implantação")
         return True
     return False
@@ -61,6 +70,8 @@ async def verificar_token(
     Valida o token JWT do Supabase Auth.
     Retorna o payload do usuário (sub, email, role, etc.).
     Em modo desenvolvimento (AUTH_OBRIGATORIO=false), permite acesso sem token.
+    Em ambiente implantado, esse bypass só é aceito com
+    AUTH_PERMITIR_BYPASS_IMPLANTACAO=true.
     """
     # Permite rotas públicas
     if request.url.path in ROTAS_PUBLICAS:

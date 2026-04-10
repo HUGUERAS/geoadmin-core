@@ -38,3 +38,13 @@ def test_auth_nao_pode_ser_desligada_em_implantacao(monkeypatch):
 
     assert excinfo.value.status_code == 401
     assert excinfo.value.detail["codigo"] == 401
+
+
+def test_auth_pode_ser_desligada_em_implantacao_com_flag_explicita(monkeypatch):
+    monkeypatch.setenv("AUTH_OBRIGATORIO", "false")
+    monkeypatch.setenv("AUTH_PERMITIR_BYPASS_IMPLANTACAO", "true")
+    monkeypatch.setenv("K_SERVICE", "geoadmin-api")
+
+    resultado = asyncio.run(auth_mod.verificar_token(_request_fake(), None))
+
+    assert resultado["sub"] == "dev-local"

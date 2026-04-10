@@ -11,6 +11,8 @@ param(
     [string]$AllowedOrigins = $env:ALLOWED_ORIGINS,
     [string]$AllowedHosts = $env:ALLOWED_HOSTS,
     [string]$SupabaseKeySecretName = "SUPABASE_KEY",
+    [bool]$AuthObrigatorio = $true,
+    [bool]$AuthPermitirBypassImplantacao = $false,
     [int]$MinInstances = 0,
     [int]$MaxInstances = 10,
     [int]$HealthcheckRetries = 5,
@@ -87,7 +89,9 @@ Assert-RequiredValue -Name "AllowedHosts" -Value $AllowedHosts
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendDir = Join-Path $repoRoot "backend"
 $imageUri = "{0}-docker.pkg.dev/{1}/{2}/{3}:latest" -f $Region, $ProjectId, $ArtifactRegistryRepository, $ServiceName
-$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
+$authObrigatorioValue = $AuthObrigatorio.ToString().ToLower()
+$authBypassImplantacaoValue = $AuthPermitirBypassImplantacao.ToString().ToLower()
+$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false##AUTH_OBRIGATORIO=$authObrigatorioValue##AUTH_PERMITIR_BYPASS_IMPLANTACAO=$authBypassImplantacaoValue"
 $secretFile = Join-Path ([System.IO.Path]::GetTempPath()) "geoadmin-supabase-key.txt"
 
 try {
