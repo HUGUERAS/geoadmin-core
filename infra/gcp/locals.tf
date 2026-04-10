@@ -62,6 +62,12 @@ locals {
     OPENAI_API_KEY    = var.valor_openai_api_key
   }
 
+  segredos_bootstrap_ativos = toset(compact([
+    nonsensitive(var.valor_supabase_key) != "" ? "SUPABASE_KEY" : "",
+    nonsensitive(var.valor_anthropic_api_key) != "" ? "ANTHROPIC_API_KEY" : "",
+    nonsensitive(var.valor_openai_api_key) != "" ? "OPENAI_API_KEY" : "",
+  ]))
+
   startup_script_vm_video = <<-EOT
     #!/usr/bin/env bash
     set -euxo pipefail

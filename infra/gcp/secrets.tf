@@ -13,13 +13,10 @@ resource "google_secret_manager_secret" "segredos" {
 }
 
 resource "google_secret_manager_secret_version" "bootstrap" {
-  for_each = var.bootstrap_secret_versions ? {
-    for nome, valor in local.segredos_bootstrap : nome => valor
-    if trimspace(valor) != ""
-  } : {}
+  for_each = var.bootstrap_secret_versions ? local.segredos_bootstrap_ativos : toset([])
 
-  secret      = google_secret_manager_secret.segredos[each.key].name
-  secret_data = each.value
+  secret      = google_secret_manager_secret.segredos[each.value].name
+  secret_data = local.segredos_bootstrap[each.value]
 }
 
 resource "google_secret_manager_secret_iam_member" "api_runtime_supabase" {
