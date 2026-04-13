@@ -80,3 +80,6 @@ infra/supabase/supabase/
 infra/supabase/.temp/
 
 .vercel
+.playwright-cli/
+*.out.log
+*.err.log

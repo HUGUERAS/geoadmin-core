@@ -564,7 +564,12 @@ def _cliente_principal_do_payload(sb, participantes: list[dict[str, Any]], paylo
 
 
 
-def _gerar_magic_links_iniciais(sb, projeto_id: str, participantes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _gerar_magic_links_iniciais(
+    sb,
+    projeto_id: str,
+    participantes: list[dict[str, Any]],
+    request: Request | None = None,
+) -> list[dict[str, Any]]:
     if not participantes:
         return []
 
@@ -578,6 +583,7 @@ def _gerar_magic_links_iniciais(sb, projeto_id: str, participantes: list[dict[st
                 projeto_id,
                 cliente_id=participante.get("cliente_id"),
                 projeto_cliente_id=participante.get("id"),
+                request=request,
                 supabase=sb,
             )
         except Exception:
@@ -1312,7 +1318,7 @@ def listar_projetos(limite: int = 50, deslocamento: int = 0):
 
 
 @router.post("", summary="Criar novo projeto", status_code=201)
-def criar_projeto(payload: ProjetoCreate):
+def criar_projeto(payload: ProjetoCreate, request: Request = None):
     sb = _get_supabase()
     participantes = _participantes_payload(payload)
     cliente_id = _cliente_principal_do_payload(sb, participantes, payload)
@@ -1340,7 +1346,12 @@ def criar_projeto(payload: ProjetoCreate):
         if cliente_principal_id and cliente_principal_id != cliente_id:
             _atualizar_projeto_compativel(sb, projeto_id, {"cliente_id": cliente_principal_id})
 
-        magic_links = _gerar_magic_links_iniciais(sb, projeto_id, participantes_salvos or participantes)
+        magic_links = _gerar_magic_links_iniciais(
+            sb,
+            projeto_id,
+            participantes_salvos or participantes,
+            request=request,
+        )
         projeto = _enriquecer_projeto(sb, projeto_id)
         if magic_links:
             projeto["magic_links"] = magic_links

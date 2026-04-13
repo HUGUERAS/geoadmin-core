@@ -183,26 +183,23 @@ def _validar_destino_magic_link(participante: dict[str, Any] | None, *, canal: s
         )
 
 
-def _resolver_app_url() -> str:
-    for chave in ("APP_URL", "PUBLIC_APP_URL", "PUBLIC_BASE_URL"):
+def _resolver_app_url(request: Request | None = None) -> str:
+    for chave in ("FORMULARIO_CLIENTE_URL", "PUBLIC_FORM_URL", "PUBLIC_FORM_BASE_URL"):
         valor = (os.environ.get(chave) or "").strip()
         if valor:
             return valor.rstrip("/")
 
-    vercel = (os.environ.get("VERCEL_URL") or "").strip()
-    if vercel:
-        return f"https://{vercel.lstrip('/')}".rstrip("/")
+    if request is not None:
+        base_url = str(request.base_url or "").strip()
+        if base_url:
+            return base_url.rstrip("/")
 
-    if any((os.environ.get(chave) or "").strip() for chave in ("K_SERVICE", "K_REVISION", "K_CONFIGURATION", "VERCEL_ENV")):
-        raise HTTPException(
-            500,
-            {
-                "erro": "PUBLIC_APP_URL não configurada no backend implantado. Defina a URL pública do frontend antes de gerar magic links.",
-                "codigo": 500,
-            },
-        )
+    for chave in ("BACKEND_PUBLIC_URL", "PUBLIC_API_URL", "API_URL_PUBLICA"):
+        valor = (os.environ.get(chave) or "").strip()
+        if valor:
+            return valor.rstrip("/")
 
-    return "http://127.0.0.1:8000"
+    return "http://127.0.0.1:8001"
 
 
 def _normalizar_estado_civil(valor: str) -> str:
@@ -711,6 +708,7 @@ def gerar_magic_link_interno(
     dias: int = 7,
     canal: str = "whatsapp",
     autor: str | None = None,
+    request: Request | None = None,
     supabase=None,
 ):
     sb = supabase or _get_supabase()
@@ -765,7 +763,7 @@ def gerar_magic_link_interno(
         if cliente_info:
             cliente_nome = cliente_info.get("nome") or cliente_nome
 
-    base_url = _resolver_app_url()
+    base_url = _resolver_app_url(request)
     link = f"{base_url}/formulario/cliente?token={token}"
     area_id = participante.get("area_id") if participante else None
     registrar_evento_magic_link(
@@ -823,6 +821,7 @@ def gerar_magic_link(
         dias=dias,
         canal=canal,
         autor=autor,
+        request=request,
         supabase=supabase,
     )
 
@@ -896,6 +895,7 @@ def gerar_magic_links_lote(request: Request, projeto_id: str, payload: GerarMagi
             dias=payload.dias,
             canal=payload.canal,
             autor=payload.autor,
+            request=request,
             supabase=sb,
         )
         links.append({
