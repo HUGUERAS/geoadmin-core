@@ -208,6 +208,7 @@ try {
         "--quiet",
         "--service-account", $RuntimeServiceAccount,
         "--set-env-vars", $envVars,
+        "--remove-env-vars", "AUTH_PERMITIR_BYPASS_IMPLANTACAO",
         "--update-secrets", "SUPABASE_KEY=${SupabaseKeySecretName}:latest",
         "--min-instances", "$MinInstances",
         "--max-instances", "$MaxInstances"

@@ -124,6 +124,7 @@ jobs:
             --min-instances "${CLOUD_RUN_MIN_INSTANCES}" \
             --max-instances "${CLOUD_RUN_MAX_INSTANCES}" \
             --set-env-vars "${ENV_VARS}" \
+            --remove-env-vars "AUTH_PERMITIR_BYPASS_IMPLANTACAO" \
             --update-secrets "SUPABASE_KEY=SUPABASE_KEY:latest" \
             --quiet
 
