@@ -2,7 +2,7 @@
 
 ## 1. Pré-requisitos
 
-- `Python 3.12.x` ou `Python 3.13.x`
+- `Python 3.12.x`, `Python 3.13.x` ou `Python 3.14.x`
 - `Node` e `npm` instalados
 - `Supabase CLI` instalado
 - `backend/.env` configurado
@@ -106,6 +106,6 @@ npm start
 
 ## 11. Bloqueios conhecidos
 
-- se o bootstrap acusar `Python 3.14`, trocar a versão do Python antes de seguir
+- se o bootstrap falhar, validar se a `.venv` foi criada com `Python 3.12`, `3.13` ou `3.14`
 - se o backend não subir por credencial, revisar `backend/.env`
 - se a web abrir mas a API falhar, testar o gateway apontando explicitamente para o backend remoto oficial

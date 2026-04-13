@@ -9,7 +9,7 @@ import Svg, { G, Line, Text as SvgText, Polyline as SvgPolyline, Circle } from '
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
-import { API_URL } from '../../../constants/Api'
+import { apiGet, apiPost } from '../../../lib/api'
 
 type Ponto    = { id: string; nome: string; altitude_m: number; lon: number; lat: number }
 type Vertice  = { lon: number; lat: number; nome: string }
@@ -544,8 +544,7 @@ export default function MapaProjetoScreen() {
   )
 
   useEffect(() => {
-    fetch(`${API_URL}/projetos/${id}`)
-      .then(r => r.json())
+    apiGet<any>(`/projetos/${id}`)
       .then(data => {
         const pontosProjeto = (data.pontos || []).filter((p: any) => p.lon != null && p.lat != null)
         const perimetroAtivo = (data.perimetro_ativo?.vertices || []).filter((v: any) => v.lon != null && v.lat != null)
@@ -554,7 +553,7 @@ export default function MapaProjetoScreen() {
         setPontos(pontosProjeto)
         setPolygonVerts(perimetroAtivo.length > 0 ? perimetroAtivo : pontosParaVertices(pontosProjeto))
       })
-      .catch(() => Alert.alert('Erro', 'Não foi possível carregar o projeto.'))
+      .catch((error: any) => Alert.alert('Erro', error?.message || 'Não foi possível carregar o projeto.'))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -586,15 +585,11 @@ export default function MapaProjetoScreen() {
     setEditTool('mover')
     setEditMode(true)
     try {
-      await fetch(`${API_URL}/perimetros/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projeto_id: id,
-          nome: (projeto?.projeto_nome || id) + ' — original',
-          tipo: 'original',
-          vertices: verts,
-        }),
+      await apiPost('/perimetros/', {
+        projeto_id: id,
+        nome: (projeto?.projeto_nome || id) + ' — original',
+        tipo: 'original',
+        vertices: verts,
       })
     } catch (err: any) {
       Alert.alert('Aviso', 'Não foi possível registrar o perímetro original: ' + (err?.message || 'erro desconhecido'))
@@ -652,18 +647,12 @@ export default function MapaProjetoScreen() {
   const salvarEdit = useCallback(() => {
     const doSave = async () => {
       try {
-        const res = await fetch(`${API_URL}/perimetros/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projeto_id: id,
-            nome: (projeto?.projeto_nome || id) + ' — editado',
-            tipo: 'editado',
-            vertices: editVerts,
-          }),
+        const salvo = await apiPost<any>('/perimetros/', {
+          projeto_id: id,
+          nome: (projeto?.projeto_nome || id) + ' — editado',
+          tipo: 'editado',
+          vertices: editVerts,
         })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const salvo = await res.json().catch(() => null)
         const proximosVertices = (salvo?.vertices || editVerts).map((v: Vertice) => ({ ...v }))
 
         setPolygonVerts(proximosVertices)

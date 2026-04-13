@@ -83,7 +83,7 @@ Principais riscos atuais:
 - fluxo de `magic link` ainda precisa de endurecimento estrutural
 - trilha de migrations local e remoto ainda não está reconciliada
 - existem fallbacks locais e stubs que precisam sair da trilha de produção, consolidados em [TASKS_BANCO_FUNCIONAMENTO_REAL.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\TASKS_BANCO_FUNCIONAMENTO_REAL.md)
-- o backend do núcleo não instala com `Python 3.14.2` por bloqueio de `pyproj==3.7.1`
+- o backend do núcleo usa `pyproj==3.7.2`, compatível com `Python 3.12`, `3.13` e `3.14`
 
 ## Onde Estamos
 

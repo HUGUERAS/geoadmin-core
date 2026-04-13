@@ -102,6 +102,38 @@ class GeometriaTextoPayload(BaseModel):
     conteudo: str
 
 
+CAMPOS_CLIENTE_OPCIONAIS_NULAVEIS = {
+    "rg",
+    "estado_civil",
+    "profissao",
+    "email",
+    "endereco",
+    "endereco_numero",
+    "municipio",
+    "estado",
+    "setor",
+    "cep",
+    "conjuge_nome",
+    "conjuge_cpf",
+}
+
+
+def _normalizar_payload_cliente_update(payload: ClienteUpdate) -> dict[str, Any]:
+    dados_brutos = payload.model_dump(exclude_none=True)
+    dados: dict[str, Any] = {}
+
+    for chave, valor in dados_brutos.items():
+        if isinstance(valor, str):
+            valor = valor.strip()
+            if chave == "nome" and not valor:
+                raise HTTPException(status_code=400, detail={"erro": "Nome nao pode ser vazio", "codigo": 400})
+            if chave in CAMPOS_CLIENTE_OPCIONAIS_NULAVEIS and not valor:
+                valor = None
+        dados[chave] = valor
+
+    return dados
+
+
 from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, Depends
 from middleware.auth import verificar_token
 
@@ -227,7 +259,7 @@ def atualizar_cliente(cliente_id: str, payload: ClienteUpdate):
     """Atualiza dados do cliente."""
     sb = get_supabase()
     cliente_ou_404(sb, cliente_id)
-    dados = payload.model_dump(exclude_none=True)
+    dados = _normalizar_payload_cliente_update(payload)
     return atualizar_cliente_db(sb, cliente_id, dados)
 
 

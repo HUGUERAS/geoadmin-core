@@ -22,31 +22,84 @@ function Invoke-CheckedCommand {
   }
 }
 
-Write-Host "== GeoAdmin Core: bootstrap local =="
+function Get-ResolvedPathSafe {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
 
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-  throw "Python nao encontrado no PATH."
+  return [System.IO.Path]::GetFullPath($Path)
 }
+
+function Get-CompatiblePython {
+  $candidates = New-Object System.Collections.Generic.List[string]
+
+  $currentPython = Get-Command python -ErrorAction SilentlyContinue
+  if ($currentPython) {
+    $candidates.Add($currentPython.Source)
+  }
+
+  $pyLauncher = Get-Command py -ErrorAction SilentlyContinue
+  if ($pyLauncher) {
+    $pyOutput = & $pyLauncher.Source -0p 2>$null
+    foreach ($line in ($pyOutput -split "`r?`n")) {
+      if ($line -match '3\.(12|13|14).+?([A-Z]:\\.+python\.exe)$') {
+        $candidates.Add($Matches[2].Trim())
+      }
+    }
+  }
+
+  $uvPythonRoot = Join-Path $env:APPDATA "uv\\python"
+  if (Test-Path $uvPythonRoot) {
+    Get-ChildItem -Path $uvPythonRoot -Filter python.exe -Recurse -File -ErrorAction SilentlyContinue |
+      ForEach-Object { $candidates.Add($_.FullName) }
+  }
+
+  foreach ($candidate in ($candidates | Select-Object -Unique)) {
+    try {
+      $version = & $candidate --version 2>&1
+      if ($version -match 'Python 3\.(12|13|14)\.') {
+        return @{
+          Path = $candidate
+          Version = $version
+        }
+      }
+    } catch {
+      continue
+    }
+  }
+
+  throw "Nenhum Python 3.12.x, 3.13.x ou 3.14.x foi encontrado. Instale um runtime compatível para o backend."
+}
+
+Write-Host "== GeoAdmin Core: bootstrap local =="
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
   throw "npm nao encontrado no PATH."
 }
 
-$pythonVersion = python --version 2>&1
-if ($pythonVersion -match 'Python 3\\.14') {
-  throw "Python 3.14 nao e suportado pela stack atual do backend por causa do pyproj. Use Python 3.12.x ou 3.13.x para o GeoAdmin Core."
-}
+$pythonInfo = Get-CompatiblePython
+$pythonCommand = $pythonInfo.Path
+$pythonVersion = $pythonInfo.Version
+Write-Host "Usando interpretador compatível: $pythonVersion ($pythonCommand)"
 
 if (Test-Path $pythonExe) {
   $venvVersion = & $pythonExe --version 2>&1
-  if ($venvVersion -match 'Python 3\\.14') {
-    throw "A .venv atual foi criada com Python 3.14 e nao serve para o backend. Remova .venv e rode novamente com Python 3.12.x ou 3.13.x."
+  if ($venvVersion -notmatch 'Python 3\.(12|13|14)\.') {
+    $resolvedRepoRoot = Get-ResolvedPathSafe -Path $repoRoot
+    $resolvedVenvPath = Get-ResolvedPathSafe -Path $venvPath
+    if (-not $resolvedVenvPath.StartsWith($resolvedRepoRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+      throw "A .venv atual nao esta dentro do workspace esperado. Abortando a limpeza por seguranca."
+    }
+
+    Write-Warning "A .venv atual foi criada com um Python fora da baseline suportada e sera recriada."
+    Remove-Item -LiteralPath $venvPath -Recurse -Force
   }
 }
 
 if (-not (Test-Path $venvPath)) {
   Write-Host "Criando ambiente virtual em $venvPath"
-  Invoke-CheckedCommand -FilePath "python" -Arguments @("-m", "venv", $venvPath)
+  Invoke-CheckedCommand -FilePath $pythonCommand -Arguments @("-m", "venv", $venvPath)
 }
 
 Write-Host "Atualizando pip"
