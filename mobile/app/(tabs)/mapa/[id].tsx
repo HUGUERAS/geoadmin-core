@@ -36,6 +36,31 @@ function computeTransform(pontos: { lon: number; lat: number }[], svgW: number, 
   return { toX, toY, fromX, fromY, minLon, maxLon, minLat, maxLat, scale }
 }
 
+function createZoomedTransform(
+  base: ReturnType<typeof computeTransform>,
+  svgW: number,
+  svgH: number,
+  zoom: number
+) {
+  const centerX = svgW / 2
+  const centerY = svgH / 2
+  const factor = Math.max(1, zoom)
+
+  const toX = (lon: number) => centerX + (base.toX(lon) - centerX) * factor
+  const toY = (lat: number) => centerY + (base.toY(lat) - centerY) * factor
+  const fromX = (x: number) => base.fromX(centerX + (x - centerX) / factor)
+  const fromY = (y: number) => base.fromY(centerY + (y - centerY) / factor)
+
+  return {
+    ...base,
+    toX,
+    toY,
+    fromX,
+    fromY,
+    zoom: factor,
+  }
+}
+
 function niceInterval(range: number, ticks = 5) {
   const raw = range / ticks, mag = Math.pow(10, Math.floor(Math.log10(raw)))
   const f = raw / mag
@@ -133,6 +158,58 @@ function decimalParaDms(dec: number): string {
   const m = Math.floor(mf)
   const s = (mf - m) * 60
   return `${g}°${String(m).padStart(2,'0')}'${s.toFixed(1).padStart(4,'0')}"`
+}
+
+function applyVertexSnap(
+  px: number,
+  py: number,
+  draggedIndex: number,
+  editVertices: Vertice[],
+  toX: (lon: number) => number,
+  toY: (lat: number) => number,
+  thresholdPx = 14
+) {
+  let snapX = px
+  let snapY = py
+  let bestPointDistance = Number.POSITIVE_INFINITY
+  let bestPoint: { x: number; y: number } | null = null
+  let bestXDistance = Number.POSITIVE_INFINITY
+  let bestYDistance = Number.POSITIVE_INFINITY
+
+  editVertices.forEach((vertice, index) => {
+    if (index === draggedIndex) return
+
+    const vx = toX(vertice.lon)
+    const vy = toY(vertice.lat)
+    const pointDistance = Math.hypot(vx - px, vy - py)
+
+    if (pointDistance < bestPointDistance) {
+      bestPointDistance = pointDistance
+      bestPoint = { x: vx, y: vy }
+    }
+
+    const dx = Math.abs(vx - px)
+    if (dx < bestXDistance) {
+      bestXDistance = dx
+      if (dx <= thresholdPx) {
+        snapX = vx
+      }
+    }
+
+    const dy = Math.abs(vy - py)
+    if (dy < bestYDistance) {
+      bestYDistance = dy
+      if (dy <= thresholdPx) {
+        snapY = vy
+      }
+    }
+  })
+
+  if (bestPoint && bestPointDistance <= thresholdPx) {
+    return bestPoint
+  }
+
+  return { x: snapX, y: snapY }
 }
 
 function intersecaoLocal(p1: Vertice, az1: number, p2: Vertice, az2: number): { lat: number; lon: number } | null {
@@ -391,7 +468,7 @@ function MapaWebView({ pontos, poligono, layers }: { pontos: Ponto[]; poligono: 
 
 function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVertices, origVertices,
   onVertexDrag, onVertexDelete, onMidpointAdd, onDragStart,
-  onVertexTap, selecaoAtiva, vxSelecionados }: any) {
+  onVertexTap, selecaoAtiva, vxSelecionados, zoom, snapEnabled }: any) {
   const { width: W, height: H } = Dimensions.get('window')
   const svgH = H - 56 - 50 - 50
   const TOUCH_R = 20
@@ -404,16 +481,16 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
 
     return [...(pontos || []), ...(polygonVerts || [])]
   }, [editMode, editVertices, origVertices, pontos, polygonVerts])
-  const xform = useMemo(
-    () => computeTransform(allPts.length ? allPts : pontos, W, svgH),
-    [allPts, W, svgH]
-  )
+  const xform = useMemo(() => {
+    const base = computeTransform(allPts.length ? allPts : pontos, W, svgH)
+    return createZoomedTransform(base, W, svgH, zoom)
+  }, [allPts, W, svgH, pontos, zoom])
   const { toX, toY, fromX, fromY, minLon, maxLon, minLat, maxLat } = xform
 
-  const stateRef = useRef<any>({ editMode, editTool, editVertices, toX, toY, fromX, fromY, onVertexDrag, onDragStart, selecaoAtiva, onVertexTap })
+  const stateRef = useRef<any>({ editMode, editTool, editVertices, toX, toY, fromX, fromY, onVertexDrag, onDragStart, selecaoAtiva, onVertexTap, snapEnabled })
   useEffect(() => {
-    stateRef.current = { editMode, editTool, editVertices, toX, toY, fromX, fromY, onVertexDrag, onDragStart, selecaoAtiva, onVertexTap }
-  })
+    stateRef.current = { editMode, editTool, editVertices, toX, toY, fromX, fromY, onVertexDrag, onDragStart, selecaoAtiva, onVertexTap, snapEnabled }
+  }, [editMode, editTool, editVertices, toX, toY, fromX, fromY, onVertexDrag, onDragStart, selecaoAtiva, onVertexTap, snapEnabled])
 
   const panRef = useRef<{ idx: number } | null>(null)
 
@@ -441,8 +518,9 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
     onPanResponderMove: (e: GestureResponderEvent) => {
       if (!panRef.current) return
       const { locationX: px, locationY: py } = e.nativeEvent
-      const { fromX: fx, fromY: fy, onVertexDrag: drag } = stateRef.current
-      drag(panRef.current.idx, fx(px), fy(py))
+      const { fromX: fx, fromY: fy, onVertexDrag: drag, editVertices: ev, toX: tx, toY: ty, snapEnabled: snap } = stateRef.current
+      const snapPoint = snap ? applyVertexSnap(px, py, panRef.current.idx, ev || [], tx, ty) : { x: px, y: py }
+      drag(panRef.current.idx, fx(snapPoint.x), fy(snapPoint.y))
     },
     onPanResponderRelease: () => { panRef.current = null },
   })).current
@@ -596,6 +674,8 @@ export default function MapaProjetoScreen() {
   const [editVerts,   setEditVerts] = useState<Vertice[]>([])
   const [origVerts,   setOrigVerts] = useState<Vertice[]>([])
   const [editHistory, setEditHist] = useState<Vertice[][]>([])
+  const [cadZoom,     setCadZoom] = useState(1)
+  const [snapAtivo,   setSnapAtivo] = useState(true)
   const undoStack = useRef<Vertice[][]>([])
 
   // ferramentas integradas
@@ -668,6 +748,7 @@ export default function MapaProjetoScreen() {
     setEditHist([])
     undoStack.current = []
     setEditTool('mover')
+    setCadZoom(1)
     setEditMode(true)
     try {
       await apiPost('/perimetros/', {
@@ -821,6 +902,18 @@ export default function MapaProjetoScreen() {
     setDeflAngulo(''); setDeflLado('D')
     setRotAngulo(''); setRotOrigemAuto(true); setRotOrigemLat(''); setRotOrigemLon('')
     setSubArea(''); setSubUnidade('ha')
+  }, [])
+
+  const aumentarZoomCad = useCallback(() => {
+    setCadZoom((atual) => Math.min(6, Number((atual + 0.25).toFixed(2))))
+  }, [])
+
+  const reduzirZoomCad = useCallback(() => {
+    setCadZoom((atual) => Math.max(1, Number((atual - 0.25).toFixed(2))))
+  }, [])
+
+  const resetarZoomCad = useCallback(() => {
+    setCadZoom(1)
   }, [])
 
   const abrirFerramenta = useCallback((ferr: NomeFerramenta) => {
@@ -1250,7 +1343,37 @@ export default function MapaProjetoScreen() {
             onVertexTap={handleVertexTap}
             selecaoAtiva={selecaoAtiva}
             vxSelecionados={vxSelecionados}
+            zoom={cadZoom}
+            snapEnabled={snapAtivo}
           />
+        )}
+
+        {mode === 'cad' && hasGeometry && (
+          <View style={[s.cadControls, { backgroundColor: `${C.card}EE`, borderColor: C.cardBorder }]}>
+            <View style={s.cadControlRow}>
+              <TouchableOpacity style={[s.cadControlBtn, { borderColor: C.cardBorder }]} onPress={reduzirZoomCad}>
+                <Text style={[s.cadControlTxt, { color: C.text }]}>−</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.cadControlBtn, { borderColor: C.cardBorder }]} onPress={resetarZoomCad}>
+                <Text style={[s.cadControlTxt, { color: C.text }]}>{Math.round(cadZoom * 100)}%</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.cadControlBtn, { borderColor: C.cardBorder }]} onPress={aumentarZoomCad}>
+                <Text style={[s.cadControlTxt, { color: C.text }]}>+</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={[
+                s.cadSnapBtn,
+                {
+                  borderColor: snapAtivo ? C.primary : C.cardBorder,
+                  backgroundColor: snapAtivo ? `${C.primary}20` : 'transparent',
+                },
+              ]}
+              onPress={() => setSnapAtivo((atual) => !atual)}
+            >
+              <Text style={[s.cadSnapTxt, { color: snapAtivo ? C.primary : C.muted }]}>SNAP {snapAtivo ? 'ON' : 'OFF'}</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Overlay de seleção de vértices */}
@@ -1656,6 +1779,12 @@ const s = StyleSheet.create({
   coordOverlay: { position: 'absolute', bottom: 8, left: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 8, padding: 8, alignItems: 'center' },
   coordText:    { fontFamily: Platform.OS === 'android' ? 'monospace' : 'Courier', fontSize: 13, color: '#ffffff', letterSpacing: 0.2 },
   coordMuted:   { fontSize: 11, color: '#9c9a92', marginTop: 2 },
+  cadControls:  { position: 'absolute', top: 10, right: 10, borderWidth: 1, borderRadius: 12, padding: 8, gap: 8 },
+  cadControlRow:{ flexDirection: 'row', gap: 6 },
+  cadControlBtn:{ minWidth: 52, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  cadControlTxt:{ fontSize: 12, fontWeight: '700' },
+  cadSnapBtn:   { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },
+  cadSnapTxt:   { fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
   // ferramentas
   selecaoOverlay: { position: 'absolute', top: 8, left: 8, right: 8, backgroundColor: '#378ADD22', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#378ADD', alignItems: 'center' },
   selecaoTxt:     { color: '#378ADD', fontSize: 13, fontWeight: '700' },
