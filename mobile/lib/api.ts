@@ -11,6 +11,9 @@ type JsonValue =
 
 export type JsonObject = { [key: string]: JsonValue };
 
+const API_BASE_URL_PRODUCAO_PADRAO =
+  'https://geoadmin-api-800479022570.us-central1.run.app';
+
 // Token de autenticação do Supabase — defina via definirToken()
 let _authToken: string | null = null;
 
@@ -57,9 +60,7 @@ function getRequiredProductionApiBaseUrl(context: string): string {
     return explicitUrl;
   }
 
-  throw new Error(
-    `EXPO_PUBLIC_API_BASE_URL é obrigatória para ${context}. Defina a URL pública do Cloud Run antes do deploy.`
-  );
+  return API_BASE_URL_PRODUCAO_PADRAO;
 }
 
 function extractHostFromExpoConfig(): string | null {
