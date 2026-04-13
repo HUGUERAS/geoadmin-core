@@ -1,88 +1,72 @@
-# GeoAdmin Pro — Contexto para todas as sessões
+# GeoAdmin Core — Contexto de Continuidade
 
-Use este arquivo em novas conversas: abra ou referencie com `@CONTEXTO_PROJETO.md` para o assistente retomar o contexto rapidamente.
+Use este arquivo como resumo rápido do núcleo oficial do produto.
 
----
+## Identidade do repositório
 
-## Quem
+- Repositório oficial do núcleo: `geoadmin-core`
+- Repositório anterior `GeoAdmin-Pro`: referência histórica e incubadora
+- Idioma de trabalho: português
 
-- **Autor/Responsável:** Hugo (Desenrola Team)
-- **Preferência:** Respostas sempre em **português**.
+## O que é o produto
 
----
+- Sistema para topografia, georreferenciamento e gestão de projetos rurais
+- Fonte única de verdade para:
+  - projetos
+  - clientes
+  - confrontações
+  - documentos
+  - exportações técnicas
+  - banco e contratos
 
-## O que é o projeto
+## Stack oficial
 
-- **GeoAdmin Pro:** sistema para topografia, georreferenciamento e gestão de projetos rurais (INCRA, SIGEF, memoriais).
-- **Objetivo central:** uma única fonte de dados — digitar uma vez no app/backend e não repetir no Métrica TOPO, planilhas ou outros sistemas.
+- Mobile/web: `Expo 54 + Expo Router` em [mobile](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\mobile)
+- Backend: `FastAPI` em [backend](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend)
+- Banco/Auth/Storage: `Supabase`
+- API em nuvem: `Google Cloud Run`
+- Web publicada: `Vercel`
 
----
+## Ambientes ativos conhecidos
 
-## Stack
+- Cloud Run:
+  - serviço `geoadmin-api`
+  - projeto `geoadmin-core-2026`
+  - URL pública: `https://geoadmin-api-800479022570.us-central1.run.app`
+- Vercel:
+  - projeto `geo-admin-pro`
+  - domínio principal: `https://geo-admin-pro.vercel.app`
+- Firebase Hosting também responde:
+  - `https://geoadmin-core-2026.web.app`
+  - `https://geoadmin-core-2026.firebaseapp.com`
 
-- **Mobile:** React Native (Expo), 4 abas: Projeto | Mapa | Cálculos | Clientes. Tema dark + laranja `#EF9F27`.
-- **Backend:** FastAPI (Python), em `C:\Users\User\Documents\GeoAdmin-Pro\backend\`.
-- **Banco:** Supabase (Postgres + PostGIS). Projeto: `https://jrlrlsotwsiidglcbifo.supabase.co`.
-- **Integração Métrica TOPO:** exportação de pontos em TXT (e depois CSV, DXF, KML) no formato que o Métrica importa.
+## Configuração de backend
 
----
+- `SUPABASE_URL`: URL do projeto Supabase oficial
+- `SUPABASE_KEY`: usar `service role key` no backend
+- Nunca commitar `.env`
+- Buckets e segredos devem existir no ambiente, não no Git
 
-## Estrutura do backend (resumo)
+## Regras de continuidade
 
-```
-backend/
-  main.py              ← app FastAPI, get_supabase(), /health, /geo/inverso
-  .env                 ← SUPABASE_URL, SUPABASE_KEY (nunca commitar)
-  .env.example         ← modelo sem valores reais
-  requirements.txt    ← fastapi, uvicorn, supabase, python-dotenv, ezdxf
-  integracoes/
-    integracao_metrica.py   ← geradores TXT, CSV, DXF, KML (usa views do Supabase)
-  routes/
-    exportacao.py          ← GET/POST /projetos/{id}/metrica/... (depende do Supabase)
-    metrica_simples.py      ← POST /metrica/txt (JSON → TXT, sem banco)
-```
+- O documento central de referência é [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
+- Depois de qualquer compactação de contexto, este arquivo e a referência oficial devem ser lidos antes de continuar
+- O `RAG Topografia` fica fora do escopo do core por enquanto
 
-- **Rodar servidor:** `cd backend` e `python -m uvicorn main:app --reload`. API em `http://127.0.0.1:8000`.
-- **Docs interativos:** `http://127.0.0.1:8000/docs`.
+## Estado atual conhecido
 
----
+- Há produção real na nuvem
+- A trilha de promoção ainda está bifurcada entre:
+  - `main`
+  - branches `codex/*`
+  - deploy manual do Cloud Run
+- O backend implantado está online, mas a configuração atual ainda precisa de alinhamento de segurança antes da próxima promoção
 
-## Supabase
+## Documentos mais importantes
 
-- **URL do projeto:** `https://jrlrlsotwsiidglcbifo.supabase.co`.
-- **Chave:** usar a **anon public** (Settings → API no Dashboard). Colocar em `backend/.env` como `SUPABASE_KEY`.
-- **Nunca** commitar `.env`; está em `backend/.gitignore`. No GitHub usar apenas Secrets para CI/deploy.
-- **Views esperadas** pela integração completa: `vw_projetos_completo`, `vw_pontos_utm`. Se não existirem, o endpoint `GET /projetos/{id}/metrica/txt` pode retornar 500.
-
----
-
-## Integração Métrica TOPO (como ficou)
-
-- **Modo simples (funciona sem Supabase):**  
-  `POST /metrica/txt` — envia JSON com `projeto_nome`, `numero_job`, `zona_utm`, `pontos[]`. Resposta: arquivo .txt pronto para importar no Métrica.
-- **Modo completo (com Supabase):**  
-  `GET /projetos/{id}/metrica/txt` (e preparar, csv, dxf, kml) — lê dados das views e gera os arquivos. Só funciona com banco e views configurados.
-- **Formato TXT:** colunas Nome, Norte, Este, Cota, Código; cabeçalho com projeto/job; gerado por GeoAdmin Pro.
-
----
-
-## Documentos de referência no repo
-
-- `Master_Plan_v2.md` — fases 0 a 3, critérios de aceitação, tarefas por agente.
-- `.cursorrules` — 6 agentes (UI/UX, Geográfico, Automação, Dados, Auditor, RAG) e regras de trabalho.
-- `Comandos_Agentes.md` — prompts prontos por agente.
-- `Fluxo_Agentes_Fases.md` — ordem de execução dos prompts por fase.
-
----
-
-## Decisões importantes
-
-- Fonte única de dados: GeoAdmin Pro; Métrica consome arquivos gerados pelo backend.
-- Endpoint simples primeiro: `POST /metrica/txt` com JSON; depois conectar Supabase no GET por projeto.
-- Favicon 404 na API é normal; ignorar. Erro 500 em `/projetos/.../metrica/txt` em geral é Supabase/views ou .env.
-- Governança de segurança documentada em [GOVERNANCA_SEGURANCA.md](c:\Users\User\GeoAdmin-Pro\docs\GOVERNANCA_SEGURANCA.md).
-- Mudanças em `auth`, `magic links`, uploads, documentos, exportações, versão web e integrações externas exigem revisão dedicada de segurança.
-
----
-
-*Última atualização: contexto da sessão de março 2026. Ajuste este arquivo quando houver mudanças relevantes.*
+- [ARQUITETURA_OFICIAL_DO_PROJETO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\ARQUITETURA_OFICIAL_DO_PROJETO.md)
+- [REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\REFERENCIA_OFICIAL_SEGURANCA_SUPABASE.md)
+- [BASELINE_OFICIAL_AMBIENTE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\BASELINE_OFICIAL_AMBIENTE.md)
+- [CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\CHECKLIST_SUBIDA_LOCAL_DO_NUCLEO.md)
+- [HARDENING_MINIMO_CORE.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\HARDENING_MINIMO_CORE.md)
+- [MAPA_PROMOCAO_AMBIENTES.md](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\docs\MAPA_PROMOCAO_AMBIENTES.md)

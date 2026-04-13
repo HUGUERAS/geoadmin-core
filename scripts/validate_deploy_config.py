@@ -142,6 +142,17 @@ def main() -> int:
         "backend/.env.example",
         [
             "PUBLIC_APP_URL=",
+            "service role",
+        ],
+    )
+    ensure_contains(
+        errors,
+        "docs/CONTEXTO_PROJETO.md",
+        [
+            "service role key",
+            "Cloud Run",
+            "Vercel",
+            "MAPA_PROMOCAO_AMBIENTES.md",
         ],
     )
     ensure_contains(
@@ -151,6 +162,15 @@ def main() -> int:
             "publicações web no Vercel",
             "builds mobile publicados via EAS/APK",
             "Cloud Run antes do deploy",
+        ],
+    )
+    ensure_absent(
+        errors,
+        "docs/CONTEXTO_PROJETO.md",
+        [
+            "anon public",
+            "Documents\\GeoAdmin-Pro\\backend",
+            "http://127.0.0.1:8000/docs",
         ],
     )
 
