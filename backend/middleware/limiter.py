@@ -1,6 +1,7 @@
 import time
 import asyncio
 import functools
+import inspect
 from collections import defaultdict
 from fastapi import Request, HTTPException
 
@@ -42,6 +43,7 @@ class CustomLimiter:
                     )
                     self._check_limit(req, max_reqs, window, scope=scope)
                     return await func(*args, **kwargs)
+                async_wrapper.__signature__ = inspect.signature(func)
                 return async_wrapper
             else:
                 @functools.wraps(func)
@@ -51,6 +53,7 @@ class CustomLimiter:
                     )
                     self._check_limit(req, max_reqs, window, scope=scope)
                     return func(*args, **kwargs)
+                sync_wrapper.__signature__ = inspect.signature(func)
                 return sync_wrapper
 
         return decorator

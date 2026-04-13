@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from middleware.auth import verificar_token
@@ -100,13 +98,13 @@ def renovar_sessao_topografo(refresh_token: str, *, cliente_auth=None) -> dict[s
 
 @router.post("/login", summary="Autenticar topógrafo/usuário interno")
 @limiter.limit("10/minute")
-def login_topografo(request: Request, payload: LoginPayload):
+def login_topografo(request: Request, payload: LoginPayload = Body(...)):
     return autenticar_topografo(payload.email, payload.senha)
 
 
 @router.post("/refresh", summary="Renovar sessão interna")
 @limiter.limit("20/minute")
-def refresh_topografo(request: Request, payload: RefreshPayload):
+def refresh_topografo(request: Request, payload: RefreshPayload = Body(...)):
     return renovar_sessao_topografo(payload.refresh_token)
 
 
