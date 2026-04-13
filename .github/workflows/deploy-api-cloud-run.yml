@@ -124,9 +124,22 @@ jobs:
             --min-instances "${CLOUD_RUN_MIN_INSTANCES}" \
             --max-instances "${CLOUD_RUN_MAX_INSTANCES}" \
             --set-env-vars "${ENV_VARS}" \
-            --remove-env-vars "AUTH_PERMITIR_BYPASS_IMPLANTACAO" \
             --update-secrets "SUPABASE_KEY=SUPABASE_KEY:latest" \
             --quiet
+
+      - name: Remove legacy auth bypass env
+        run: |
+          CURRENT_ENVS="$(gcloud run services describe "${CLOUD_RUN_SERVICE}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT_ID}" \
+            --format='value(spec.template.spec.containers[0].env[].name)')"
+          if echo "${CURRENT_ENVS}" | tr ';' '\n' | grep -qx 'AUTH_PERMITIR_BYPASS_IMPLANTACAO'; then
+            gcloud run services update "${CLOUD_RUN_SERVICE}" \
+              --region "${GCP_REGION}" \
+              --project "${GCP_PROJECT_ID}" \
+              --remove-env-vars "AUTH_PERMITIR_BYPASS_IMPLANTACAO" \
+              --quiet
+          fi
 
       - name: Validate Cloud Run runtime contract
         run: |

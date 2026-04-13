@@ -124,6 +124,46 @@ function Test-CloudRunRuntimeContract {
     }
 }
 
+function Remove-LegacyBypassEnv {
+    param(
+        [string]$ServiceName,
+        [string]$Region,
+        [string]$ProjectId
+    )
+
+    $describeCommand = @(
+        "run", "services", "describe", $ServiceName,
+        "--region", $Region,
+        "--project", $ProjectId,
+        "--format=json"
+    )
+
+    $json = & gcloud @describeCommand
+    if ($LASTEXITCODE -ne 0) {
+        throw "Falha ao descrever servico Cloud Run para remover env legado."
+    }
+
+    $service = $json | ConvertFrom-Json
+    $envNames = @(
+        foreach ($entry in $service.spec.template.spec.containers[0].env) {
+            if ($entry.name) { $entry.name }
+        }
+    )
+
+    if ($envNames -notcontains "AUTH_PERMITIR_BYPASS_IMPLANTACAO") {
+        Write-Host "AUTH_PERMITIR_BYPASS_IMPLANTACAO ja nao esta presente no runtime."
+        return
+    }
+
+    Invoke-GCloud -Arguments @(
+        "run", "services", "update", $ServiceName,
+        "--region", $Region,
+        "--project", $ProjectId,
+        "--remove-env-vars", "AUTH_PERMITIR_BYPASS_IMPLANTACAO",
+        "--quiet"
+    )
+}
+
 Assert-RequiredValue -Name "ProjectId" -Value $ProjectId
 Assert-RequiredValue -Name "Region" -Value $Region
 Assert-RequiredValue -Name "ArtifactRegistryRepository" -Value $ArtifactRegistryRepository
@@ -208,7 +248,6 @@ try {
         "--quiet",
         "--service-account", $RuntimeServiceAccount,
         "--set-env-vars", $envVars,
-        "--remove-env-vars", "AUTH_PERMITIR_BYPASS_IMPLANTACAO",
         "--update-secrets", "SUPABASE_KEY=${SupabaseKeySecretName}:latest",
         "--min-instances", "$MinInstances",
         "--max-instances", "$MaxInstances"
@@ -221,6 +260,7 @@ try {
     }
 
     Invoke-GCloud -Arguments $deployArgs
+    Remove-LegacyBypassEnv -ServiceName $ServiceName -Region $Region -ProjectId $ProjectId
 
     $serviceUrlCommand = @(
         "run", "services", "describe", $ServiceName,
