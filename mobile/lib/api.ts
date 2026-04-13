@@ -22,8 +22,20 @@ function sanitizeBaseUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
 }
 
+function getExpoConfigApiBaseUrl(): string | null {
+  const configUrl =
+    (Constants.expoConfig as { extra?: { apiBaseUrl?: string } } | null)?.extra?.apiBaseUrl?.trim() ??
+    null;
+
+  if (!configUrl) {
+    return null;
+  }
+
+  return sanitizeBaseUrl(configUrl);
+}
+
 function getExplicitApiBaseUrl(): string | null {
-  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  const explicitUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || getExpoConfigApiBaseUrl();
   if (!explicitUrl) {
     return null;
   }

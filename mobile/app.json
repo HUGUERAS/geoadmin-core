@@ -25,6 +25,7 @@
     ],
     "extra": {
       "router": {},
+      "apiBaseUrl": "https://geoadmin-api-800479022570.us-central1.run.app",
       "eas": {
         "projectId": "d17fae3a-1c71-4365-b2f4-78aa26e5a30e"
       }

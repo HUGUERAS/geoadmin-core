@@ -15,6 +15,10 @@ import { Feather } from '@expo/vector-icons'
 import { Colors } from '../constants/Colors'
 import { useAuth } from '../lib/auth'
 
+const WebTextInput = TextInput as unknown as typeof TextInput & {
+  defaultProps?: Record<string, unknown>
+}
+
 
 export default function LoginScreen() {
   const C = Colors.dark
@@ -76,7 +80,7 @@ export default function LoginScreen() {
         <View style={s.form}>
           <View style={s.fieldGap}>
             <Text style={[s.label, { color: C.text }]}>E-mail</Text>
-            <TextInput
+            <WebTextInput
               value={email}
               onChangeText={setEmail}
               placeholder="voce@empresa.com"
@@ -84,6 +88,10 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              id="login-email"
+              name="email"
               style={[s.input, { backgroundColor: C.background, borderColor: C.cardBorder, color: C.text }]}
             />
           </View>
@@ -91,13 +99,17 @@ export default function LoginScreen() {
           <View style={s.fieldGap}>
             <Text style={[s.label, { color: C.text }]}>Senha</Text>
             <View style={[s.passwordBox, { backgroundColor: C.background, borderColor: C.cardBorder }]}>
-              <TextInput
+              <WebTextInput
                 value={senha}
                 onChangeText={setSenha}
                 placeholder="Sua senha de acesso"
                 placeholderTextColor={C.muted}
                 secureTextEntry={!mostrarSenha}
                 autoCapitalize="none"
+                autoComplete="current-password"
+                textContentType="password"
+                id="login-password"
+                name="password"
                 style={[s.passwordInput, { color: C.text }]}
               />
               <TouchableOpacity onPress={() => setMostrarSenha((state) => !state)} accessibilityRole="button">
