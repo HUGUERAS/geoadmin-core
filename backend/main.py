@@ -58,6 +58,7 @@ _detalhar_erros = os.getenv("DEBUG_ERRORS", "false").lower() == "true"
 
 from routes.exportacao import router as exportacao_router
 from routes.metrica_simples import router as metrica_router
+from routes.auth import router as auth_router
 from routes.projetos import router as projetos_router
 from routes.clientes import router as clientes_router
 from routes.documentos import router as docs_router
@@ -175,6 +176,7 @@ if os.path.isdir(_static_dir):
 
 app.include_router(projetos_router)
 app.include_router(clientes_router)
+app.include_router(auth_router)
 app.include_router(exportacao_router)
 app.include_router(metrica_router)
 app.include_router(docs_router)

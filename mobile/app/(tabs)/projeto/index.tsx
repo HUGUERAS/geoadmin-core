@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Colors } from '../../../constants/Colors'
 import { ProjetoCard } from '../../../components/ProjetoCard'
 import { apiGet } from '../../../lib/api'
+import { useAuth } from '../../../lib/auth'
 import { initDB, cacheProjetos, getCachedProjetos } from '../../../lib/db'
 import type { ListaProjetosResponseV1, ProjetoListaItemApiV1 } from '../../../types/contratos-v1'
 
@@ -105,6 +106,7 @@ export default function ProjetosScreen() {
   const C = Colors.dark
   const insets = useSafeAreaInsets()
   const router = useRouter()
+  const { usuario, sair } = useAuth()
   const [projetos, setProjetos]     = useState<ProjetoListaItemApiV1[]>([])
   const [loading, setLoading]       = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -180,12 +182,25 @@ export default function ProjetosScreen() {
               <View style={s.topRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.titulo, { color: C.text }]}>Projetos</Text>
-                  <Text style={[s.sub, { color: C.muted }]}>Painel de campo, documentação e operação por lote</Text>
+                  <Text style={[s.sub, { color: C.muted }]}>
+                    Painel de campo, documentação e operação por lote
+                    {usuario?.email ? ` · ${usuario.email}` : ''}
+                  </Text>
                 </View>
-                <TouchableOpacity style={[s.novoBtn, { borderColor: C.primary }]} onPress={() => router.push('/projeto/novo' as any)} accessibilityRole="button" accessibilityLabel="Criar novo projeto">
-                  <Feather name="plus" size={16} color={C.primary} />
-                  <Text style={[s.novoBtnTxt, { color: C.primary }]}>Novo</Text>
-                </TouchableOpacity>
+                <View style={s.headerActions}>
+                  <TouchableOpacity style={[s.novoBtn, { borderColor: C.primary }]} onPress={() => router.push('/projeto/novo' as any)} accessibilityRole="button" accessibilityLabel="Criar novo projeto">
+                    <Feather name="plus" size={16} color={C.primary} />
+                    <Text style={[s.novoBtnTxt, { color: C.primary }]}>Novo</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[s.logoutBtn, { borderColor: C.cardBorder, backgroundColor: C.background }]}
+                    onPress={() => { sair().catch(() => {}) }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Encerrar sessão"
+                  >
+                    <Feather name="log-out" size={16} color={C.muted} />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.metricasRow}>
@@ -330,9 +345,11 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   header: { padding: 20, borderBottomWidth: 0.5, gap: 14, marginBottom: 8 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   titulo: { fontSize: 28, fontWeight: '700' },
   sub: { fontSize: 13, lineHeight: 20 },
   novoBtn: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  logoutBtn: { width: 40, height: 40, borderRadius: 999, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   novoBtnTxt: { fontSize: 13, fontWeight: '700' },
   metricasRow: { flexDirection: 'row', gap: 10 },
   metaCard: { minWidth: 148, borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },

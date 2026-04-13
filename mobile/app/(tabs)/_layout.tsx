@@ -1,9 +1,27 @@
 import { Tabs } from 'expo-router'
+import { ActivityIndicator, Text, View } from 'react-native'
+import { Redirect } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../constants/Colors'
+import { useAuth } from '../../lib/auth'
 
 export default function TabLayout() {
   const C = Colors.dark
+  const { autenticado, carregando } = useAuth()
+
+  if (carregando) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: C.background }}>
+        <ActivityIndicator size="large" color={C.primary} />
+        <Text style={{ color: C.muted, fontWeight: '600' }}>Carregando sessão...</Text>
+      </View>
+    )
+  }
+
+  if (!autenticado) {
+    return <Redirect href="/login" />
+  }
+
   return (
     <Tabs screenOptions={{
       tabBarStyle: {
