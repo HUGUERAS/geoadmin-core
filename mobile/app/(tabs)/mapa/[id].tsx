@@ -15,7 +15,7 @@ type Ponto    = { id: string; nome: string; altitude_m: number; lon: number; lat
 type Vertice  = { lon: number; lat: number; nome: string }
 type Layers   = { pontos: boolean; poligono: boolean; rotulos: boolean }
 type Mode     = 'mapa' | 'cad'
-type EditTool = 'mover' | 'adicionar' | 'deletar'
+type EditTool = 'mover' | 'adicionar' | 'deletar' | 'cortar' | 'juntar'
 
 type NomeFerramenta = 'area' | 'inverso' | 'irradiacao' | 'intersecao' | 'distpl' | 'deflexao' | 'mediaPts' | 'conversao' | 'rotacao' | 'subdivisao'
 
@@ -203,6 +203,82 @@ function vxNecessarios(ferr: NomeFerramenta): number {
     case 'subdivisao': return 0
     default:           return 0
   }
+}
+
+function indicesForwardExclusive(start: number, end: number, total: number): number[] {
+  const indices: number[] = []
+  let atual = (start + 1) % total
+  while (atual !== end) {
+    indices.push(atual)
+    atual = (atual + 1) % total
+  }
+  return indices
+}
+
+function cortarTrechoEntreVertices(verts: Vertice[], a: number, b: number): Vertice[] | null {
+  if (a === b || verts.length < 4) {
+    return null
+  }
+
+  const forwardAB = indicesForwardExclusive(a, b, verts.length)
+  const forwardBA = indicesForwardExclusive(b, a, verts.length)
+
+  if (!forwardAB.length || !forwardBA.length) {
+    return null
+  }
+
+  if (forwardAB.length <= forwardBA.length) {
+    return [
+      { ...verts[a] },
+      { ...verts[b] },
+      ...forwardBA.map((idx) => ({ ...verts[idx] })),
+    ]
+  }
+
+  return [
+    { ...verts[a] },
+    ...forwardAB.map((idx) => ({ ...verts[idx] })),
+    { ...verts[b] },
+  ]
+}
+
+function verticesSaoAdjacentes(a: number, b: number, total: number): boolean {
+  if (total < 2) return false
+  return Math.abs(a - b) === 1 || Math.abs(a - b) === total - 1
+}
+
+function juntarVerticesAdjacentes(verts: Vertice[], a: number, b: number): Vertice[] | null {
+  if (verts.length <= 3 || a === b || !verticesSaoAdjacentes(a, b, verts.length)) {
+    return null
+  }
+
+  const primeiro = Math.min(a, b)
+  const ultimo = Math.max(a, b)
+
+  if (primeiro === 0 && ultimo === verts.length - 1) {
+    const va = verts[ultimo]
+    const vb = verts[primeiro]
+    return [
+      {
+        lon: (va.lon + vb.lon) / 2,
+        lat: (va.lat + vb.lat) / 2,
+        nome: vb.nome || va.nome || '',
+      },
+      ...verts.slice(1, verts.length - 1).map((v) => ({ ...v })),
+    ]
+  }
+
+  const va = verts[primeiro]
+  const vb = verts[ultimo]
+  return [
+    ...verts.slice(0, primeiro).map((v) => ({ ...v })),
+    {
+      lon: (va.lon + vb.lon) / 2,
+      lat: (va.lat + vb.lat) / 2,
+      nome: va.nome || vb.nome || '',
+    },
+    ...verts.slice(ultimo + 1).map((v) => ({ ...v })),
+  ]
 }
 
 const FERRAMENTAS: { id: NomeFerramenta; icone: string; label: string }[] = [
@@ -641,6 +717,30 @@ export default function MapaProjetoScreen() {
     })
   }, [pushHist])
 
+  const aplicarCorte = useCallback((a: number, b: number) => {
+    setEditVerts((prev) => {
+      const next = cortarTrechoEntreVertices(prev, a, b)
+      if (!next) {
+        Alert.alert('Corte indisponível', 'Escolha dois vértices não adjacentes para cortar um trecho do perímetro.')
+        return prev
+      }
+      pushHist(prev)
+      return next
+    })
+  }, [pushHist])
+
+  const aplicarJuncao = useCallback((a: number, b: number) => {
+    setEditVerts((prev) => {
+      const next = juntarVerticesAdjacentes(prev, a, b)
+      if (!next) {
+        Alert.alert('Junção indisponível', 'Escolha dois vértices adjacentes para juntar em um único ponto.')
+        return prev
+      }
+      pushHist(prev)
+      return next
+    })
+  }, [pushHist])
+
   const desfazer = useCallback(() => {
     if (!undoStack.current.length) return
     const last = undoStack.current[undoStack.current.length - 1]
@@ -762,6 +862,27 @@ export default function MapaProjetoScreen() {
   }, [tool, id, loading, polygonVerts.length, editMode, entrarEdit, abrirFerramenta])
 
   const handleVertexTap = useCallback((i: number) => {
+    if (!ferrAtiva && (editTool === 'cortar' || editTool === 'juntar')) {
+      setVxSelecionados((prev) => {
+        if (prev.includes(i)) {
+          return prev.filter((item) => item !== i)
+        }
+
+        const next = [...prev, i].slice(0, 2)
+        if (next.length === 2) {
+          if (editTool === 'cortar') {
+            aplicarCorte(next[0], next[1])
+          } else {
+            aplicarJuncao(next[0], next[1])
+          }
+          return []
+        }
+
+        return next
+      })
+      return
+    }
+
     if (!ferrAtiva) return
     const nec = vxNecessarios(ferrAtiva)
     setVxSelecionados(prev => {
@@ -779,7 +900,7 @@ export default function MapaProjetoScreen() {
       }
       return next
     })
-  }, [ferrAtiva])
+  }, [aplicarCorte, aplicarJuncao, editTool, ferrAtiva])
 
   useEffect(() => {
     if (!ferrAtiva) return
@@ -1011,7 +1132,8 @@ export default function MapaProjetoScreen() {
     router.replace(`/(tabs)/projeto/${id}` as any)
   }, [clienteId, id, origem, router])
 
-  const selecaoAtiva = ferrAtiva !== null && vxNecessarios(ferrAtiva) !== 0
+  const selecaoEdicaoAtiva = editMode && (editTool === 'cortar' || editTool === 'juntar')
+  const selecaoAtiva = (ferrAtiva !== null && vxNecessarios(ferrAtiva) !== 0) || selecaoEdicaoAtiva
   const hasGeometry = visiblePoints.length > 0 || polygonVerts.length > 0
 
   if (loading) return (
@@ -1067,10 +1189,15 @@ export default function MapaProjetoScreen() {
             ['mover',     '↔'],
             ['adicionar', '+'],
             ['deletar',   '✕'],
+            ['cortar',    '✂'],
+            ['juntar',    '⤢'],
           ] as [EditTool, string][]).map(([t, icon]) => (
             <TouchableOpacity key={t}
               style={[s.etool, editTool === t && { backgroundColor: C.primary }]}
-              onPress={() => setEditTool(t)}>
+              onPress={() => {
+                setEditTool(t)
+                setVxSelecionados([])
+              }}>
               <Text style={{ color: editTool === t ? C.primaryText : C.muted, fontSize: 12, fontWeight: '700' }}>
                 {icon}
               </Text>
@@ -1123,10 +1250,14 @@ export default function MapaProjetoScreen() {
         )}
 
         {/* Overlay de seleção de vértices */}
-        {editMode && ferrAtiva && vxNecessarios(ferrAtiva) !== 0 && (
+        {editMode && selecaoAtiva && (
           <View style={s.selecaoOverlay}>
             <Text style={s.selecaoTxt}>
-              {ferrAtiva === 'mediaPts'
+              {editTool === 'cortar'
+                ? `Corte: selecione 2 vértices para remover o trecho menor`
+                : editTool === 'juntar'
+                  ? `Junção: selecione 2 vértices adjacentes para fundir`
+                : ferrAtiva === 'mediaPts'
                 ? `Toque nos vértices • ${vxSelecionados.length} selecionados`
                 : `Toque nos vértices • ${vxSelecionados.length}/${vxNecessarios(ferrAtiva)} selecionados`}
             </Text>
@@ -1136,7 +1267,13 @@ export default function MapaProjetoScreen() {
                 <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓ Calcular</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={limparFerramenta}
+            <TouchableOpacity onPress={() => {
+              if (ferrAtiva) {
+                limparFerramenta()
+                return
+              }
+              setVxSelecionados([])
+            }}
               style={{ marginTop: 4, padding: 4 }}>
               <Text style={{ color: '#378ADD', fontSize: 11 }}>Cancelar</Text>
             </TouchableOpacity>
