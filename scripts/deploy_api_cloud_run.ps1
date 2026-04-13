@@ -74,6 +74,56 @@ function Test-HealthEndpoint {
     }
 }
 
+function Test-CloudRunRuntimeContract {
+    param(
+        [string]$ServiceName,
+        [string]$Region,
+        [string]$ProjectId
+    )
+
+    $describeCommand = @(
+        "run", "services", "describe", $ServiceName,
+        "--region", $Region,
+        "--project", $ProjectId,
+        "--format=json"
+    )
+    $rendered = $describeCommand -join " "
+    Write-Host "> gcloud $rendered"
+
+    if (-not $PSCmdlet.ShouldProcess("gcloud", $rendered)) {
+        return
+    }
+
+    $json = & gcloud @describeCommand
+    if ($LASTEXITCODE -ne 0) {
+        throw "Falha ao descrever servico Cloud Run para validar contrato."
+    }
+
+    $service = $json | ConvertFrom-Json
+    $envMap = @{}
+    foreach ($entry in $service.spec.template.spec.containers[0].env) {
+        if ($entry.name) {
+            $envMap[$entry.name] = $entry.value
+        }
+    }
+
+    if ($envMap["AUTH_OBRIGATORIO"] -ne "true") {
+        throw "Cloud Run deve estar com AUTH_OBRIGATORIO=true."
+    }
+
+    if ($envMap.ContainsKey("AUTH_PERMITIR_BYPASS_IMPLANTACAO")) {
+        throw "Cloud Run nao pode expor AUTH_PERMITIR_BYPASS_IMPLANTACAO na trilha oficial."
+    }
+
+    if ($envMap["EXPOSE_API_DOCS"] -ne "false") {
+        throw "Cloud Run deve estar com EXPOSE_API_DOCS=false."
+    }
+
+    if ($envMap["DEBUG_ERRORS"] -ne "false") {
+        throw "Cloud Run deve estar com DEBUG_ERRORS=false."
+    }
+}
+
 Assert-RequiredValue -Name "ProjectId" -Value $ProjectId
 Assert-RequiredValue -Name "Region" -Value $Region
 Assert-RequiredValue -Name "ArtifactRegistryRepository" -Value $ArtifactRegistryRepository
@@ -89,7 +139,7 @@ Assert-RequiredValue -Name "AllowedHosts" -Value $AllowedHosts
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendDir = Join-Path $repoRoot "backend"
 $imageUri = "{0}-docker.pkg.dev/{1}/{2}/{3}:latest" -f $Region, $ProjectId, $ArtifactRegistryRepository, $ServiceName
-$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##PUBLIC_APP_URL=$PublicAppUrl##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
+$envVars = "^##^SUPABASE_URL=$SupabaseUrl##SUPABASE_BUCKET_ARQUIVOS_PROJETO=$SupabaseBucket##PUBLIC_APP_URL=$PublicAppUrl##ALLOWED_ORIGINS=$AllowedOrigins##ALLOWED_HOSTS=$AllowedHosts##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false##AUTH_OBRIGATORIO=true"
 $secretFile = Join-Path ([System.IO.Path]::GetTempPath()) "geoadmin-supabase-key.txt"
 
 try {
@@ -189,6 +239,7 @@ try {
         throw "Falha ao consultar URL do servico Cloud Run"
     }
 
+    Test-CloudRunRuntimeContract -ServiceName $ServiceName -Region $Region -ProjectId $ProjectId
     Write-Host "Service URL: $serviceUrl"
     Test-HealthEndpoint -BaseUrl $serviceUrl -Retries $HealthcheckRetries -DelaySeconds $HealthcheckDelaySeconds
 } finally {

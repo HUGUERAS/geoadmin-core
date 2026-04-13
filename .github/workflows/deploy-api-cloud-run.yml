@@ -113,7 +113,7 @@ jobs:
 
       - name: Deploy Cloud Run service
         run: |
-          ENV_VARS="^##^SUPABASE_URL=${SUPABASE_URL}##SUPABASE_BUCKET_ARQUIVOS_PROJETO=${SUPABASE_BUCKET_ARQUIVOS_PROJETO}##PUBLIC_APP_URL=${PUBLIC_APP_URL}##ALLOWED_ORIGINS=${ALLOWED_ORIGINS}##ALLOWED_HOSTS=${ALLOWED_HOSTS}##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false"
+          ENV_VARS="^##^SUPABASE_URL=${SUPABASE_URL}##SUPABASE_BUCKET_ARQUIVOS_PROJETO=${SUPABASE_BUCKET_ARQUIVOS_PROJETO}##PUBLIC_APP_URL=${PUBLIC_APP_URL}##ALLOWED_ORIGINS=${ALLOWED_ORIGINS}##ALLOWED_HOSTS=${ALLOWED_HOSTS}##EXPOSE_API_DOCS=false##DEBUG_ERRORS=false##AUTH_OBRIGATORIO=true"
           gcloud run deploy "${CLOUD_RUN_SERVICE}" \
             --image "${IMAGE_URI}" \
             --region "${GCP_REGION}" \
@@ -126,6 +126,37 @@ jobs:
             --set-env-vars "${ENV_VARS}" \
             --update-secrets "SUPABASE_KEY=SUPABASE_KEY:latest" \
             --quiet
+
+      - name: Validate Cloud Run runtime contract
+        run: |
+          gcloud run services describe "${CLOUD_RUN_SERVICE}" \
+            --region "${GCP_REGION}" \
+            --project "${GCP_PROJECT_ID}" \
+            --format=json > cloud-run-service.json
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path("cloud-run-service.json").read_text(encoding="utf-8"))
+          envs = {
+              item["name"]: item.get("value")
+              for item in payload["spec"]["template"]["spec"]["containers"][0].get("env", [])
+              if "name" in item
+          }
+
+          if envs.get("AUTH_OBRIGATORIO") != "true":
+              raise SystemExit("Cloud Run deve estar com AUTH_OBRIGATORIO=true.")
+
+          if "AUTH_PERMITIR_BYPASS_IMPLANTACAO" in envs:
+              raise SystemExit("Cloud Run nao pode expor AUTH_PERMITIR_BYPASS_IMPLANTACAO na trilha oficial.")
+
+          if envs.get("EXPOSE_API_DOCS") != "false":
+              raise SystemExit("Cloud Run deve estar com EXPOSE_API_DOCS=false.")
+
+          if envs.get("DEBUG_ERRORS") != "false":
+              raise SystemExit("Cloud Run deve estar com DEBUG_ERRORS=false.")
+          PY
 
       - name: Show deployed URL
         run: |

@@ -26,6 +26,19 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 - `CLOUD_RUN_MIN_INSTANCES` opcional
 - `CLOUD_RUN_MAX_INSTANCES` opcional
 
+## Guardrails obrigatorios da trilha oficial
+
+- `AUTH_OBRIGATORIO=true`
+- `EXPOSE_API_DOCS=false`
+- `DEBUG_ERRORS=false`
+- `AUTH_PERMITIR_BYPASS_IMPLANTACAO` nao pode existir no runtime oficial
+
+Observacao:
+
+- `--allow-unauthenticated` no Cloud Run continua aceitavel como exposicao de rede da API publica
+- isso nao substitui autenticacao da aplicacao
+- o backend oficial nao pode ser promovido com bypass de autenticacao
+
 ## GitHub secrets necessarios
 
 - `GCP_WORKLOAD_IDENTITY_PROVIDER`
@@ -55,6 +68,7 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 5. Criar ou validar a service account de runtime do `Cloud Run`
 6. Preencher as `vars` e `secrets` do repositório
 7. Rodar o workflow manual `Deploy API (Cloud Run)`
+8. Confirmar no servico implantado que `AUTH_OBRIGATORIO=true` e que nao existe `AUTH_PERMITIR_BYPASS_IMPLANTACAO`
 
 ## Tarefas do responsavel de aplicacao
 
@@ -96,6 +110,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy_api_cloud_run.ps1
 3. `GET /projetos/{id}`
 4. upload basico em rota que use storage
 5. geracao documental
+6. confirmar que o runtime do Cloud Run nao contem `AUTH_PERMITIR_BYPASS_IMPLANTACAO`
+7. confirmar que `AUTH_OBRIGATORIO=true`
 
 ## Observacao de automacao
 

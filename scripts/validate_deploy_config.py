@@ -134,7 +134,17 @@ def main() -> int:
             "SUPABASE_URL",
             "ALLOWED_ORIGINS",
             "ALLOWED_HOSTS",
+            "AUTH_OBRIGATORIO=true",
             "Smoke test /health",
+        ],
+    )
+    ensure_contains(
+        errors,
+        "scripts/deploy_api_cloud_run.ps1",
+        [
+            "AUTH_OBRIGATORIO=true",
+            "Cloud Run nao pode expor AUTH_PERMITIR_BYPASS_IMPLANTACAO",
+            "Cloud Run deve estar com EXPOSE_API_DOCS=false",
         ],
     )
     ensure_contains(
@@ -162,6 +172,20 @@ def main() -> int:
             "publicações web no Vercel",
             "builds mobile publicados via EAS/APK",
             "Cloud Run antes do deploy",
+        ],
+    )
+    ensure_absent(
+        errors,
+        ".github/workflows/deploy-api-cloud-run.yml",
+        [
+            "AUTH_PERMITIR_BYPASS_IMPLANTACAO=",
+        ],
+    )
+    ensure_absent(
+        errors,
+        "scripts/deploy_api_cloud_run.ps1",
+        [
+            "AUTH_PERMITIR_BYPASS_IMPLANTACAO=",
         ],
     )
     ensure_absent(
