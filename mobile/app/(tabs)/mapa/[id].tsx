@@ -495,7 +495,12 @@ export default function MapaProjetoScreen() {
   const [topInset, setTopInset] = useState(0)
   useEffect(() => { setTopInset(insets.top) }, [insets.top])
   const headerPaddingTop = Math.max(topInset + 12, 20)
-  const { id, tool } = useLocalSearchParams<{ id: string; tool?: NomeFerramenta }>()
+  const { id, tool, origem, clienteId } = useLocalSearchParams<{
+    id: string
+    tool?: NomeFerramenta
+    origem?: 'projeto' | 'cliente' | 'calculos' | 'mapa'
+    clienteId?: string
+  }>()
   const router  = useRouter()
 
   const [projeto,     setProjeto]  = useState<any>(null)
@@ -992,6 +997,20 @@ export default function MapaProjetoScreen() {
     limparFerramenta()
   }, [resultado, editVerts, pushHist, limparFerramenta])
 
+  const voltarTelaAnterior = useCallback(() => {
+    if (origem === 'cliente' && clienteId) {
+      router.replace(`/(tabs)/clientes/${clienteId}` as any)
+      return
+    }
+
+    if (origem === 'calculos') {
+      router.replace('/(tabs)/calculos' as any)
+      return
+    }
+
+    router.replace(`/(tabs)/projeto/${id}` as any)
+  }, [clienteId, id, origem, router])
+
   const selecaoAtiva = ferrAtiva !== null && vxNecessarios(ferrAtiva) !== 0
   const hasGeometry = visiblePoints.length > 0 || polygonVerts.length > 0
 
@@ -1005,7 +1024,7 @@ export default function MapaProjetoScreen() {
     <View style={[s.fill, { backgroundColor: C.background }]}>
       {/* Header */}
       <View style={[s.header, { backgroundColor: C.card, borderBottomColor: C.cardBorder, paddingTop: headerPaddingTop }]}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+        <TouchableOpacity onPress={voltarTelaAnterior} style={s.backBtn}>
           <Feather name="arrow-left" size={22} color={C.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>

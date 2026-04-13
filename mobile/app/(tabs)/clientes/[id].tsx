@@ -428,7 +428,7 @@ export default function ClienteDetalheScreen() {
     } catch {
       // segue a navegacao mesmo sem persistir o ultimo contexto
     }
-    router.push(`/(tabs)/mapa/${projetoId}` as any)
+    router.push(`/(tabs)/mapa/${projetoId}?origem=cliente&clienteId=${id}` as any)
   }
 
   const confrontantesPorProjeto = useMemo(() => {

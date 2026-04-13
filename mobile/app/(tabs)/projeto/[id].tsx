@@ -493,7 +493,7 @@ export default function DetalheProjetoScreen() {
     } catch {
       // segue a navegação mesmo sem persistir contexto
     }
-    router.push(`/(tabs)/mapa/${id}` as any)
+    router.push(`/(tabs)/mapa/${id}?origem=projeto` as any)
   }
 
   if (loading) return (

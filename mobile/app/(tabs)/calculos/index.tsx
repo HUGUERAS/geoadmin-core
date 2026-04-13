@@ -123,7 +123,7 @@ export default function CalculosScreen() {
 
   const abrirFerramenta = (ferramenta: { rota?: string; toolMapa?: string }) => {
     if (projetoAtivo?.id && ferramenta.toolMapa) {
-      router.push(`/(tabs)/mapa/${projetoAtivo.id}?tool=${ferramenta.toolMapa}` as any)
+      router.push(`/(tabs)/mapa/${projetoAtivo.id}?tool=${ferramenta.toolMapa}&origem=calculos` as any)
       return
     }
     if (ferramenta.rota) {
@@ -147,7 +147,7 @@ export default function CalculosScreen() {
             <View style={s.contextoAcoes}>
               {projetoAtivo ? (
                 <>
-                  <TouchableOpacity style={[s.contextoBtn, { borderColor: C.primary }]} onPress={() => router.push(`/(tabs)/mapa/${projetoAtivo.id}` as any)}>
+                  <TouchableOpacity style={[s.contextoBtn, { borderColor: C.primary }]} onPress={() => router.push(`/(tabs)/mapa/${projetoAtivo.id}?origem=calculos` as any)}>
                     <Text style={[s.contextoBtnTxt, { color: C.primary }]}>Abrir CAD</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[s.contextoBtn, { borderColor: C.info }]} onPress={() => router.push(`/(tabs)/projeto/${projetoAtivo.id}` as any)}>
