@@ -396,10 +396,14 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
   const svgH = H - 56 - 50 - 50
   const TOUCH_R = 20
 
-  const allPts = useMemo(
-    () => editMode ? [...(editVertices || []), ...(origVertices || [])] : [...(pontos || []), ...(polygonVerts || [])],
-    [editMode, editVertices, origVertices, pontos, polygonVerts]
-  )
+  const allPts = useMemo(() => {
+    if (editMode) {
+      const base = (origVertices?.length ? origVertices : editVertices) || []
+      return [...base]
+    }
+
+    return [...(pontos || []), ...(polygonVerts || [])]
+  }, [editMode, editVertices, origVertices, pontos, polygonVerts])
   const xform = useMemo(
     () => computeTransform(allPts.length ? allPts : pontos, W, svgH),
     [allPts, W, svgH]
