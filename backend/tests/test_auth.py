@@ -38,3 +38,17 @@ def test_auth_nao_pode_ser_desligada_em_implantacao(monkeypatch):
 
     assert excinfo.value.status_code == 401
     assert excinfo.value.detail["codigo"] == 401
+
+
+@pytest.mark.parametrize("path", [
+    "/formulario/cliente",
+    "/formulario/cliente/contexto",
+])
+def test_formulario_cliente_permanece_publico_mesmo_em_implantacao(monkeypatch, path):
+    monkeypatch.setenv("AUTH_OBRIGATORIO", "true")
+    monkeypatch.setenv("K_SERVICE", "geoadmin-api")
+
+    resultado = asyncio.run(auth_mod.verificar_token(_request_fake(path), None))
+
+    assert resultado["sub"] == "anonimo"
+    assert resultado["role"] == "anon"

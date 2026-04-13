@@ -17,8 +17,16 @@ logger = logging.getLogger(__name__)
 
 _seguranca = HTTPBearer(auto_error=False)
 
-# Endpoints que não exigem autenticação
-ROTAS_PUBLICAS = {"/health", "/docs", "/openapi.json", "/redoc"}
+# Endpoints que não exigem autenticação por login.
+# O formulário do cliente continua protegido pelo token próprio do magic link.
+ROTAS_PUBLICAS = {
+    "/health",
+    "/docs",
+    "/openapi.json",
+    "/redoc",
+    "/formulario/cliente",
+    "/formulario/cliente/contexto",
+}
 AMBIENTES_PRODUCAO = {"prod", "production", "staging", "preview"}
 SINAIS_IMPLANTACAO = (
     "K_SERVICE",
