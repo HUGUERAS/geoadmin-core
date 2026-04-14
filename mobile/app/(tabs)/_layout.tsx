@@ -33,11 +33,7 @@ export default function TabLayout() {
         headerShown: false,
       }} />
       <Tabs.Screen name="mapa/[id]" options={{ href: null, headerShown: false }} />
-      <Tabs.Screen name="calculos/index" options={{
-        title: 'Cálculos',
-        tabBarIcon: ({ color }) => <Feather name="cpu" size={22} color={color} />,
-        headerShown: false,
-      }} />
+      <Tabs.Screen name="calculos/index" options={{ href: null, headerShown: false }} />
       <Tabs.Screen name="calculos/inverso" options={{ href: null }} />
       <Tabs.Screen name="calculos/area" options={{ href: null }} />
       <Tabs.Screen name="calculos/conversao" options={{ href: null }} />

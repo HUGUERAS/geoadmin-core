@@ -16,8 +16,21 @@ type Vertice  = { lon: number; lat: number; nome: string }
 type Layers   = { pontos: boolean; poligono: boolean; rotulos: boolean }
 type Mode     = 'mapa' | 'cad'
 type EditTool = 'mover' | 'adicionar' | 'deletar'
-
-type NomeFerramenta = 'area' | 'inverso' | 'irradiacao' | 'intersecao' | 'distpl' | 'deflexao' | 'mediaPts' | 'conversao' | 'rotacao' | 'subdivisao'
+type NomeFerramenta =
+  | 'polilinha'
+  | 'linha'
+  | 'pontos'
+  | 'nomenclatura'
+  | 'area'
+  | 'inverso'
+  | 'irradiacao'
+  | 'intersecao'
+  | 'distpl'
+  | 'deflexao'
+  | 'mediaPts'
+  | 'conversao'
+  | 'rotacao'
+  | 'subdivisao'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -191,7 +204,11 @@ function latLonParaUTM(lat: number, lon: number): { norte: number; este: number;
 
 function vxNecessarios(ferr: NomeFerramenta): number {
   switch (ferr) {
+    case 'linha':       return 2
     case 'inverso':    return 2
+    case 'polilinha':  return 0
+    case 'pontos':     return 0
+    case 'nomenclatura': return 0
     case 'irradiacao': return 1
     case 'intersecao': return 2
     case 'distpl':     return 3
@@ -206,8 +223,11 @@ function vxNecessarios(ferr: NomeFerramenta): number {
 }
 
 const FERRAMENTAS: { id: NomeFerramenta; icone: string; label: string }[] = [
+  { id: 'polilinha',  icone: '⌁', label: 'Polilinha' },
+  { id: 'linha',      icone: '／', label: 'Linha' },
+  { id: 'pontos',     icone: '◫', label: 'Pontos' },
+  { id: 'nomenclatura', icone: '🏷', label: 'Nomenclatura' },
   { id: 'area',       icone: '⬟', label: 'Área' },
-  { id: 'inverso',    icone: '↔', label: 'Inverso' },
   { id: 'irradiacao', icone: '📡', label: 'Irradiação' },
   { id: 'intersecao', icone: '✕', label: 'Interseção' },
   { id: 'distpl',     icone: '⊥', label: 'Dist. P-L' },
@@ -725,17 +745,38 @@ export default function MapaProjetoScreen() {
     setSubArea(''); setSubUnidade('ha')
   }, [])
 
+  const inverterPolilinha = useCallback(() => {
+    pushHist(editVerts)
+    setEditVerts(prev => [...prev].reverse())
+    setResultado({ acao: 'ordem_invertida', total: editVerts.length })
+  }, [editVerts, pushHist])
+
+  const aplicarNomenclaturaSequencial = useCallback(() => {
+    pushHist(editVerts)
+    setEditVerts(prev => prev.map((vertice, indice) => ({
+      ...vertice,
+      nome: `V${indice + 1}`,
+    })))
+    setResultado({ acao: 'nomenclatura_aplicada', total: editVerts.length })
+  }, [editVerts, pushHist])
+
   const abrirFerramenta = useCallback((ferr: NomeFerramenta) => {
     setFerrPickerVisible(false)
     setFerrAtiva(ferr)
     setVxSelecionados([])
     setResultado(null)
+
+    if (ferr === 'polilinha') {
+      setMode('cad')
+      setEditTool('adicionar')
+      setFerrModalVisible(true)
+      return
+    }
+
     const nec = vxNecessarios(ferr)
     if (nec === 0) {
-      // abre direto
       setFerrModalVisible(true)
     }
-    // com seleção: aguarda vertex taps
   }, [])
 
   useEffect(() => {
@@ -743,6 +784,10 @@ export default function MapaProjetoScreen() {
     if (autoToolKeyRef.current === `${id}:${tool}`) return
 
     const ferramentasSuportadas = new Set<NomeFerramenta>([
+      'polilinha',
+      'linha',
+      'pontos',
+      'nomenclatura',
       'area',
       'irradiacao',
       'intersecao',
@@ -806,7 +851,7 @@ export default function MapaProjetoScreen() {
       return
     }
 
-    if (ferrAtiva === 'inverso') {
+    if (ferrAtiva === 'inverso' || ferrAtiva === 'linha') {
       const [p1, p2] = selecionados
       const dist = haversine(p1.lat, p1.lon, p2.lat, p2.lon)
       const az   = azimute(p1.lat, p1.lon, p2.lat, p2.lon)
@@ -1077,7 +1122,7 @@ export default function MapaProjetoScreen() {
           {/* Botão ferramentas ⚙ */}
           <TouchableOpacity style={[s.etool, { borderColor: C.primary }]}
             onPress={() => setFerrPickerVisible(true)}
-            accessibilityRole="button" accessibilityLabel="Ferramentas de cálculo">
+            accessibilityRole="button" accessibilityLabel="Ferramentas do workspace">
             <Text style={{ color: C.primary, fontSize: 13 }}>⚙</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[s.etool, { marginLeft: 'auto' }]} onPress={cancelarEdit}>
@@ -1178,7 +1223,7 @@ export default function MapaProjetoScreen() {
         <View style={s.ferrModal}>
           <View style={[s.ferrSheet, { backgroundColor: C.card }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={[s.ferrSheetTitle, { color: C.text }]}>Ferramentas de Cálculo</Text>
+              <Text style={[s.ferrSheetTitle, { color: C.text }]}>Ferramentas do Workspace</Text>
               <TouchableOpacity onPress={() => setFerrPickerVisible(false)}>
                 <Feather name="x" size={20} color={C.muted} />
               </TouchableOpacity>
@@ -1213,6 +1258,34 @@ export default function MapaProjetoScreen() {
                 </TouchableOpacity>
               </View>
 
+              {ferrAtiva === 'polilinha' && (
+                <View style={{ backgroundColor: C.background, borderRadius: 10, padding: 14, gap: 8, marginBottom: 12 }}>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Modo principal de edição</Text>
+                  <Text style={{ color: C.muted, fontSize: 13, lineHeight: 20 }}>
+                    A polilinha é o coração do workspace. Use adicionar, mover e deletar direto no canvas e, quando precisar, inverta a ordem dos pontos por aqui.
+                  </Text>
+                </View>
+              )}
+
+              {ferrAtiva === 'pontos' && (
+                <View style={{ backgroundColor: C.background, borderRadius: 10, padding: 14, gap: 8, marginBottom: 12 }}>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Pontos visíveis no workspace</Text>
+                  <Text style={{ color: C.muted, fontSize: 13, lineHeight: 20 }}>
+                    Lista rápida para conferência de vértices e pontos de apoio sem sair do CAD.
+                  </Text>
+                  {(editVerts.length ? editVerts : polygonVerts).map((vertice, indice) => (
+                    <View key={`ponto-${indice}`} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+                      <Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>
+                        {vertice.nome || `V${indice + 1}`}
+                      </Text>
+                      <Text style={{ color: C.muted, fontSize: 12 }}>
+                        {vertice.lat.toFixed(6)}, {vertice.lon.toFixed(6)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               {/* Vértices selecionados */}
               {vxSelecionados.length > 0 && (
                 <View style={{ marginBottom: 12 }}>
@@ -1235,6 +1308,15 @@ export default function MapaProjetoScreen() {
                       </View>
                     )
                   })}
+                </View>
+              )}
+
+              {ferrAtiva === 'nomenclatura' && (
+                <View style={{ backgroundColor: C.background, borderRadius: 10, padding: 14, gap: 8, marginBottom: 12 }}>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Organizar vértices</Text>
+                  <Text style={{ color: C.muted, fontSize: 13, lineHeight: 20 }}>
+                    Aplique nomes sequenciais ao perímetro ativo ou inverta a ordem dos pontos quando o desenho vier ao contrário.
+                  </Text>
                 </View>
               )}
 
@@ -1360,11 +1442,13 @@ export default function MapaProjetoScreen() {
               )}
 
               {/* Botão calcular */}
-              <TouchableOpacity
-                style={{ backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 12 }}
-                onPress={calcular}>
-                <Text style={{ color: C.primaryText, fontWeight: '700', fontSize: 15 }}>Calcular</Text>
-              </TouchableOpacity>
+              {!['polilinha', 'pontos', 'nomenclatura'].includes(ferrAtiva || '') && (
+                <TouchableOpacity
+                  style={{ backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 12 }}
+                  onPress={calcular}>
+                  <Text style={{ color: C.primaryText, fontWeight: '700', fontSize: 15 }}>Calcular</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Resultados */}
               {resultado && (
@@ -1379,12 +1463,28 @@ export default function MapaProjetoScreen() {
                     </>
                   )}
 
-                  {ferrAtiva === 'inverso' && (
+                  {(ferrAtiva === 'inverso' || ferrAtiva === 'linha') && (
                     <>
                       <Text style={{ color: C.text, fontSize: 14 }}>Distância: {resultado.dist.toFixed(3)} m</Text>
                       <Text style={{ color: C.text, fontSize: 14 }}>Az V1→V2: {resultado.az}</Text>
                       <Text style={{ color: C.text, fontSize: 14 }}>Az V2→V1: {resultado.azInv}</Text>
                     </>
+                  )}
+
+                  {ferrAtiva === 'polilinha' && (
+                    <Text style={{ color: C.text, fontSize: 14 }}>
+                      {resultado.acao === 'ordem_invertida'
+                        ? `Ordem do perímetro invertida (${resultado.total} vértices).`
+                        : 'Polilinha pronta para edição.'}
+                    </Text>
+                  )}
+
+                  {ferrAtiva === 'nomenclatura' && (
+                    <Text style={{ color: C.text, fontSize: 14 }}>
+                      {resultado.acao === 'nomenclatura_aplicada'
+                        ? `Nomenclatura sequencial aplicada em ${resultado.total} vértices.`
+                        : 'Ações de nomenclatura prontas para o perímetro ativo.'}
+                    </Text>
                   )}
 
                   {ferrAtiva === 'irradiacao' && (
@@ -1450,6 +1550,40 @@ export default function MapaProjetoScreen() {
                       <Text style={{ color: C.text, fontSize: 14 }}>Área restante: {(resultado.areaResto / 10000).toFixed(4)} ha</Text>
                     </>
                   )}
+                </View>
+              )}
+
+              {ferrAtiva === 'polilinha' && (
+                <View style={{ gap: 8, marginBottom: 8 }}>
+                  <TouchableOpacity
+                    style={{ backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
+                    onPress={() => {
+                      setMode('cad')
+                      setEditTool('adicionar')
+                      setFerrModalVisible(false)
+                    }}>
+                    <Text style={{ color: C.primaryText, fontWeight: '700', fontSize: 14 }}>Entrar em inserção de vértices</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ backgroundColor: C.info, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
+                    onPress={inverterPolilinha}>
+                    <Text style={{ color: '#041018', fontWeight: '700', fontSize: 14 }}>Inverter ordem dos pontos</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {ferrAtiva === 'nomenclatura' && (
+                <View style={{ gap: 8, marginBottom: 8 }}>
+                  <TouchableOpacity
+                    style={{ backgroundColor: C.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
+                    onPress={aplicarNomenclaturaSequencial}>
+                    <Text style={{ color: C.primaryText, fontWeight: '700', fontSize: 14 }}>Aplicar V1, V2, V3...</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ backgroundColor: C.info, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}
+                    onPress={inverterPolilinha}>
+                    <Text style={{ color: '#041018', fontWeight: '700', fontSize: 14 }}>Inverter ordem do perímetro</Text>
+                  </TouchableOpacity>
                 </View>
               )}
 

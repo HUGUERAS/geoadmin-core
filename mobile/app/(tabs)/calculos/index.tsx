@@ -25,38 +25,38 @@ type SecaoDef = {
 
 const SECOES: SecaoDef[] = [
   {
-    id: 'peca-tecnica',
-    titulo: 'Peça técnica',
-    descricao: 'Ferramentas para conferir área, gerar coordenadas auxiliares e fechar o raciocínio topográfico.',
+    id: 'workspace-principal',
+    titulo: 'Workspace principal',
+    descricao: 'Essas são as ferramentas mais próximas do uso real no CAD mobile: desenhar, revisar vértices, conferir pontos e organizar nomenclatura.',
     ferramentas: [
-      { id: 'inverso', label: 'Inverso', icone: 'arrow-up-right', rota: '/calculos/inverso', toolMapa: 'inverso' },
-      { id: 'area', label: 'Área', icone: 'square', rota: '/calculos/area', toolMapa: 'area' },
-      { id: 'intersecao', label: 'Interseção', icone: 'git-merge', rota: '/calculos/intersecao', toolMapa: 'intersecao' },
-      { id: 'distancia', label: 'Dist. P-L', icone: 'move', rota: '/calculos/distancia', toolMapa: 'distpl' },
-      { id: 'subdivisao', label: 'Subdivisão', icone: 'scissors', rota: '/calculos/subdivisao', toolMapa: 'subdivisao' },
-      { id: 'rotacao', label: 'Rotação', icone: 'rotate-cw', rota: '/calculos/rotacao', toolMapa: 'rotacao' },
+      { id: 'polilinha', label: 'Polilinha', icone: 'trending-up', rota: '/calculos/polilinha', toolMapa: 'polilinha' },
+      { id: 'linha', label: 'Linha', icone: 'slash', rota: '/calculos/linha', toolMapa: 'linha' },
+      { id: 'pontos', label: 'Pontos', icone: 'grid', rota: '/calculos/pontos', toolMapa: 'pontos' },
+      { id: 'nomenclatura', label: 'Nomenclatura', icone: 'tag', rota: '/calculos/nomenclatura', toolMapa: 'nomenclatura' },
     ],
   },
   {
     id: 'apoio-cad',
-    titulo: 'Apoio ao CAD',
-    descricao: 'Use para montar, conferir e ajustar vértices antes de voltar ao mapa/CAD do projeto.',
+    titulo: 'Apoio técnico',
+    descricao: 'Ferramentas que continuam úteis dentro do CAD para conferir área, distâncias e ajustes geométricos.',
     ferramentas: [
+      { id: 'area', label: 'Área', icone: 'square', rota: '/calculos/area', toolMapa: 'area' },
+      { id: 'distancia', label: 'Dist. P-L', icone: 'move', rota: '/calculos/distancia', toolMapa: 'distpl' },
+      { id: 'rotacao', label: 'Rotação', icone: 'rotate-cw', rota: '/calculos/rotacao', toolMapa: 'rotacao' },
+      { id: 'subdivisao', label: 'Subdivisão', icone: 'scissors', rota: '/calculos/subdivisao', toolMapa: 'subdivisao' },
       { id: 'conversao', label: 'Conversão', icone: 'refresh-cw', rota: '/calculos/conversao', toolMapa: 'conversao' },
-      { id: 'deflexao', label: 'Deflexão', icone: 'corner-down-right', rota: '/calculos/deflexao', toolMapa: 'deflexao' },
       { id: 'media', label: 'Média Pts', icone: 'target', rota: '/calculos/media', toolMapa: 'mediaPts' },
-      { id: 'irradiacao', label: 'Irradiação', icone: 'navigation', rota: '/calculos/irradiacao', toolMapa: 'irradiacao' },
     ],
   },
   {
-    id: 'pontos-linhas',
-    titulo: 'Pontos e Linhas',
-    descricao: 'Bloco de notas de campo, travessia de segmentos e nomenclatura de vértices.',
+    id: 'fallback-tecnico',
+    titulo: 'Fallback técnico',
+    descricao: 'Mantidas durante a migração para o workspace único. Só use quando o fluxo contextual do mapa ainda não cobrir o caso.',
     ferramentas: [
-      { id: 'pontos', label: 'Pontos', icone: 'grid', rota: '/calculos/pontos' },
-      { id: 'linha', label: 'Linha', icone: 'arrow-up-right', rota: '/calculos/linha' },
-      { id: 'polilinha', label: 'Polilinha', icone: 'trending-up', rota: '/calculos/polilinha' },
-      { id: 'nomenclatura', label: 'Nomenclatura', icone: 'tag', rota: '/calculos/nomenclatura' },
+      { id: 'inverso', label: 'Inverso', icone: 'arrow-up-right', rota: '/calculos/inverso', toolMapa: 'linha' },
+      { id: 'deflexao', label: 'Deflexão', icone: 'corner-down-right', rota: '/calculos/deflexao', toolMapa: 'deflexao' },
+      { id: 'intersecao', label: 'Interseção', icone: 'git-merge', rota: '/calculos/intersecao', toolMapa: 'intersecao' },
+      { id: 'irradiacao', label: 'Irradiação', icone: 'navigation', rota: '/calculos/irradiacao', toolMapa: 'irradiacao' },
     ],
   },
 ]
@@ -135,7 +135,7 @@ export default function CalculosScreen() {
     <View style={[s.container, { backgroundColor: C.background }]}>
       <ScreenHeader
         titulo="Cálculos técnicos"
-        subtitulo="Essas ferramentas existem para alimentar o CAD e a peça técnica, não para virar um fluxo paralelo."
+        subtitulo="Esta tela virou hub de apoio. O fluxo principal do produto agora é Projeto -> Mapa/CAD -> Ferramenta contextual."
       />
       <ScrollView contentContainerStyle={s.grid}>
         <View style={[s.contextoCard, { backgroundColor: C.card, borderColor: projetoAtivo ? C.primary : C.cardBorder }]}>
@@ -190,7 +190,7 @@ export default function CalculosScreen() {
             </View>
           )
         })}
-        <Text style={[s.rodape, { color: C.muted }]}>Fluxo ideal: abrir o projeto, entrar no CAD, calcular em contexto e só usar o modo livre quando estiver fazendo rascunho ou conferência isolada.</Text>
+        <Text style={[s.rodape, { color: C.muted }]}>Fluxo ideal: entrar no projeto, abrir o workspace do mapa e usar esta tela só como fallback técnico enquanto a migração para o CAD mobile não termina.</Text>
       </ScrollView>
     </View>
   )
