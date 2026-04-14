@@ -340,6 +340,225 @@
     .nav-row .primary-btn,
     .ghost-btn { width: 100%; }
   }
+
+  /* ================================================================
+     FASE 4 — Trilha de progresso "Passo X de 3"
+     ================================================================ */
+  .trilha {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .trilha-passo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    min-width: 76px;
+  }
+  .trilha-conector {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 22px;
+    min-width: 20px;
+    transition: background .3s;
+  }
+  .trilha-conector.ativo { background: var(--success); }
+  .trilha-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--bg-soft);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all .25s;
+  }
+  .trilha-passo.ativo .trilha-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #081a0d;
+  }
+  .trilha-passo.concluido .trilha-num {
+    background: rgba(70,192,126,.15);
+    border-color: var(--success);
+    color: var(--success);
+  }
+  .trilha-rotulo {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+    transition: color .25s;
+  }
+  .trilha-passo.ativo .trilha-rotulo  { color: var(--accent); }
+  .trilha-passo.concluido .trilha-rotulo { color: var(--success); }
+
+  /* ================================================================
+     FASE 4 — Resumo readonly (Etapa 3)
+     ================================================================ */
+  .resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .resumo-item {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .resumo-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .resumo-valor {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-word;
+  }
+  .resumo-editar {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+  }
+
+  /* ================================================================
+     FASE 4 — Upload de documentos pessoais
+     ================================================================ */
+  .secao-upload { margin-top: 22px; }
+  .secao-upload h3 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-family: "Georgia", "Times New Roman", serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .badge-opcional {
+    font-size: 11px;
+    font-family: inherit;
+    background: rgba(47,165,106,.14);
+    color: var(--accent);
+    border: 1px solid rgba(47,165,106,.24);
+    border-radius: 8px;
+    padding: 2px 8px;
+    letter-spacing: .04em;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .upload-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .upload-doc-item {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    background: #101512;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .upload-doc-titulo {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .upload-doc-zona {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-doc-zona:hover {
+    border-color: var(--accent);
+    background: rgba(47,165,106,.05);
+  }
+  .upload-doc-zona input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  .upload-doc-icone { font-size: 26px; line-height: 1; }
+  .upload-doc-zona-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .upload-doc-nome {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-all;
+    display: none;
+    padding: 6px 10px;
+    background: rgba(47,165,106,.08);
+    border-radius: 8px;
+    border: 1px solid rgba(47,165,106,.2);
+  }
+  .upload-doc-nome.visivel { display: block; }
+  .upload-doc-progresso {
+    height: 6px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    display: none;
+  }
+  .upload-doc-progresso.visivel { display: block; }
+  .upload-doc-barra {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 6px;
+    transition: width .1s linear;
+  }
+  .upload-doc-check {
+    color: var(--success);
+    font-size: 12px;
+    font-weight: 700;
+    display: none;
+  }
+  .upload-doc-check.visivel { display: block; }
+
+  @media (max-width: 480px) {
+    .trilha-rotulo { display: none; }
+    .trilha-passo { min-width: auto; }
+  }
 </style>
 </head>
 <body>
@@ -373,25 +592,19 @@
       </div>
     </section>
 
-    <section class="progress" id="progress"></section>
+    <div class="trilha" id="trilha"></div>
 
-    <form id="formulario" novalidate>
+    <form id="formulario" enctype="multipart/form-data" novalidate>
       <div class="step-card" data-step="0">
         <div class="step-header">
-          <h2 class="step-title">1. Seus dados pessoais</h2>
+          <h2 class="step-title">1. Identificação</h2>
           <p class="step-subtitle">Preencha como nos seus documentos. Isso evita retrabalho na hora de gerar as peças do processo.</p>
         </div>
-
-        <div class="note">Se você for casado(a) ou viver em união estável, preencha também os dados do cônjuge.</div>
 
         <div class="grid cols-2">
           <div class="field">
             <label class="required" for="nome">Nome completo</label>
             <input id="nome" name="nome" required autocomplete="name" placeholder="Nome completo como no RG" />
-          </div>
-          <div class="field">
-            <label class="required" for="telefone">Telefone</label>
-            <input id="telefone" name="telefone" required autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000" />
           </div>
           <div class="field">
             <label class="required" for="cpf">CPF</label>
@@ -401,6 +614,31 @@
             <label class="required" for="rg">RG</label>
             <input id="rg" name="rg" required autocomplete="off" placeholder="Número do RG" />
           </div>
+          <div class="field">
+            <label for="rg_orgao_emissor">Órgão emissor do RG</label>
+            <input id="rg_orgao_emissor" name="rg_orgao_emissor" autocomplete="off" placeholder="Ex.: SSP/GO" />
+          </div>
+          <div class="field">
+            <label for="rg_data_emissao">Data de emissão do RG</label>
+            <input id="rg_data_emissao" name="rg_data_emissao" type="date" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="nav-row">
+          <div class="spacer"></div>
+          <button type="button" class="primary-btn" data-next>Próximo →</button>
+        </div>
+      </div>
+
+      <div class="step-card" data-step="1" hidden>
+        <div class="step-header">
+          <h2 class="step-title">2. Dados pessoais e do imóvel</h2>
+          <p class="step-subtitle">Preencha seus dados de contato, endereço residencial e as informações do imóvel. Ao final, faça um esboço rápido da área se quiser.</p>
+        </div>
+
+        <div class="note">Se você for casado(a) ou viver em união estável, preencha também os dados do cônjuge.</div>
+
+        <div class="grid cols-2">
           <div class="field">
             <label class="required" for="estado_civil">Estado civil</label>
             <select id="estado_civil" name="estado_civil" required autocomplete="off">
@@ -415,6 +653,10 @@
           <div class="field">
             <label for="profissao">Profissão</label>
             <input id="profissao" name="profissao" autocomplete="organization-title" placeholder="Ex.: Agricultor" />
+          </div>
+          <div class="field">
+            <label class="required" for="telefone">Telefone</label>
+            <input id="telefone" name="telefone" required autocomplete="tel" inputmode="tel" placeholder="(00) 00000-0000" />
           </div>
           <div class="field">
             <label for="email">E-mail</label>
@@ -433,19 +675,36 @@
           </div>
         </div>
 
-        <div class="nav-row">
-          <div class="spacer"></div>
-          <button type="button" class="primary-btn" data-next>Continuar</button>
+        <div class="note" style="margin-top:18px;">Endereço residencial do proprietário</div>
+        <div class="grid cols-3" style="margin-top:14px;">
+          <div class="field">
+            <label class="required" for="endereco">Endereço residencial</label>
+            <input id="endereco" name="endereco" required autocomplete="street-address" placeholder="Rua, avenida, vila ou comunidade" />
+          </div>
+          <div class="field">
+            <label for="endereco_numero">Número</label>
+            <input id="endereco_numero" name="endereco_numero" autocomplete="address-line2" placeholder="s/n" />
+          </div>
+          <div class="field">
+            <label class="required" for="municipio">Município do endereço residencial</label>
+            <input id="municipio" name="municipio" required list="lista-municipios" autocomplete="address-level2" placeholder="Digite ou escolha o município" />
+          </div>
+          <div class="field">
+            <label for="cep">CEP residencial</label>
+            <input id="cep" name="cep" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" />
+          </div>
         </div>
-      </div>
 
-      <div class="step-card" data-step="1" hidden>
-        <div class="step-header">
-          <h2 class="step-title">2. Dados do imóvel</h2>
-          <p class="step-subtitle">Separe o endereço residencial do proprietário da localização do imóvel. Isso ajuda muito quando a pessoa mora na cidade e a área fica na fazenda ou chácara.</p>
+        <div class="field" style="margin-top:10px; gap:10px;">
+          <label for="usar_municipio_imovel" style="text-transform:none; letter-spacing:0; font-size:14px; color:var(--text); display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input id="usar_municipio_imovel" name="usar_municipio_imovel" type="checkbox" autocomplete="off" style="width:auto; margin:0; accent-color: var(--accent);" />
+            Meu endereço residencial fica no mesmo município do imóvel
+          </label>
+          <div class="hint">Marque essa opção só se o município residencial for o mesmo da área.</div>
         </div>
 
-        <div class="grid cols-2">
+        <div class="note" style="margin-top:18px;">Dados do imóvel</div>
+        <div class="grid cols-2" style="margin-top:14px;">
           <div class="field">
             <label class="required" for="nome_imovel">Nome da área ou imóvel</label>
             <input id="nome_imovel" name="nome_imovel" required autocomplete="organization" placeholder="Ex.: Fazenda Boa Esperança" />
@@ -480,35 +739,7 @@
           </div>
         </div>
 
-        <div class="note" style="margin-top:14px;">Endereço residencial do proprietário</div>
-        <div class="grid cols-3" style="margin-top:14px;">
-          <div class="field">
-            <label class="required" for="endereco">Endereço residencial</label>
-            <input id="endereco" name="endereco" required autocomplete="street-address" placeholder="Rua, avenida, vila ou comunidade" />
-          </div>
-          <div class="field">
-            <label for="endereco_numero">Número</label>
-            <input id="endereco_numero" name="endereco_numero" autocomplete="address-line2" placeholder="s/n" />
-          </div>
-          <div class="field">
-            <label class="required" for="municipio">Município do endereço residencial</label>
-            <input id="municipio" name="municipio" required list="lista-municipios" autocomplete="address-level2" placeholder="Digite ou escolha o município" />
-          </div>
-          <div class="field">
-            <label for="cep">CEP residencial</label>
-            <input id="cep" name="cep" autocomplete="postal-code" inputmode="numeric" placeholder="00000-000" />
-          </div>
-        </div>
-
-        <div class="field" style="margin-top:10px; gap:10px;">
-          <label for="usar_municipio_imovel" style="text-transform:none; letter-spacing:0; font-size:14px; color:var(--text); display:flex; align-items:center; gap:10px; cursor:pointer;">
-            <input id="usar_municipio_imovel" name="usar_municipio_imovel" type="checkbox" autocomplete="off" style="width:auto; margin:0; accent-color: var(--accent);" />
-            Meu endereço residencial fica no mesmo município do imóvel
-          </label>
-          <div class="hint">Marque essa opção só se o município residencial for o mesmo da área.</div>
-        </div>
-
-        <div class="note" style="margin-top:18px;">Localização ou endereço do imóvel</div>
+        <div class="note" style="margin-top:14px;">Localização ou endereço do imóvel</div>
         <div class="grid cols-3" style="margin-top:14px;">
           <div class="field">
             <label for="endereco_imovel">Endereço, comunidade ou localidade do imóvel</label>
@@ -532,19 +763,9 @@
           <textarea id="observacoes" name="observacoes" autocomplete="off" placeholder="Conte algo que ajude a localizar a área, descrever acessos, vizinhos conhecidos ou alguma particularidade importante."></textarea>
         </div>
 
-        <div class="nav-row">
-          <button type="button" class="secondary-btn" data-prev>Voltar</button>
-          <button type="button" class="primary-btn" data-next>Continuar</button>
-        </div>
-      </div>
+        <div class="note" style="margin-top:18px;">Esboço aproximado da área <span style="font-weight:400; font-size:12px;">(opcional)</span></div>
 
-      <div class="step-card" data-step="2" hidden>
-        <div class="step-header">
-          <h2 class="step-title">3. Esboço aproximado da área</h2>
-          <p class="step-subtitle">Faça um croqui rápido só para nos orientar. Se você tiver coordenadas, KML, GeoJSON, CSV, TXT ou um croqui em foto/PDF, envie também.</p>
-        </div>
-
-        <div class="sketch-shell">
+        <div class="sketch-shell" style="margin-top:14px;">
           <div class="sketch-toolbar">
             <button type="button" class="ghost-btn" id="btn-clear-sketch">Limpar desenho</button>
             <span class="hint">Toque no quadro abaixo para marcar os vértices do croqui. Isso é só um esboço, não precisa ficar perfeito.</span>
@@ -558,7 +779,7 @@
         <div class="grid" style="margin-top:16px;">
           <div class="field">
             <label for="croqui_coords">Coordenadas aproximadas (opcional)</label>
-            <textarea id="croqui_coords" name="croqui_coords" autocomplete="off" placeholder="Cole aqui linhas como lat,lon ou lon,lat. Exemplo:\n-14.19108,-49.40610\n-14.19150,-49.40560\n-14.19210,-49.40590"></textarea>
+            <textarea id="croqui_coords" name="croqui_coords" autocomplete="off" placeholder="Cole aqui linhas como lat,lon ou lon,lat. Exemplo:&#10;-14.19108,-49.40610&#10;-14.19150,-49.40560&#10;-14.19210,-49.40590"></textarea>
             <div class="hint">Se você não tiver coordenadas, pode pular esse campo e só desenhar o croqui ou enviar um arquivo.</div>
           </div>
         </div>
@@ -570,36 +791,127 @@
             <div class="hint">Aceita GeoJSON, KML, CSV, TXT ou ZIP com shapefile.</div>
           </div>
           <div class="upload-box">
-            <label for="anexos">Croqui, foto ou PDF</label>
+            <label for="anexos">Croqui, foto ou PDF da área</label>
             <input id="anexos" name="anexos" type="file" autocomplete="off" accept="image/*,.pdf" multiple />
             <div class="hint">Envie fotos do croqui, mapa escaneado ou qualquer documento que ajude na localização.</div>
           </div>
         </div>
 
-        <input type="hidden" id="croqui_svg" name="croqui_svg" autocomplete="off" />
+        <div class="note" style="margin-top:18px;">Confrontantes (vizinhos da área)</div>
+        <div class="hint" style="margin-top:4px; margin-bottom:12px;">Se você souber quem são os vizinhos de cada lado, informe agora. Se não souber algum dado, deixe em branco.</div>
+        <div class="confrontantes" id="confrontantes"></div>
+        <button type="button" class="ghost-btn" id="btn-add-conf" style="margin-top:14px;">+ Adicionar confrontante</button>
 
         <div class="nav-row">
-          <button type="button" class="secondary-btn" data-prev>Voltar</button>
-          <button type="button" class="primary-btn" data-next>Continuar</button>
+          <button type="button" class="secondary-btn" data-prev>← Voltar</button>
+          <button type="button" class="primary-btn" data-next>Próximo →</button>
         </div>
       </div>
-
-      <div class="step-card" data-step="3" hidden>
+      <!-- ===== ETAPA 3: CONFIRMAÇÃO E ENVIO ===== -->
+      <div class="step-card" data-step="2" hidden>
         <div class="step-header">
-          <h2 class="step-title">4. Confrontantes e conferência final</h2>
-          <p class="step-subtitle">Se você souber quem são os vizinhos de cada lado, informe agora. Se não souber algum dado, deixe em branco.</p>
+          <h2 class="step-title">3. Confirmação</h2>
+          <p class="step-subtitle">Confira seus dados abaixo. Se quiser corrigir algo, use o botão "← Voltar". Depois envie seus documentos (opcional) e clique em <strong>Confirmar e enviar</strong>.</p>
         </div>
 
-        <div class="confrontantes" id="confrontantes"></div>
-        <button type="button" class="ghost-btn" id="btn-add-conf" style="margin-top:14px;">Adicionar confrontante</button>
+        <!-- Resumo readonly dos dados preenchidos -->
+        <div class="resumo-grid">
+          <div class="resumo-item">
+            <div class="resumo-label">Nome completo</div>
+            <div class="resumo-valor" id="resumo-nome">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">CPF</div>
+            <div class="resumo-valor" id="resumo-cpf">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">RG</div>
+            <div class="resumo-valor" id="resumo-rg">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Estado civil</div>
+            <div class="resumo-valor" id="resumo-estado-civil">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Telefone</div>
+            <div class="resumo-valor" id="resumo-telefone">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">E-mail</div>
+            <div class="resumo-valor" id="resumo-email">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Endereço residencial</div>
+            <div class="resumo-valor" id="resumo-endereco">—</div>
+          </div>
+          <div class="resumo-item">
+            <div class="resumo-label">Imóvel</div>
+            <div class="resumo-valor" id="resumo-imovel">—</div>
+          </div>
+        </div>
+
+        <!-- Upload de documentos pessoais (opcional) -->
+        <div class="secao-upload">
+          <h3>Documentos <span class="badge-opcional">opcional</span></h3>
+          <p class="step-subtitle">Envie fotos ou scans dos seus documentos para agilizar o processo. Aceitamos JPG, PNG ou PDF de até 10 MB cada.</p>
+
+          <div class="upload-doc-grid">
+
+            <div class="upload-doc-item">
+              <div class="upload-doc-titulo">RG — frente e verso</div>
+              <div class="upload-doc-zona">
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" name="rg_arquivo" id="rg_arquivo" autocomplete="off" />
+                <div class="upload-doc-icone">🪪</div>
+                <div class="upload-doc-zona-hint">Toque para selecionar</div>
+              </div>
+              <div class="upload-doc-nome" id="nome-rg_arquivo"></div>
+              <div class="upload-doc-progresso" id="prog-rg_arquivo">
+                <div class="upload-doc-barra" id="barra-rg_arquivo"></div>
+              </div>
+              <div class="upload-doc-check" id="check-rg_arquivo">✓ Enviado com sucesso</div>
+            </div>
+
+            <div class="upload-doc-item">
+              <div class="upload-doc-titulo">CPF</div>
+              <div class="upload-doc-zona">
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" name="cpf_arquivo" id="cpf_arquivo" autocomplete="off" />
+                <div class="upload-doc-icone">📋</div>
+                <div class="upload-doc-zona-hint">Toque para selecionar</div>
+              </div>
+              <div class="upload-doc-nome" id="nome-cpf_arquivo"></div>
+              <div class="upload-doc-progresso" id="prog-cpf_arquivo">
+                <div class="upload-doc-barra" id="barra-cpf_arquivo"></div>
+              </div>
+              <div class="upload-doc-check" id="check-cpf_arquivo">✓ Enviado com sucesso</div>
+            </div>
+
+            <div class="upload-doc-item">
+              <div class="upload-doc-titulo">Comprovante de residência</div>
+              <div class="upload-doc-zona">
+                <input type="file" accept=".jpg,.jpeg,.png,.pdf" name="comprovante_residencia" id="comprovante_residencia" autocomplete="off" />
+                <div class="upload-doc-icone">🏠</div>
+                <div class="upload-doc-zona-hint">Toque para selecionar</div>
+              </div>
+              <div class="upload-doc-nome" id="nome-comprovante_residencia"></div>
+              <div class="upload-doc-progresso" id="prog-comprovante_residencia">
+                <div class="upload-doc-barra" id="barra-comprovante_residencia"></div>
+              </div>
+              <div class="upload-doc-check" id="check-comprovante_residencia">✓ Enviado com sucesso</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Inputs ocultos necessários para o backend -->
+        <input type="hidden" id="croqui_svg" name="croqui_svg" autocomplete="off" />
         <input type="hidden" id="confrontantes_json" name="confrontantes_json" autocomplete="off" />
 
         <div class="status-banner" id="status-banner"></div>
         <div class="error-banner" id="error-banner"></div>
 
         <div class="nav-row">
-          <button type="button" class="secondary-btn" data-prev>Voltar</button>
-          <button type="submit" class="primary-btn" id="btn-submit">Enviar dados</button>
+          <button type="button" class="secondary-btn" data-prev>← Voltar</button>
+          <button type="submit" class="primary-btn" id="btn-submit">Confirmar e enviar</button>
         </div>
       </div>
     </form>
@@ -613,50 +925,72 @@
   </main>
 
 <script>
-const passos = [
-  { titulo: 'Dados pessoais', descricao: 'Identificação do proprietário' },
-  { titulo: 'Imóvel', descricao: 'Dados da área e endereço' },
-  { titulo: 'Esboço', descricao: 'Croqui, coordenadas e arquivos' },
-  { titulo: 'Confrontantes', descricao: 'Vizinhos e envio final' },
-]
+/*
+ * GeoAdmin Pro — Portal do Cliente (Fase 4)
+ *
+ * Fluxo completo:
+ *   1. Cliente recebe link WhatsApp com token único
+ *   2. Página carrega contexto via GET /formulario/cliente/contexto?token=TOKEN
+ *   3. Formulário em 3 etapas com trilha visual de progresso:
+ *        Etapa 1 – Identificação   (nome, CPF, RG, órgão emissor, data emissão)
+ *        Etapa 2 – Dados pessoais  (estado civil, contato, endereço, imóvel, esboço, confrontantes)
+ *        Etapa 3 – Confirmação     (resumo readonly, upload de documentos, envio)
+ *   4. Submit via XMLHttpRequest multipart com barra de progresso por arquivo
+ *   5. Tela de sucesso após resposta 200 do servidor
+ *
+ * Segurança:
+ *   - Token validado server-side em cada request; nunca usado para filtrar dados client-side
+ *   - Não exibe IDs, UUIDs ou dados técnicos internos ao cliente
+ */
+
+// ────────────────────────────────────────────────────────────────────────────
+// Constantes e estado global
+// ────────────────────────────────────────────────────────────────────────────
+const NOME_PASSOS = ['Identificação', 'Dados pessoais', 'Confirmação']
+const CAMPOS_DOC = ['rg_arquivo', 'cpf_arquivo', 'comprovante_residencia']
+
+const token         = new URLSearchParams(window.location.search).get('token')
+const form          = document.getElementById('formulario')
+const statusBanner  = document.getElementById('status-banner')
+const errorBanner   = document.getElementById('error-banner')
+const successCard   = document.getElementById('success-card')
+const steps         = [...document.querySelectorAll('.step-card')]
+const sketchSvg     = document.getElementById('sketch-svg')
+const sketchStatus  = document.getElementById('sketch-status')
+const croquiSvgInput        = document.getElementById('croqui_svg')
+const listaMunicipios       = document.getElementById('lista-municipios')
+const municipioImovelInput  = document.getElementById('municipio_imovel')
+const municipioEnderecoInput= document.getElementById('municipio')
+const usarMunicipioImovelInput = document.getElementById('usar_municipio_imovel')
+const enderecoInput         = document.getElementById('endereco')
+const enderecoNumeroInput   = document.getElementById('endereco_numero')
+const cepInput              = document.getElementById('cep')
+const enderecoImovelInput   = document.getElementById('endereco_imovel')
+const enderecoImovelNumeroInput = document.getElementById('endereco_imovel_numero')
+const cepImovelInput        = document.getElementById('cep_imovel')
+
 const estado = {
   passoAtual: 0,
   sketchPoints: [],
   confrontantes: [
     { lado: 'Norte', nome: '', cpf: '', nome_imovel: '', matricula: '', tipo: 'particular' },
-    { lado: 'Sul', nome: '', cpf: '', nome_imovel: '', matricula: '', tipo: 'particular' },
+    { lado: 'Sul',   nome: '', cpf: '', nome_imovel: '', matricula: '', tipo: 'particular' },
   ],
 }
-const token = new URLSearchParams(window.location.search).get('token')
-const form = document.getElementById('formulario')
-const statusBanner = document.getElementById('status-banner')
-const errorBanner = document.getElementById('error-banner')
-const successCard = document.getElementById('success-card')
-const progress = document.getElementById('progress')
-const steps = [...document.querySelectorAll('.step-card')]
-const sketchSvg = document.getElementById('sketch-svg')
-const sketchStatus = document.getElementById('sketch-status')
-const croquiSvgInput = document.getElementById('croqui_svg')
-const listaMunicipios = document.getElementById('lista-municipios')
-const municipioImovelInput = document.getElementById('municipio_imovel')
-const municipioEnderecoInput = document.getElementById('municipio')
-const usarMunicipioImovelInput = document.getElementById('usar_municipio_imovel')
-const enderecoInput = document.getElementById('endereco')
-const enderecoNumeroInput = document.getElementById('endereco_numero')
-const cepInput = document.getElementById('cep')
-const enderecoImovelInput = document.getElementById('endereco_imovel')
-const enderecoImovelNumeroInput = document.getElementById('endereco_imovel_numero')
-const cepImovelInput = document.getElementById('cep_imovel')
+
+// ────────────────────────────────────────────────────────────────────────────
+// Municípios (autocompletar)
+// ────────────────────────────────────────────────────────────────────────────
 const municipiosSugeridos = [
   'Abadiânia','Acreúna','Águas Lindas de Goiás','Alexânia','Alto Horizonte','Alto Paraíso de Goiás','Anápolis','Aparecida de Goiânia','Aragarças','Bela Vista de Goiás',
   'Bom Jardim de Goiás','Buriti Alegre','Cabeceiras','Caiapônia','Caldas Novas','Campinaçu','Campinorte','Campos Belos','Catalão','Cavalcante',
   'Ceres','Cidade Ocidental','Cocalzinho de Goiás','Corumbá de Goiás','Cristalina','Crixás','Doverlândia','Formosa','Goiânia','Goianésia',
   'Goianira','Goiás','Goiatuba','Gurupi','Hidrolândia','Iaciara','Indiara','Inhumas','Ipameri','Iporá',
-  'Itaberaí','Itaberaí','Itaguaru','Itapaci','Itapuranga','Itarumã','Jaraguá','Jataí','Jussara','Luziânia',
+  'Itaberaí','Itaguaru','Itapaci','Itapuranga','Itarumã','Jaraguá','Jataí','Jussara','Luziânia',
   'Mambaí','Mara Rosa','Minaçu','Mineiros','Montes Claros de Goiás','Morrinhos','Mozarlândia','Nerópolis','Niquelândia','Novo Gama',
   'Padre Bernardo','Palmeiras de Goiás','Palmeirópolis','Paranaiguara','Piranhas','Pirenópolis','Planaltina','Porangatu','Posse','Quirinópolis',
-  'Rio Verde','Sanclerlândia','Santa Helena de Goiás','Santa Rita do Araguaia','São João d\'Aliança','São Luís de Montes Belos','São Miguel do Araguaia','Senador Canedo','Silvânia','Simolândia',
-  'Sítio d\'Abadia','Trindade','Uruaçu','Uruana','Valparaíso de Goiás','Vicentinópolis','Vila Boa','Vila Propício','Brasília'
+  'Rio Verde','Sanclerlândia','Santa Helena de Goiás','Santa Rita do Araguaia',"São João d'Aliança",'São Luís de Montes Belos','São Miguel do Araguaia','Senador Canedo','Silvânia','Simolândia',
+  "Sítio d'Abadia",'Trindade','Uruaçu','Uruana','Valparaíso de Goiás','Vicentinópolis','Vila Boa','Vila Propício','Brasília',
 ]
 
 function normalizarMunicipio(valor) {
@@ -673,182 +1007,28 @@ function montarListaMunicipios(contexto = {}) {
     municipioImovelInput?.value,
     municipioEnderecoInput?.value,
   ]
-
   const municipios = [...new Set([...municipiosSugeridos, ...valoresContexto]
     .map(normalizarMunicipio)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, 'pt-BR')))]
-
   listaMunicipios.innerHTML = municipios
-    .map((municipio) => `<option value="${municipio}"></option>`)
+    .map(m => `<option value="${m}"></option>`)
     .join('')
 }
 
 function sincronizarMunicipioEndereco() {
   if (!usarMunicipioImovelInput?.checked) return
   const municipio = normalizarMunicipio(municipioImovelInput?.value)
-  if (municipio) {
-    municipioEnderecoInput.value = municipio
-  }
+  if (municipio) municipioEnderecoInput.value = municipio
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Máscaras e CEP
+// ────────────────────────────────────────────────────────────────────────────
 function mascaraCEP(input) {
-  let valor = (input.value || '').replace(/\D/g, '').slice(0, 8)
-  valor = valor.replace(/(\d{5})(\d)/, '$1-$2')
-  input.value = valor
-}
-
-async function consultarCep(cepNumerico) {
-  const resposta = await fetch(`https://viacep.com.br/ws/${cepNumerico}/json/`)
-  if (!resposta.ok) {
-    throw new Error('Falha ao consultar o CEP.')
-  }
-
-  const dados = await resposta.json()
-  if (dados.erro) {
-    throw new Error('CEP não encontrado. Confira os números digitados.')
-  }
-  return dados
-}
-
-async function buscarCepResidencial() {
-  const cepNumerico = (cepInput?.value || '').replace(/\D/g, '')
-  if (cepNumerico.length !== 8) {
-    return
-  }
-
-  try {
-    mostrarStatus('Consultando CEP residencial...')
-    const dados = await consultarCep(cepNumerico)
-
-    if (!enderecoInput.value && dados.logradouro) {
-      enderecoInput.value = dados.logradouro
-    }
-    if (!enderecoNumeroInput.value && dados.complemento) {
-      enderecoNumeroInput.value = dados.complemento
-    }
-    if (!municipioEnderecoInput.value || !usarMunicipioImovelInput?.checked) {
-      municipioEnderecoInput.value = normalizarMunicipio(dados.localidade)
-    }
-    montarListaMunicipios({ cliente: { municipio: dados.localidade } })
-    statusBanner.style.display = 'none'
-  } catch (erro) {
-    mostrarErro(erro.message || 'Não foi possível consultar o CEP residencial agora.')
-  }
-}
-
-async function buscarCepImovel() {
-  const cepNumerico = (cepImovelInput?.value || '').replace(/\D/g, '')
-  if (cepNumerico.length !== 8) {
-    return
-  }
-
-  try {
-    mostrarStatus('Consultando CEP do imóvel...')
-    const dados = await consultarCep(cepNumerico)
-
-    if (!enderecoImovelInput.value && dados.logradouro) {
-      enderecoImovelInput.value = dados.logradouro
-    }
-    if (!enderecoImovelNumeroInput.value && dados.complemento) {
-      enderecoImovelNumeroInput.value = dados.complemento
-    }
-    if (!municipioImovelInput.value) {
-      municipioImovelInput.value = normalizarMunicipio(dados.localidade)
-    }
-    montarListaMunicipios({ projeto: { municipio: dados.localidade, imovel_municipio: dados.localidade } })
-    sincronizarMunicipioEndereco()
-    statusBanner.style.display = 'none'
-  } catch (erro) {
-    mostrarErro(erro.message || 'Não foi possível consultar o CEP do imóvel agora.')
-  }
-}
-
-function renderProgress() {
-  progress.innerHTML = passos.map((passo, index) => {
-    const classes = [ 'progress-item' ]
-    if (index === estado.passoAtual) classes.push('active')
-    if (index < estado.passoAtual) classes.push('done')
-    return `
-      <div class="${classes.join(' ')}">
-        <span class="step-index">${index + 1}</span>
-        <span>${passo.titulo}</span>
-      </div>
-    `
-  }).join('')
-}
-
-function mostrarPasso(index) {
-  estado.passoAtual = Math.max(0, Math.min(index, steps.length - 1))
-  steps.forEach((step, stepIndex) => {
-    step.hidden = stepIndex !== estado.passoAtual
-  })
-  renderProgress()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function validarPasso(index) {
-  const passo = steps[index]
-  if (!passo) return true
-
-  const camposObrigatorios = [...passo.querySelectorAll('[required]')]
-  for (const campo of camposObrigatorios) {
-    if (typeof campo.checkValidity === 'function' && !campo.checkValidity()) {
-      mostrarErro('Confira os campos obrigatórios antes de continuar.')
-      campo.reportValidity()
-      if (typeof campo.focus === 'function') campo.focus()
-      return false
-    }
-  }
-
-  return true
-}
-
-function validarFormularioCompleto() {
-  for (let index = 0; index < steps.length; index += 1) {
-    const passo = steps[index]
-    if (!passo) continue
-
-    const camposObrigatorios = [...passo.querySelectorAll('[required]')]
-    const campoInvalido = camposObrigatorios.find(campo => typeof campo.checkValidity === 'function' && !campo.checkValidity())
-    if (campoInvalido) {
-      mostrarPasso(index)
-      mostrarErro('Ainda falta preencher alguns dados obrigatórios.')
-      campoInvalido.reportValidity()
-      if (typeof campoInvalido.focus === 'function') campoInvalido.focus()
-      return false
-    }
-  }
-
-  return true
-}
-
-function nextStep() {
-  limparMensagens()
-  if (!validarPasso(estado.passoAtual)) {
-    return
-  }
-  mostrarPasso(estado.passoAtual + 1)
-}
-
-function prevStep() {
-  limparMensagens()
-  mostrarPasso(estado.passoAtual - 1)
-}
-
-function limparMensagens() {
-  statusBanner.style.display = 'none'
-  errorBanner.style.display = 'none'
-}
-
-function mostrarStatus(texto) {
-  statusBanner.textContent = texto
-  statusBanner.style.display = 'block'
-}
-
-function mostrarErro(texto) {
-  errorBanner.textContent = texto
-  errorBanner.style.display = 'block'
+  let v = (input.value || '').replace(/\D/g, '').slice(0, 8)
+  v = v.replace(/(\d{5})(\d)/, '$1-$2')
+  input.value = v
 }
 
 function mascaraCPF(input) {
@@ -859,6 +1039,188 @@ function mascaraCPF(input) {
   input.value = v
 }
 
+async function consultarCep(cepNumerico) {
+  const res = await fetch(`https://viacep.com.br/ws/${cepNumerico}/json/`)
+  if (!res.ok) throw new Error('Falha ao consultar o CEP.')
+  const dados = await res.json()
+  if (dados.erro) throw new Error('CEP não encontrado. Confira os números digitados.')
+  return dados
+}
+
+async function buscarCepResidencial() {
+  const cepNum = (cepInput?.value || '').replace(/\D/g, '')
+  if (cepNum.length !== 8) return
+  try {
+    mostrarStatus('Consultando CEP residencial...')
+    const dados = await consultarCep(cepNum)
+    if (!enderecoInput.value && dados.logradouro)     enderecoInput.value = dados.logradouro
+    if (!enderecoNumeroInput.value && dados.complemento) enderecoNumeroInput.value = dados.complemento
+    if (!municipioEnderecoInput.value || !usarMunicipioImovelInput?.checked)
+      municipioEnderecoInput.value = normalizarMunicipio(dados.localidade)
+    montarListaMunicipios({ cliente: { municipio: dados.localidade } })
+    statusBanner.style.display = 'none'
+  } catch (e) {
+    mostrarErro(e.message || 'Não foi possível consultar o CEP residencial agora.')
+  }
+}
+
+async function buscarCepImovel() {
+  const cepNum = (cepImovelInput?.value || '').replace(/\D/g, '')
+  if (cepNum.length !== 8) return
+  try {
+    mostrarStatus('Consultando CEP do imóvel...')
+    const dados = await consultarCep(cepNum)
+    if (!enderecoImovelInput.value && dados.logradouro)       enderecoImovelInput.value = dados.logradouro
+    if (!enderecoImovelNumeroInput.value && dados.complemento) enderecoImovelNumeroInput.value = dados.complemento
+    if (!municipioImovelInput.value)
+      municipioImovelInput.value = normalizarMunicipio(dados.localidade)
+    montarListaMunicipios({ projeto: { municipio: dados.localidade, imovel_municipio: dados.localidade } })
+    sincronizarMunicipioEndereco()
+    statusBanner.style.display = 'none'
+  } catch (e) {
+    mostrarErro(e.message || 'Não foi possível consultar o CEP do imóvel agora.')
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Trilha de progresso — renderização
+// ────────────────────────────────────────────────────────────────────────────
+function renderTrilha() {
+  const trilha = document.getElementById('trilha')
+  if (!trilha) return
+  let html = ''
+  NOME_PASSOS.forEach((nome, idx) => {
+    const isAtivo     = idx === estado.passoAtual
+    const isConcluido = idx < estado.passoAtual
+    const cls = isAtivo ? 'trilha-passo ativo' : isConcluido ? 'trilha-passo concluido' : 'trilha-passo'
+    const num = isConcluido ? '✓' : String(idx + 1)
+    html += `<div class="${cls}"><div class="trilha-num">${num}</div><div class="trilha-rotulo">${nome}</div></div>`
+    if (idx < NOME_PASSOS.length - 1) {
+      html += `<div class="trilha-conector${isConcluido ? ' ativo' : ''}"></div>`
+    }
+  })
+  trilha.innerHTML = html
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Navegação entre etapas
+// ────────────────────────────────────────────────────────────────────────────
+function mostrarPasso(index) {
+  estado.passoAtual = Math.max(0, Math.min(index, steps.length - 1))
+  steps.forEach((step, i) => { step.hidden = i !== estado.passoAtual })
+  renderTrilha()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function validarPasso(index) {
+  const passo = steps[index]
+  if (!passo) return true
+  for (const campo of [...passo.querySelectorAll('[required]')]) {
+    if (typeof campo.checkValidity === 'function' && !campo.checkValidity()) {
+      mostrarErro('Confira os campos obrigatórios antes de continuar.')
+      campo.reportValidity()
+      if (typeof campo.focus === 'function') campo.focus()
+      return false
+    }
+  }
+  return true
+}
+
+function validarFormularioCompleto() {
+  for (let i = 0; i < steps.length; i++) {
+    const campo = [...(steps[i]?.querySelectorAll('[required]') || [])]
+      .find(c => typeof c.checkValidity === 'function' && !c.checkValidity())
+    if (campo) {
+      mostrarPasso(i)
+      mostrarErro('Ainda falta preencher alguns dados obrigatórios.')
+      campo.reportValidity()
+      if (typeof campo.focus === 'function') campo.focus()
+      return false
+    }
+  }
+  return true
+}
+
+function nextStep() {
+  limparMensagens()
+  if (!validarPasso(estado.passoAtual)) return
+  const prox = estado.passoAtual + 1
+  if (prox === 2) {
+    // Ao entrar na etapa de confirmação: serializar confrontantes e montar resumo
+    serializarConfrontantes()
+    preencherResumo()
+  }
+  mostrarPasso(prox)
+}
+
+function prevStep() {
+  limparMensagens()
+  mostrarPasso(estado.passoAtual - 1)
+}
+
+function limparMensagens() {
+  statusBanner.style.display = 'none'
+  errorBanner.style.display  = 'none'
+}
+
+function mostrarStatus(texto) {
+  statusBanner.textContent    = texto
+  statusBanner.style.display  = 'block'
+}
+
+function mostrarErro(texto) {
+  errorBanner.textContent   = texto
+  errorBanner.style.display = 'block'
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Resumo readonly — Etapa 3
+// ────────────────────────────────────────────────────────────────────────────
+const ESTADO_CIVIL_MAPA = {
+  solteiro: 'Solteiro(a)', casado: 'Casado(a)', divorciado: 'Divorciado(a)',
+  viuvo: 'Viúvo(a)', uniao_estavel: 'União estável',
+}
+
+function preencherResumo() {
+  const get = id => (document.getElementById(id)?.value || '').trim()
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—' }
+
+  set('resumo-nome', get('nome'))
+  set('resumo-cpf', get('cpf'))
+
+  const rg = [get('rg'), get('rg_orgao_emissor')].filter(Boolean).join(' — ')
+  set('resumo-rg', rg)
+
+  set('resumo-estado-civil', ESTADO_CIVIL_MAPA[get('estado_civil')] || get('estado_civil'))
+  set('resumo-telefone', get('telefone'))
+  set('resumo-email', get('email') || '—')
+
+  const partsEndereco = [get('endereco'), get('endereco_numero'), get('municipio'), get('cep')].filter(Boolean)
+  set('resumo-endereco', partsEndereco.join(', '))
+
+  const partsImovel = [get('nome_imovel'), get('municipio_imovel')].filter(Boolean)
+  set('resumo-imovel', partsImovel.join(' — '))
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Upload de documentos — feedback visual (nome, barra, check)
+// ────────────────────────────────────────────────────────────────────────────
+function atualizarProgresso(nome, pct) {
+  const prog  = document.getElementById('prog-' + nome)
+  const barra = document.getElementById('barra-' + nome)
+  if (prog)  prog.classList.add('visivel')
+  if (barra) barra.style.width = Math.min(100, pct) + '%'
+}
+
+function marcarDocConcluido(nome) {
+  atualizarProgresso(nome, 100)
+  const check = document.getElementById('check-' + nome)
+  if (check) check.classList.add('visivel')
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Confrontantes
+// ────────────────────────────────────────────────────────────────────────────
 function renderConfrontantes() {
   const container = document.getElementById('confrontantes')
   container.innerHTML = estado.confrontantes.map((conf, index) => `
@@ -890,7 +1252,7 @@ function renderConfrontantes() {
         <div class="field">
           <label for="confrontante_tipo_${index}">Tipo</label>
           <select id="confrontante_tipo_${index}" name="confrontante_tipo_${index}" data-conf="tipo" data-index="${index}" autocomplete="off">
-            ${['particular','estrada','rio','servidao','outros'].map(tipo => `<option value="${tipo}" ${conf.tipo === tipo ? 'selected' : ''}>${tipo}</option>`).join('')}
+            ${['particular','estrada','rio','servidao','outros'].map(t => `<option value="${t}" ${conf.tipo === t ? 'selected' : ''}>${t}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -900,7 +1262,7 @@ function renderConfrontantes() {
 
 function serializarConfrontantes() {
   document.getElementById('confrontantes_json').value = JSON.stringify(
-    estado.confrontantes.filter(conf => (conf.nome || '').trim())
+    estado.confrontantes.filter(c => (c.nome || '').trim())
   )
 }
 
@@ -914,26 +1276,29 @@ function removeConfrontante(index) {
   renderConfrontantes()
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Sketch / Croqui
+// ────────────────────────────────────────────────────────────────────────────
 function desenharSketch() {
   const gridLines = []
   for (let i = 10; i < 100; i += 10) {
     gridLines.push(`<line x1="${i}" y1="0" x2="${i}" y2="100" stroke="#f0e3ca" stroke-width="0.4" />`)
     gridLines.push(`<line x1="0" y1="${i}" x2="100" y2="${i}" stroke="#f0e3ca" stroke-width="0.4" />`)
   }
-  const points = estado.sketchPoints
-  const polyline = points.length
+  const points  = estado.sketchPoints
+  const poly    = points.length
     ? `<polyline fill="${points.length >= 3 ? 'rgba(197,139,43,.20)' : 'none'}" stroke="#b27014" stroke-width="1.5" points="${points.map(p => `${p.x},${p.y}`).join(' ')}${points.length >= 3 ? ' ' + points[0].x + ',' + points[0].y : ''}" />`
     : ''
-  const circles = points.map((point, index) => `
+  const circles = points.map((p, i) => `
     <g>
-      <circle cx="${point.x}" cy="${point.y}" r="2.1" fill="#7d4f0b" />
-      <text x="${point.x + 2.8}" y="${point.y - 2.8}" font-size="4" fill="#5b4630">${index + 1}</text>
+      <circle cx="${p.x}" cy="${p.y}" r="2.1" fill="#7d4f0b" />
+      <text x="${p.x + 2.8}" y="${p.y - 2.8}" font-size="4" fill="#5b4630">${i + 1}</text>
     </g>
   `).join('')
   sketchSvg.innerHTML = `
     <rect x="0" y="0" width="100" height="100" fill="#fffdf8" />
     ${gridLines.join('')}
-    ${polyline}
+    ${poly}
     ${circles}
   `
   sketchStatus.textContent = points.length
@@ -943,154 +1308,216 @@ function desenharSketch() {
 }
 
 function registrarPonto(event) {
-  const box = sketchSvg.getBoundingClientRect()
+  const box     = sketchSvg.getBoundingClientRect()
   const clientX = event.touches ? event.touches[0].clientX : event.clientX
   const clientY = event.touches ? event.touches[0].clientY : event.clientY
-  const x = ((clientX - box.left) / box.width) * 100
-  const y = ((clientY - box.top) / box.height) * 100
-  estado.sketchPoints.push({ x: Math.max(2, Math.min(98, Number(x.toFixed(2)))), y: Math.max(2, Math.min(98, Number(y.toFixed(2)))) })
+  const x = ((clientX - box.left) / box.width)  * 100
+  const y = ((clientY - box.top)  / box.height) * 100
+  estado.sketchPoints.push({
+    x: Math.max(2, Math.min(98, Number(x.toFixed(2)))),
+    y: Math.max(2, Math.min(98, Number(y.toFixed(2)))),
+  })
   desenharSketch()
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Contexto do token (carregado na inicialização)
+// ────────────────────────────────────────────────────────────────────────────
 async function carregarContexto() {
   try {
-    const res = await fetch(`/formulario/cliente/contexto?token=${token}`)
+    const res  = await fetch(`/formulario/cliente/contexto?token=${encodeURIComponent(token)}`)
     if (!res.ok) throw new Error('Falha ao carregar contexto')
     const data = await res.json()
-    document.getElementById('meta-projeto').textContent = data.projeto?.projeto_nome || 'Projeto em preparação'
-    document.getElementById('meta-cliente').textContent = data.cliente?.nome || 'Participante'
-    document.getElementById('meta-papel').textContent = data.participante?.papel || 'Participante do processo'
-    document.getElementById('meta-lote').textContent = data.lote?.identificacao || data.area?.nome || 'Recorte sem lote específico'
-    document.getElementById('meta-validade').textContent = data.cliente?.magic_link_expira
+
+    document.getElementById('meta-projeto').textContent   = data.projeto?.projeto_nome || 'Projeto em preparação'
+    document.getElementById('meta-cliente').textContent   = data.cliente?.nome         || 'Participante'
+    document.getElementById('meta-papel').textContent     = data.participante?.papel   || 'Participante do processo'
+    document.getElementById('meta-lote').textContent      = data.lote?.identificacao   || data.area?.nome || 'Recorte sem lote específico'
+    document.getElementById('meta-validade').textContent  = data.cliente?.magic_link_expira
       ? new Date(data.cliente.magic_link_expira).toLocaleString('pt-BR')
       : 'Sem validade'
-    if (data.projeto?.projeto_nome) {
-      document.getElementById('hero-title').textContent = `Projeto ${data.projeto.projeto_nome}`
-    }
-    if (data.mensagem) {
-      document.getElementById('hero-subtitle').textContent = `${data.mensagem} Você não tem acesso aos demais lotes ou imóveis do projeto.`
-    }
 
-    const municipioImovelContexto = normalizarMunicipio(
-      data.projeto?.municipio ||
-      data.projeto?.imovel_municipio
-    )
-    const municipioClienteContexto = normalizarMunicipio(
-      data.cliente?.municipio ||
-      data.cliente?.cliente_municipio ||
-      data.projeto?.cliente_municipio
-    )
+    if (data.projeto?.projeto_nome)
+      document.getElementById('hero-title').textContent = `Projeto ${data.projeto.projeto_nome}`
+    if (data.mensagem)
+      document.getElementById('hero-subtitle').textContent = `${data.mensagem} Você não tem acesso aos demais lotes ou imóveis do projeto.`
+
+    const municipioImovelCtx  = normalizarMunicipio(data.projeto?.municipio || data.projeto?.imovel_municipio)
+    const municipioClienteCtx = normalizarMunicipio(data.cliente?.municipio || data.cliente?.cliente_municipio || data.projeto?.cliente_municipio)
 
     montarListaMunicipios(data)
-    if (municipioImovelContexto && !municipioImovelInput.value) {
-      municipioImovelInput.value = municipioImovelContexto
-    }
-    if (municipioClienteContexto && !municipioEnderecoInput.value) {
-      municipioEnderecoInput.value = municipioClienteContexto
-    }
-    if (!municipioEnderecoInput.value && usarMunicipioImovelInput?.checked) {
-      sincronizarMunicipioEndereco()
-    }
+    if (municipioImovelCtx  && !municipioImovelInput.value)   municipioImovelInput.value   = municipioImovelCtx
+    if (municipioClienteCtx && !municipioEnderecoInput.value) municipioEnderecoInput.value = municipioClienteCtx
+    if (!municipioEnderecoInput.value && usarMunicipioImovelInput?.checked) sincronizarMunicipioEndereco()
   } catch {
-    document.getElementById('meta-projeto').textContent = 'Projeto indisponível'
-    document.getElementById('meta-cliente').textContent = 'Participante indisponível'
-    document.getElementById('meta-papel').textContent = 'Papel indisponível'
-    document.getElementById('meta-lote').textContent = 'Lote indisponível'
+    document.getElementById('meta-projeto').textContent  = 'Projeto indisponível'
+    document.getElementById('meta-cliente').textContent  = 'Participante indisponível'
+    document.getElementById('meta-papel').textContent    = 'Papel indisponível'
+    document.getElementById('meta-lote').textContent     = 'Lote indisponível'
     document.getElementById('meta-validade').textContent = 'Verifique o link'
     montarListaMunicipios()
   }
 }
 
-form.addEventListener('submit', async (event) => {
+// ────────────────────────────────────────────────────────────────────────────
+// Submit via XMLHttpRequest — suporte a barra de progresso de upload
+// ────────────────────────────────────────────────────────────────────────────
+form.addEventListener('submit', function (event) {
   event.preventDefault()
   limparMensagens()
   serializarConfrontantes()
 
-  if (!validarFormularioCompleto()) {
-    return
-  }
+  if (!validarFormularioCompleto()) return
 
   const submitBtn = document.getElementById('btn-submit')
-  submitBtn.disabled = true
+  submitBtn.disabled    = true
   submitBtn.textContent = 'Enviando...'
 
-  try {
-    const payload = new FormData(form)
-    const res = await fetch(`/formulario/cliente?token=${token}`, {
-      method: 'POST',
-      body: payload,
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      throw new Error(data.detail?.erro || data.erro || 'Não foi possível enviar os dados agora.')
+  // Iniciar barras de progresso para os arquivos selecionados
+  CAMPOS_DOC.forEach(function (nome) {
+    const input = document.getElementById(nome)
+    if (input && input.files && input.files.length > 0) {
+      atualizarProgresso(nome, 2)  // 2% inicial para feedback imediato
     }
-    form.style.display = 'none'
-    successCard.style.display = 'block'
-    mostrarStatus(`Recebemos ${data.vertices_recebidos || 0} vértice(s) e ${data.area?.anexos_total || 0} anexo(s).`)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } catch (error) {
-    mostrarErro(error.message || 'Falha ao enviar. Confira sua conexão e tente novamente.')
-  } finally {
-    submitBtn.disabled = false
-    submitBtn.textContent = 'Enviar dados'
-  }
+  })
+
+  const formData = new FormData(form)
+  const xhr      = new XMLHttpRequest()
+  xhr.open('POST', '/formulario/cliente?token=' + encodeURIComponent(token))
+
+  // Progresso do upload (bytes enviados / total)
+  xhr.upload.addEventListener('progress', function (e) {
+    if (!e.lengthComputable) return
+    const pct = Math.min(95, Math.round((e.loaded / e.total) * 100))
+    CAMPOS_DOC.forEach(function (nome) {
+      const input = document.getElementById(nome)
+      if (input && input.files && input.files.length > 0) atualizarProgresso(nome, pct)
+    })
+  })
+
+  xhr.addEventListener('load', function () {
+    let data = {}
+    try { data = JSON.parse(xhr.responseText) } catch (_) {}
+
+    if (xhr.status >= 200 && xhr.status < 300) {
+      // Upload concluído: marcar todos os arquivos enviados
+      CAMPOS_DOC.forEach(function (nome) {
+        const input = document.getElementById(nome)
+        if (input && input.files && input.files.length > 0) marcarDocConcluido(nome)
+      })
+      // Aguarda um instante para mostrar os checks antes de exibir tela de sucesso
+      setTimeout(function () {
+        form.style.display        = 'none'
+        successCard.style.display = 'block'
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }, 700)
+    } else {
+      const msg = (data.detail && data.detail.erro) || data.erro || 'Não foi possível enviar os dados agora.'
+      mostrarErro(msg)
+      submitBtn.disabled    = false
+      submitBtn.textContent = 'Confirmar e enviar'
+    }
+  })
+
+  xhr.addEventListener('error', function () {
+    mostrarErro('Erro de conexão. Verifique sua internet e tente novamente.')
+    submitBtn.disabled    = false
+    submitBtn.textContent = 'Confirmar e enviar'
+  })
+
+  xhr.send(formData)
 })
 
-document.querySelectorAll('[data-next]').forEach(button => button.addEventListener('click', nextStep))
-document.querySelectorAll('[data-prev]').forEach(button => button.addEventListener('click', prevStep))
+// ────────────────────────────────────────────────────────────────────────────
+// Event listeners
+// ────────────────────────────────────────────────────────────────────────────
+
+// Navegação entre etapas
+document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', nextStep))
+document.querySelectorAll('[data-prev]').forEach(btn => btn.addEventListener('click', prevStep))
+
+// Confrontantes
 document.getElementById('btn-add-conf').addEventListener('click', addConfrontante)
-document.getElementById('btn-clear-sketch').addEventListener('click', () => {
+document.addEventListener('click', function (event) {
+  const btn = event.target.closest('[data-remove-conf]')
+  if (btn) removeConfrontante(Number(btn.dataset.removeConf))
+})
+
+// Sketch
+document.getElementById('btn-clear-sketch').addEventListener('click', function () {
   estado.sketchPoints = []
   desenharSketch()
 })
-
 sketchSvg.addEventListener('click', registrarPonto)
-sketchSvg.addEventListener('touchstart', (event) => {
+sketchSvg.addEventListener('touchstart', function (event) {
   event.preventDefault()
   registrarPonto(event)
 }, { passive: false })
 
-document.addEventListener('input', (event) => {
+// CEP
+cepInput?.addEventListener('blur', buscarCepResidencial)
+cepImovelInput?.addEventListener('blur', buscarCepImovel)
+
+// Input (delegado) — máscaras + estado civil + confrontantes + município
+document.addEventListener('input', function (event) {
   const target = event.target
+
   if (target.id === 'estado_civil') {
-    document.getElementById('conjuge-grid').style.display = ['casado', 'uniao_estavel'].includes(target.value) ? 'grid' : 'none'
+    document.getElementById('conjuge-grid').style.display =
+      ['casado', 'uniao_estavel'].includes(target.value) ? 'grid' : 'none'
   }
-  if (target.id === 'cpf' || target.id === 'conjuge_cpf') {
-    mascaraCPF(target)
-  }
-  if (target.id === 'cep' || target.id === 'cep_imovel') {
-    mascaraCEP(target)
-  }
+  if (target.id === 'cpf' || target.id === 'conjuge_cpf') mascaraCPF(target)
+  if (target.id === 'cep' || target.id === 'cep_imovel')  mascaraCEP(target)
+
   if (target.id === 'municipio_imovel') {
     montarListaMunicipios()
     sincronizarMunicipioEndereco()
   }
-  if (target.id === 'municipio') {
-    montarListaMunicipios()
-  }
+  if (target.id === 'municipio') montarListaMunicipios()
+
   if (target.dataset && target.dataset.conf) {
-    const index = Number(target.dataset.index)
-    estado.confrontantes[index][target.dataset.conf] = target.value
+    const idx = Number(target.dataset.index)
+    estado.confrontantes[idx][target.dataset.conf] = target.value
     serializarConfrontantes()
   }
 })
 
-document.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-remove-conf]')
-  if (!button) return
-  removeConfrontante(Number(button.dataset.removeConf))
+// Sincronizar município quando checkbox for alterado
+usarMunicipioImovelInput?.addEventListener('change', function () {
+  if (usarMunicipioImovelInput.checked) sincronizarMunicipioEndereco()
 })
 
-usarMunicipioImovelInput?.addEventListener('change', () => {
-  if (usarMunicipioImovelInput.checked) {
-    sincronizarMunicipioEndereco()
+// Upload de documentos — mostrar nome do arquivo após seleção
+document.addEventListener('change', function (event) {
+  const input = event.target
+  if (input.type !== 'file' || !CAMPOS_DOC.includes(input.name)) return
+
+  const arquivo  = input.files && input.files[0]
+  const nomeEl   = document.getElementById('nome-'  + input.name)
+  const checkEl  = document.getElementById('check-' + input.name)
+  const progEl   = document.getElementById('prog-'  + input.name)
+  const barraEl  = document.getElementById('barra-' + input.name)
+
+  // Resetar estado visual
+  if (checkEl) checkEl.classList.remove('visivel')
+  if (progEl)  progEl.classList.remove('visivel')
+  if (barraEl) barraEl.style.width = '0%'
+
+  if (nomeEl) {
+    if (arquivo) {
+      nomeEl.textContent = arquivo.name
+      nomeEl.classList.add('visivel')
+    } else {
+      nomeEl.textContent = ''
+      nomeEl.classList.remove('visivel')
+    }
   }
 })
 
-cepInput?.addEventListener('blur', buscarCepResidencial)
-cepImovelInput?.addEventListener('blur', buscarCepImovel)
-
-renderProgress()
+// ────────────────────────────────────────────────────────────────────────────
+// Inicialização
+// ────────────────────────────────────────────────────────────────────────────
+renderTrilha()
 renderConfrontantes()
 desenharSketch()
 montarListaMunicipios()
@@ -1098,7 +1525,3 @@ carregarContexto()
 </script>
 </body>
 </html>
-
-
-
-

@@ -21,12 +21,12 @@ import { initDB, cacheProjetos, getCachedProjetos } from '../../../lib/db'
 import type { ListaProjetosResponseV1, ProjetoListaItemApiV1 } from '../../../types/contratos-v1'
 
 const CHIPS: { label: string; value: string | null }[] = [
-  { label: 'Todos',       value: null          },
-  { label: 'Medição',     value: 'medicao'     },
-  { label: 'Montagem',    value: 'montagem'    },
+  { label: 'Todos', value: null },
+  { label: 'Medição', value: 'medicao' },
+  { label: 'Montagem', value: 'montagem' },
   { label: 'Protocolado', value: 'protocolado' },
-  { label: 'Aprovado',    value: 'aprovado'    },
-  { label: 'Finalizado',  value: 'finalizado'  },
+  { label: 'Aprovado', value: 'aprovado' },
+  { label: 'Finalizado', value: 'finalizado' },
 ]
 
 function nomeProjeto(item: ProjetoListaItemApiV1) {
@@ -101,19 +101,28 @@ function projetosProntos(projetos: ProjetoListaItemApiV1[]) {
     .slice(0, 4)
 }
 
+function formatarTempoDecorrido(data: Date): string {
+  const diffSec = Math.floor((Date.now() - data.getTime()) / 1000)
+  if (diffSec < 60) return 'agora'
+  const mins = Math.floor(diffSec / 60)
+  if (mins < 60) return `há ${mins} min`
+  return `há ${Math.floor(mins / 60)} h`
+}
+
 export default function ProjetosScreen() {
   const C = Colors.dark
   const insets = useSafeAreaInsets()
   const router = useRouter()
-  const [projetos, setProjetos]     = useState<ProjetoListaItemApiV1[]>([])
-  const [loading, setLoading]       = useState(true)
+  const [projetos, setProjetos] = useState<ProjetoListaItemApiV1[]>([])
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [erro, setErro]             = useState('')
-  const [offline, setOffline]       = useState(false)
+  const [erro, setErro] = useState('')
+  const [offline, setOffline] = useState(false)
   const [filtroStatus, setFiltroStatus] = useState<string | null>(null)
-  const [busca, setBusca]           = useState('')
+  const [busca, setBusca] = useState('')
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState<Date | null>(null)
   // topInset starts at 0 matching the static HTML; updated after hydration
-  const [topInset, setTopInset]     = useState(0)
+  const [topInset, setTopInset] = useState(0)
 
   useEffect(() => {
     setTopInset(insets.top)
@@ -128,6 +137,7 @@ export default function ProjetosScreen() {
       const lista = data.projetos || []
       await cacheProjetos(lista)
       setProjetos(lista)
+      setUltimaAtualizacao(new Date())
     } catch {
       try {
         const cached = (await getCachedProjetos()) as ProjetoListaItemApiV1[]
@@ -152,7 +162,7 @@ export default function ProjetosScreen() {
   const projetosFiltrados = useMemo(() => projetos.filter((item: ProjetoListaItemApiV1) => {
     if (filtroStatus && item.status !== filtroStatus) return false
     if (termo) {
-      const nome    = nomeProjeto(item).toLowerCase()
+      const nome = nomeProjeto(item).toLowerCase()
       const cliente = String(item.cliente_nome ?? '').toLowerCase()
       if (!nome.includes(termo) && !cliente.includes(termo)) return false
     }
@@ -236,6 +246,12 @@ export default function ProjetosScreen() {
                   autoCorrect={false}
                 />
               </View>
+
+              {ultimaAtualizacao !== null ? (
+                <Text style={[s.syncStamp, { color: C.muted }]}>
+                  Atualizado {formatarTempoDecorrido(ultimaAtualizacao)}
+                </Text>
+              ) : null}
 
               {!loading && projetos.length > 0 ? (
                 <>
@@ -377,4 +393,5 @@ const s = StyleSheet.create({
   btnRetry: { marginTop: 16, borderWidth: 1, borderRadius: 8, paddingHorizontal: 20, paddingVertical: 14 },
   bannerOffline: { backgroundColor: '#B8860B', paddingVertical: 6, paddingHorizontal: 14, marginBottom: 8 },
   bannerTxt: { color: '#FFF8DC', fontSize: 12, fontWeight: '500', textAlign: 'center' },
+  syncStamp: { fontSize: 11, textAlign: 'right', marginBottom: 4 },
 })

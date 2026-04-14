@@ -14,10 +14,13 @@ import hashlib  # [SEC-11] hash do JWT para chave de rate limit por sessão
 import json
 import logging
 import os
+import re  # [SEC-03] remoção de tags perigosas em SVG
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
+
+import defusedxml.ElementTree as _defused_ET  # [SEC-03] parser seguro contra XXE / billion-laughs
 
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from middleware.auth import verificar_token
@@ -88,6 +91,9 @@ class DadosFormulario(BaseModel):
     nome: str
     cpf: str
     rg: str
+    # [Fase-4] Campos de identificação do RG — opcionais; salvos se a coluna existir
+    rg_orgao_emissor: Optional[str] = ""
+    rg_data_emissao: Optional[str] = ""
     estado_civil: str
     profissao: Optional[str] = ""
     telefone: str
@@ -225,6 +231,9 @@ def _payload_cliente_formulario(
     payload = {
         "nome": dados.nome,
         "rg": dados.rg,
+        # [Fase-4] Campos de identificação do RG — incluídos apenas se preenchidos
+        "rg_orgao_emissor": dados.rg_orgao_emissor or None,
+        "rg_data_emissao": dados.rg_data_emissao or None,
         "estado_civil": _normalizar_estado_civil(dados.estado_civil),
         "profissao": dados.profissao,
         "telefone": dados.telefone,
@@ -315,6 +324,9 @@ def _reaproveitar_cliente_existente_formulario(sb, cliente_atual_id: str, client
     return cliente_existente_id
 
 def _atualizar_cliente_formulario(sb, cliente_id: str, dados: DadosFormulario) -> str:
+    # [Fase-4] rg_orgao_emissor e rg_data_emissao são colunas novas (migration 028).
+    # Se o banco ainda não tiver as colunas, removemos do payload e tentamos novamente.
+    colunas_opcionais_cliente = {"rg_orgao_emissor", "rg_data_emissao"}
     ultimo_erro: Exception | None = None
     for preferir_cpf_cnpj in (True, False):
         try:
@@ -327,6 +339,16 @@ def _atualizar_cliente_formulario(sb, cliente_id: str, dados: DadosFormulario) -
             return cliente_id
         except Exception as exc:
             ultimo_erro = exc
+            # Remoção de colunas opcionais inexistentes no schema atual
+            removidas = [
+                col for col in list(colunas_opcionais_cliente)
+                if _erro_schema(exc, f"'{col}' column") or col.lower() in str(exc).lower()
+            ]
+            if removidas:
+                for col in removidas:
+                    colunas_opcionais_cliente.discard(col)
+                    setattr(dados, col, None)
+                continue
             if dados.cpf and _erro_documento_duplicado(exc):
                 cliente_existente = _buscar_cliente_por_documento_formulario(sb, dados.cpf)
                 if cliente_existente and cliente_existente.get("id") != cliente_id:
@@ -569,6 +591,49 @@ def _gerar_svg_croqui_seguro(vertices: list[dict[str, Any]]) -> str:
     )
 
 
+# [SEC-03] Sanitização de SVG contra XSS e ataques XML.
+#
+# Por que aplicar mesmo num SVG gerado server-side?
+#   • Defesa em profundidade: se uma refatoração futura introduzir dados de
+#     usuário na geração do SVG, a barreira já estará presente.
+#   • defusedxml bloqueia XXE, billion laughs e entidades externas antes de
+#     qualquer outra validação.
+#   • O regex remove <script> e event-handlers on* que navegadores executam ao
+#     renderizar SVG inline ou como <img src="data:image/svg+xml">.
+def sanitizar_svg(svg_conteudo: str) -> str:
+    """Remove scripts e elementos perigosos de um SVG antes do armazenamento.
+
+    [SEC-03] Etapas:
+    1. defusedxml valida o XML e bloqueia XXE / billion-laughs no parse.
+    2. Regex remove blocos <script>...</script> (case-insensitive, multiline).
+    3. Regex neutraliza atributos de event-handler (onclick, onload, etc.),
+       substituindo-os por data-blocked para não quebrar o markup.
+
+    Levanta HTTPException 422 se o conteúdo não for XML válido.
+    """
+    try:
+        # [SEC-03] defusedxml impede XXE e expansão de entidades maliciosas
+        _defused_ET.fromstring(svg_conteudo.encode())
+    except _defused_ET.ParseError:
+        raise HTTPException(status_code=422, detail="SVG inválido ou malformado.")
+
+    # [SEC-03] Remover blocos <script> inteiros (incluindo conteúdo)
+    svg_limpo = re.sub(
+        r"<script[^>]*>.*?</script>",
+        "",
+        svg_conteudo,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    # [SEC-03] Neutralizar event-handlers inline (onclick=, onload=, onerror=, …)
+    svg_limpo = re.sub(
+        r"\bon\w+\s*=",
+        "data-blocked=",
+        svg_limpo,
+        flags=re.IGNORECASE,
+    )
+    return svg_limpo
+
+
 async def _extrair_payload_request(request: Request) -> tuple[dict[str, Any], list[tuple[str, bytes, str | None]], tuple[str, bytes, str | None] | None]:
     content_type = request.headers.get("content-type", "")
     if "application/json" in content_type:
@@ -604,7 +669,15 @@ async def _extrair_payload_request(request: Request) -> tuple[dict[str, Any], li
             total_uploads += 1
             total_bytes += len(conteudo)
             validar_lote_uploads(total_arquivos=total_uploads, total_bytes=total_bytes)
-            item = (valor.filename or chave, conteudo, getattr(valor, "content_type", None))
+
+            # [Fase-4] Documentos do cliente: prefixar nome com tipo do input para
+            # facilitar classificação ao salvar (rg_arquivo_, cpf_arquivo_, etc.)
+            _CAMPOS_DOC_CLIENTE = {"rg_arquivo", "cpf_arquivo", "comprovante_residencia"}
+            nome_arquivo = valor.filename or chave
+            if chave in _CAMPOS_DOC_CLIENTE:
+                nome_arquivo = f"{chave}_{nome_arquivo}" if valor.filename else chave
+
+            item = (nome_arquivo, conteudo, getattr(valor, "content_type", None))
             if chave == "arquivo_geometria":
                 geo_upload = item
             else:
@@ -968,6 +1041,11 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
 
     svg_seguro = _gerar_svg_croqui_seguro(vertices)
     if svg_seguro:
+        # [SEC-03] Sanitizar SVG antes de armazenar: defusedxml (XXE/billion-laughs)
+        # + remoção de <script> e event-handlers on* via regex.
+        # Embora o SVG seja gerado server-side, a sanitização atua como camada de
+        # defesa em profundidade para qualquer mudança futura na função geradora.
+        svg_seguro = sanitizar_svg(svg_seguro)
         uploads.append(("croqui_cliente.svg", svg_seguro.encode("utf-8"), "image/svg+xml"))
 
     try:
@@ -1011,6 +1089,34 @@ async def receber_formulario(request: Request, token: str = Query(...), supabase
             )
         except Exception as exc:
             logger.warning("Falha ao registrar consumo do magic link: %s", exc)
+
+        # [Fase-4] Notificação de conclusão para o escritório.
+        # O app mobile pode consultar eventos com tipo_evento='formulario_cliente_concluido'
+        # para exibir badge de "novo" na lista de projetos sem necessidade de push notification.
+        try:
+            registrar_evento_magic_link(
+                sb,
+                projeto_id=projeto_id,
+                projeto_cliente_id=(vinculo or {}).get("id"),
+                cliente_id=cliente_id,
+                area_id=area.get("id") or (vinculo or {}).get("area_id"),
+                token=None,
+                tipo_evento="formulario_cliente_concluido",
+                canal="interno",
+                autor="formulario_cliente",
+                expira_em=None,
+                payload={
+                    "descricao": f"Cliente {dados.nome} concluiu o preenchimento do formulário",
+                    "cliente_id": cliente_id,
+                    "projeto_clientes_id": (vinculo or {}).get("id"),
+                    "anexos_docs_cliente": sum(
+                        1 for nome, _, _ in uploads
+                        if any(nome.startswith(p) for p in ("rg_arquivo_", "cpf_arquivo_", "comprovante_residencia_"))
+                    ),
+                },
+            )
+        except Exception as exc:
+            logger.warning("Falha ao registrar notificação de conclusão do formulário: %s", exc)
 
     if vinculo:
         try:

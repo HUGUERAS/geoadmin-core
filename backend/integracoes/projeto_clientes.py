@@ -17,7 +17,7 @@ PAPEIS_VALIDOS = {
     'outro',
 }
 
-EVENTOS_MAGIC_LINK_VALIDOS = {'gerado', 'reenviado', 'revogado', 'consumido', 'legado'}
+EVENTOS_MAGIC_LINK_VALIDOS = {'gerado', 'reenviado', 'revogado', 'consumido', 'legado', 'formulario_cliente_concluido'}
 CANAIS_MAGIC_LINK_VALIDOS = {'whatsapp', 'email', 'sms', 'manual', 'interno'}
 
 

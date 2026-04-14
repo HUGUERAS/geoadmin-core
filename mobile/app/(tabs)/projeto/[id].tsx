@@ -14,7 +14,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import * as DocumentPicker from 'expo-document-picker'
 import * as Linking from 'expo-linking'
-import { Feather } from '@expo/vector-icons'
+import { Feather, Ionicons } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
 import { StatusBadge } from '../../../components/StatusBadge'
 import { SyncBadge } from '../../../components/SyncBadge'
@@ -257,20 +257,21 @@ export default function DetalheProjetoScreen() {
   const [topInset, setTopInset] = useState(0)
   useEffect(() => { setTopInset(insets.top) }, [insets.top])
   const { id } = useLocalSearchParams<{ id: string }>()
-  const router  = useRouter()
-  const [projeto, setProjeto]       = useState<(ProjetoDetalheApiV1 & Record<string, any>) | null>(null)
-  const [loading, setLoading]       = useState(true)
-  const [gerando, setGerando]       = useState(false)
-  const [pendentes, setPendentes]   = useState(0)
-  const [erros, setErros]           = useState(0)
-  const [sincronizando, setSinc]    = useState(false)
-  const [offline, setOffline]       = useState(false)
-  const [semCache, setSemCache]     = useState(false)
-  const [secao, setSecao]           = useState<SecaoProjeto>('visao')
+  const router = useRouter()
+  const [projeto, setProjeto] = useState<(ProjetoDetalheApiV1 & Record<string, any>) | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [gerando, setGerando] = useState(false)
+  const [pendentes, setPendentes] = useState(0)
+  const [erros, setErros] = useState(0)
+  const [sincronizando, setSinc] = useState(false)
+  const [offline, setOffline] = useState(false)
+  const [semCache, setSemCache] = useState(false)
+  const [secao, setSecao] = useState<SecaoProjeto>('visao')
   const [gerandoLinksLote, setGerandoLinksLote] = useState(false)
   const [importandoLotes, setImportandoLotes] = useState(false)
   const [migrandoArquivos, setMigrandoArquivos] = useState(false)
   const [revisandoConfrontoId, setRevisandoConfrontoId] = useState<string | null>(null)
+  const [gerandoLinkClienteId, setGerandoLinkClienteId] = useState<string | null>(null)
 
   const atualizarPendentes = useCallback(async () => {
     const n = await contarPendentes(id)
@@ -336,6 +337,19 @@ export default function DetalheProjetoScreen() {
       Alert.alert('Link copiado', 'A mensagem pronta para WhatsApp foi copiada. Cole no chat do cliente para destravar o formulário.')
     } catch {
       Alert.alert('Erro', 'Não foi possível gerar o link agora.')
+    }
+  }
+
+  const gerarLinkParaCliente = async (trackingId: string, clienteId: string) => {
+    setGerandoLinkClienteId(trackingId)
+    try {
+      const data = await apiPost<any>(`/projetos/${id}/magic-link`, { cliente_id: clienteId || undefined })
+      Clipboard.setString(data.mensagem_whatsapp || data.link)
+      Alert.alert('Link copiado', 'A mensagem pronta para WhatsApp foi copiada para o clipboard.')
+    } catch (error: any) {
+      Alert.alert('Erro ao gerar link', error?.message || 'Não foi possível gerar o link agora.')
+    } finally {
+      setGerandoLinkClienteId(null)
     }
   }
 
@@ -706,6 +720,46 @@ export default function DetalheProjetoScreen() {
           </TouchableOpacity>
         </View>
 
+        {resumoOperacional?.proximo_passo ? (
+          <View style={[s.proximosAtosCard, { backgroundColor: `${C.primary}10`, borderColor: C.cardBorder }]}>
+            <View style={s.proximosAtosRow}>
+              <Ionicons name="arrow-forward-circle" size={20} color={C.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[s.proximosAtosLabel, { color: C.primary }]}>Próximo ato</Text>
+                <Text style={[s.proximosAtosTxt, { color: C.text }]}>{resumoOperacional.proximo_passo}</Text>
+              </View>
+            </View>
+            {resumoOperacional.bloqueio_principal ? (
+              <View style={s.proximosAtosBloqueioRow}>
+                <Ionicons name="warning-outline" size={16} color="#F59E0B" />
+                <Text style={[s.proximosAtosBloqueioTxt, { color: '#F59E0B' }]}>{resumoOperacional.bloqueio_principal}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View style={s.atalhoRow}>
+          <TouchableOpacity
+            style={[s.atalhoBtn, { borderColor: C.cardBorder, backgroundColor: C.card }]}
+            onPress={gerarMagicLink}
+          >
+            <Ionicons name="link-outline" size={20} color={C.primary} />
+            <Text style={[s.atalhoBtnTxt, { color: C.text }]}>Link cliente</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.atalhoBtn, { borderColor: C.cardBorder, backgroundColor: C.card, opacity: painelDocumental?.pronto_para_pacote_final ? 1 : 0.4 }]}
+            onPress={gerarDocumentos}
+            disabled={!painelDocumental?.pronto_para_pacote_final || gerando}
+          >
+            {gerando ? (
+              <ActivityIndicator color={C.primary} size="small" />
+            ) : (
+              <Ionicons name="document-text-outline" size={20} color={C.success} />
+            )}
+            <Text style={[s.atalhoBtnTxt, { color: C.text }]}>Pacote final</Text>
+          </TouchableOpacity>
+        </View>
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.secoesRow}>
           {SECOES.map((item) => {
             const ativa = secao === item.id
@@ -968,26 +1022,92 @@ export default function DetalheProjetoScreen() {
                 <Text style={[s.emptyTxt, { color: C.muted }]}>Este projeto ainda não tem participantes vinculados.</Text>
               ) : participantes.map((item: any, indice: number) => {
                 const areaVinculada = areas.find((area: any) => item.area_id && String(area.id) === String(item.area_id))
+                const formularioRecebido = Boolean(item.formulario_ok)
+                const papelRotulo = tituloPapel(item.papel)
+                const clienteUid = String(item.id || item.cliente_id || indice)
+                const clienteApiId = String(item.cliente_id || item.id || '')
+                const gerandoEsteLink = gerandoLinkClienteId === clienteUid
                 return (
-                  <View key={String(item.id || item.cliente_id || indice)} style={[s.participanteCard, { borderColor: C.cardBorder }]}>
+                  <View key={clienteUid} style={[s.participanteCard, { borderColor: C.cardBorder }]}>
                     <View style={s.cardHeaderRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[s.clientName, { color: C.text }]}>{item.nome || 'Participante sem nome'}</Text>
-                        <Text style={[s.clientMeta, { color: C.muted }]}>{tituloPapel(item.papel)} · CPF: {item.cpf || 'Pendente'} · Telefone: {item.telefone || 'Pendente'}</Text>
+                        {/* Toque no nome navega para detalhe do cliente */}
+                        {item.cliente_id ? (
+                          <TouchableOpacity
+                            onPress={() => router.push(`/(tabs)/clientes/${item.cliente_id}` as any)}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Ver detalhe de ${item.nome || 'participante'}`}
+                          >
+                            <Text style={[s.clientName, { color: C.primary, textDecorationLine: 'underline' }]}>
+                              {item.nome || 'Participante sem nome'}
+                            </Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <Text style={[s.clientName, { color: C.text }]}>{item.nome || 'Participante sem nome'}</Text>
+                        )}
+                        <Text style={[s.clientMeta, { color: C.muted }]}>CPF: {item.cpf || 'Pendente'} · Tel: {item.telefone || 'Pendente'}</Text>
                       </View>
-                      {item.principal ? (
-                        <View style={[s.inlineStatus, { backgroundColor: `${C.primary}16`, borderColor: C.primary }]}>
-                          <Text style={[s.inlineStatusTxt, { color: C.primary }]}>Principal</Text>
+
+                      {/* Badges: papel + formulário */}
+                      <View style={s.inlineStatusStack}>
+                        <View style={[s.inlineStatus, {
+                          backgroundColor: `${item.principal ? C.primary : C.muted}16`,
+                          borderColor: item.principal ? C.primary : C.cardBorder,
+                        }]}>
+                          <Text style={[s.inlineStatusTxt, { color: item.principal ? C.primary : C.muted }]}>
+                            {papelRotulo}
+                          </Text>
                         </View>
+                        <View style={[s.inlineStatus, {
+                          backgroundColor: `${formularioRecebido ? C.success : C.danger}16`,
+                          borderColor: formularioRecebido ? C.success : C.danger,
+                        }]}>
+                          <Text style={[s.inlineStatusTxt, { color: formularioRecebido ? C.success : C.danger }]}>
+                            {formularioRecebido ? 'Form ✓' : 'Form pendente'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <Text style={[s.clientMeta, { color: C.muted }]}>
+                      {areaVinculada ? `Lote: ${nomeLote(areaVinculada)}` : 'Sem lote específico'}
+                      {item.recebe_magic_link ? ' · Recebe link' : ''}
+                    </Text>
+
+                    {/* Ações inline */}
+                    <View style={s.inlineActionsRow}>
+                      {/* Botão "Gerar link" por cliente */}
+                      {item.recebe_magic_link ? (
+                        <TouchableOpacity
+                          style={[s.inlineBtn, {
+                            borderColor: gerandoEsteLink ? C.muted : C.primary,
+                            opacity: gerandoEsteLink ? 0.6 : 1,
+                          }]}
+                          onPress={() => gerarLinkParaCliente(clienteUid, clienteApiId)}
+                          disabled={Boolean(gerandoLinkClienteId)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Gerar link de formulário para este cliente"
+                        >
+                          {gerandoEsteLink ? (
+                            <ActivityIndicator color={C.primary} size="small" />
+                          ) : (
+                            <Text style={[s.inlineBtnTxt, { color: C.primary }]}>Gerar link</Text>
+                          )}
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {/* Botão para navegar para detalhe do cliente */}
+                      {item.cliente_id ? (
+                        <TouchableOpacity
+                          style={[s.inlineBtn, { borderColor: C.success }]}
+                          onPress={() => router.push(`/(tabs)/clientes/${item.cliente_id}` as any)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Abrir ficha do cliente"
+                        >
+                          <Text style={[s.inlineBtnTxt, { color: C.success }]}>Ver cliente</Text>
+                        </TouchableOpacity>
                       ) : null}
                     </View>
-                    <Text style={[s.clientMeta, { color: C.muted }]}>{areaVinculada ? `Lote vinculado: ${nomeLote(areaVinculada)}` : 'Sem lote específico vinculado'}</Text>
-                    <Text style={[s.clientMeta, { color: C.muted }]}>{item.recebe_magic_link ? 'Recebe magic link' : 'Sem envio automático de link'}</Text>
-                    {item.cliente_id ? (
-                      <TouchableOpacity style={[s.inlineBtn, { borderColor: C.success }]} onPress={() => router.push(`/(tabs)/clientes/${item.cliente_id}` as any)}>
-                        <Text style={[s.inlineBtnTxt, { color: C.success }]}>Abrir cliente & documentação</Text>
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
                 )
               })}
@@ -1156,7 +1276,7 @@ export default function DetalheProjetoScreen() {
               {arquivosCartograficos.length === 0 ? (
                 <Text style={[s.emptyTxt, { color: C.muted }]}>Nenhum arquivo cartográfico enviado ainda.</Text>
               ) : arquivosCartograficos.slice(0, 6).map((arquivo: any) => (
-                <View key={arquivo.id} style={[s.participanteCard, { borderColor: C.cardBorder }]}> 
+                <View key={arquivo.id} style={[s.participanteCard, { borderColor: C.cardBorder }]}>
                   <View style={s.cardHeaderRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={[s.clientName, { color: C.text }]} numberOfLines={1}>{arquivo.nome_original || arquivo.nome_arquivo || 'Arquivo'}</Text>
@@ -1183,13 +1303,13 @@ export default function DetalheProjetoScreen() {
               ) : (
                 <View style={s.sectionWrap}>
                   {magicLinksHistorico.slice(0, 5).map((evento: any, indice: number) => (
-                    <View key={`ml-${evento.id || indice}`} style={[s.docItem, { borderBottomColor: C.cardBorder }]}> 
+                    <View key={`ml-${evento.id || indice}`} style={[s.docItem, { borderBottomColor: C.cardBorder }]}>
                       <Text style={[s.docNome, { color: C.text }]}>{String(evento.tipo_evento || 'evento').replace(/_/g, ' ')}</Text>
                       <Text style={[s.docData, { color: C.muted }]}>{formatarData(evento.criado_em)} · canal {evento.canal || 'interno'} · participante {evento.projeto_cliente_id || 'legado'}</Text>
                     </View>
                   ))}
                   {arquivosEventos.slice(0, 5).map((evento: any, indice: number) => (
-                    <View key={`arq-${evento.id || indice}`} style={[s.docItem, { borderBottomColor: C.cardBorder }]}> 
+                    <View key={`arq-${evento.id || indice}`} style={[s.docItem, { borderBottomColor: C.cardBorder }]}>
                       <Text style={[s.docNome, { color: C.text }]}>{String(evento.tipo_evento || 'evento').replace(/_/g, ' ')}</Text>
                       <Text style={[s.docData, { color: C.muted }]}>{formatarData(evento.criado_em)} · arquivo {evento.arquivo_id || 'n/a'} · {evento.observacao || 'sem observação'}</Text>
                     </View>
@@ -1288,4 +1408,13 @@ const s = StyleSheet.create({
   bannerOffline: { backgroundColor: '#B8860B', paddingVertical: 6, paddingHorizontal: 14 },
   bannerTxt: { color: '#FFF8DC', fontSize: 12, fontWeight: '500', textAlign: 'center' },
   semCacheTxt: { fontSize: 14, textAlign: 'center', paddingHorizontal: 24 },
+  proximosAtosCard: { borderWidth: 1, borderRadius: 8, padding: 12, gap: 8 },
+  proximosAtosRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  proximosAtosLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  proximosAtosTxt: { fontSize: 14, lineHeight: 20, marginTop: 2 },
+  proximosAtosBloqueioRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proximosAtosBloqueioTxt: { fontSize: 13, fontWeight: '600', flex: 1 },
+  atalhoRow: { flexDirection: 'row', gap: 10 },
+  atalhoBtn: { flex: 1, borderWidth: 1, borderRadius: 12, padding: 10, alignItems: 'center', gap: 6 },
+  atalhoBtnTxt: { fontSize: 12, fontWeight: '600' },
 })

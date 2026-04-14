@@ -10,6 +10,7 @@ import {
   Alert,
   TextInput,
   Platform,
+  RefreshControl,
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
@@ -57,6 +58,8 @@ type ProjetoCliente = {
   magic_link_expira?: string | null
   perimetro_tecnico_ok?: boolean
   perimetro_tecnico_tipo?: string | null
+  /** Papel do cliente neste projeto (ex: proprietario, herdeiro, conjuge) */
+  papel?: string | null
 }
 
 type ResumoCliente = {
@@ -220,8 +223,7 @@ function confrontoInicial(): FormConfrontante {
   }
 }
 
-function formatarData(valor?: string | null, comHora = true) {
-  if (!valor) return 'Sem registro'
+function formatarData(valor?: string | null, comHora = true) {  if (!valor) return 'Sem registro'
   const data = new Date(valor)
   if (Number.isNaN(data.getTime())) return 'Sem registro'
   return data.toLocaleString('pt-BR', comHora ? {
@@ -235,6 +237,26 @@ function formatarData(valor?: string | null, comHora = true) {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+/** Mascara o CPF mostrando apenas os 3 últimos dígitos: ***.***.*D-DD */
+function mascaraCpf(cpf?: string | null): string {
+  if (!cpf) return 'Não informado'
+  const d = cpf.replace(/\D/g, '')
+  if (d.length !== 11) return '***.***.***-**'
+  return `***.***.*${d[8]}-${d[9]}${d[10]}`
+}
+
+/** Formata o papel do cliente no projeto para exibição */
+function tituloPapelCliente(papel?: string | null): string {
+  const valor = (papel || '').trim().toLowerCase()
+  if (valor === 'principal' || valor === 'proprietario') return 'Proprietário'
+  if (valor === 'coproprietario') return 'Coproprietário'
+  if (valor === 'herdeiro') return 'Herdeiro'
+  if (valor === 'conjuge') return 'Cônjuge'
+  if (valor === 'representante') return 'Representante'
+  if (valor === 'possuidor') return 'Possuidor'
+  return valor ? valor.charAt(0).toUpperCase() + valor.slice(1) : 'Participante'
 }
 
 function obterMetaStatus(status?: string | null) {
@@ -386,6 +408,7 @@ export default function ClienteDetalheScreen() {
   const [detalhe, setDetalhe] = useState<ClienteDetalheResponse | null>(null)
   const [form, setForm] = useState<FormCliente>(clienteParaForm({ id: '' }))
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [reenviandoProjetoId, setReenviandoProjetoId] = useState<string | null>(null)
@@ -414,7 +437,13 @@ export default function ClienteDetalheScreen() {
       setErro(e?.message ?? 'Nao foi possivel carregar o cliente.')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const onRefresh = () => {
+    setRefreshing(true)
+    carregar()
   }
 
   useEffect(() => {
@@ -681,14 +710,29 @@ export default function ClienteDetalheScreen() {
   const status = obterMetaStatus(detalhe.resumo?.status_documentacao)
 
   return (
-    <ScrollView style={[s.container, { backgroundColor: C.background }]} contentContainerStyle={s.content}>
+    <ScrollView
+      style={[s.container, { backgroundColor: C.background }]}
+      contentContainerStyle={s.content}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.primary} />
+      }
+    >
       <View style={[s.header, { backgroundColor: C.card, borderBottomColor: C.cardBorder, paddingTop: Math.max(topInset + 12, 20) }]}>
         <TouchableOpacity onPress={() => router.back()} style={s.voltar} accessibilityRole="button" accessibilityLabel="Voltar para a lista de clientes">
           <Feather name="arrow-left" size={20} color={C.text} />
         </TouchableOpacity>
         <View style={s.headerTexto}>
           <Text style={[s.titulo, { color: C.text }]} numberOfLines={2}>{detalhe.cliente.nome || 'Cliente sem nome'}</Text>
-          <Text style={[s.subtitulo, { color: C.muted }]}>{detalhe.cliente.telefone || detalhe.cliente.email || detalhe.cliente.cpf || 'Sem contato cadastrado'}</Text>
+          <Text style={[s.subtitulo, { color: C.muted }]}>CPF: {mascaraCpf(detalhe.cliente.cpf)}</Text>
+          {detalhe.cliente.telefone ? (
+            <TouchableOpacity
+              onPress={() => Linking.openURL(`tel:${detalhe.cliente.telefone!.replace(/\D/g, '')}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Ligar para ${detalhe.cliente.telefone}`}
+            >
+              <Text style={[s.subtitulo, { color: C.primary }]}>{detalhe.cliente.telefone}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 
@@ -764,21 +808,35 @@ export default function ClienteDetalheScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={[s.card, { backgroundColor: C.card, borderColor: C.cardBorder }]}> 
+      <View style={[s.card, { backgroundColor: C.card, borderColor: C.cardBorder }]}>
         <Text style={[s.sectionTitulo, { color: C.text }]}>Projetos vinculados</Text>
         {detalhe.projetos.map((projeto) => {
           const proximaAcao = obterProximaAcaoProjeto(projeto)
           return (
-            <View key={projeto.id} style={[s.projetoCard, { backgroundColor: C.background, borderColor: C.cardBorder }]}> 
+            <View key={projeto.id} style={[s.projetoCard, { backgroundColor: C.background, borderColor: C.cardBorder }]}>
               <View style={s.projetoTopo}>
                 <View style={s.projetoTopoTexto}>
                   <Text style={[s.projetoTitulo, { color: C.text }]}>{projeto.projeto_nome || 'Projeto sem nome'}</Text>
                   <Text style={[s.metaInfo, { color: C.muted }]}>{[projeto.municipio, projeto.estado].filter(Boolean).join(' / ') || 'Localizacao nao informada'}</Text>
                 </View>
-                <StatusBadge status={projeto.status} />
+                <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  <StatusBadge status={projeto.status} />
+                  {projeto.papel ? (
+                    <View style={[s.papelBadge, { backgroundColor: `${C.primary}18`, borderColor: C.primary }]}>
+                      <Text style={[s.papelBadgeTxt, { color: C.primary }]}>{tituloPapelCliente(projeto.papel)}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              {/* Badge: formulário */}
+              <View style={[s.formularioBadge, { backgroundColor: projeto.formulario_ok ? `${C.success}18` : `${C.danger}18`, borderColor: projeto.formulario_ok ? C.success : C.danger }]}>
+                <Feather name={projeto.formulario_ok ? 'check-circle' : 'circle'} size={12} color={projeto.formulario_ok ? C.success : C.danger} />
+                <Text style={[s.metaInfo, { color: projeto.formulario_ok ? C.success : C.danger, fontWeight: '700' }]}>
+                  {projeto.formulario_ok ? 'Formulário recebido' : 'Formulário pendente'}
+                </Text>
               </View>
               <Text style={[s.metaInfo, { color: C.muted }]}>Tipos: {chipDocumentos(projeto.documentos_tipos)}</Text>
-              <View style={[s.proximaAcaoCard, { borderColor: proximaAcao.cor, backgroundColor: `${proximaAcao.cor}15` }]}> 
+              <View style={[s.proximaAcaoCard, { borderColor: proximaAcao.cor, backgroundColor: `${proximaAcao.cor}15` }]}>
                 <Text style={[s.proximaAcaoLabel, { color: proximaAcao.cor }]}>Próxima ação</Text>
                 <Text style={[s.metaInfo, { color: C.text, fontWeight: '700' }]}>{proximaAcao.titulo}</Text>
                 <Text style={[s.metaInfo, { color: C.muted }]}>{proximaAcao.descricao}</Text>
@@ -791,7 +849,7 @@ export default function ClienteDetalheScreen() {
                 const diasRestantes = Math.round((expira.getTime() - hoje.getTime()) / 86400000)
                 const expirado = diasRestantes < 0
                 return (
-                  <View style={[s.magicLinkStatus, { backgroundColor: expirado ? `${C.danger}18` : `${C.success}18`, borderColor: expirado ? C.danger : C.success }]}> 
+                  <View style={[s.magicLinkStatus, { backgroundColor: expirado ? `${C.danger}18` : `${C.success}18`, borderColor: expirado ? C.danger : C.success }]}>
                     <Text style={[s.metaInfo, { color: expirado ? C.danger : C.success, fontWeight: '700' }]}>
                       {expirado ? 'Link expirado' : `Válido até ${expira.toLocaleDateString('pt-BR')} · Expira em ${diasRestantes} dia${diasRestantes === 1 ? '' : 's'}`}
                     </Text>
@@ -819,13 +877,23 @@ export default function ClienteDetalheScreen() {
                     </TouchableOpacity>
                   )
                 })()}
+                {detalhe.cliente.telefone ? (
+                  <TouchableOpacity
+                    style={[s.btnSecundario, s.projetoAcaoBtn, { borderColor: C.success }]}
+                    onPress={() => Linking.openURL(`https://wa.me/55${detalhe.cliente.telefone!.replace(/\D/g, '')}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Abrir WhatsApp"
+                  >
+                    <Text style={[s.btnSecundarioTxt, { color: C.success }]}>WhatsApp</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
           )
         })}
       </View>
 
-      <View style={[s.card, { backgroundColor: C.card, borderColor: C.cardBorder }]}> 
+      <View style={[s.card, { backgroundColor: C.card, borderColor: C.cardBorder }]}>
         <Text style={[s.sectionTitulo, { color: C.text }]}>Confrontantes e vizinhos</Text>
         <ProjetoSelector projetos={detalhe.projetos} projetoId={projetoConfrontanteId} onSelect={setProjetoConfrontanteId} />
         <View style={s.grid}>
@@ -1025,6 +1093,9 @@ const s = StyleSheet.create({
   btnPrimario: { borderRadius: 10, minHeight: 48, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   btnPrimarioTxt: { fontSize: 14, fontWeight: '700', textAlign: 'center' },
   projetoCard: { borderWidth: 0.5, borderRadius: 12, padding: 12, gap: 8 },
+  papelBadge: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
+  papelBadgeTxt: { fontSize: 11, fontWeight: '700' },
+  formularioBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   confrontanteCard: { borderWidth: 0.5, borderRadius: 12, padding: 12, gap: 8 },
   vazioGeo: { borderWidth: 0.5, borderRadius: 12, padding: 12, gap: 4 },
   proximaAcaoCard: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 4 },

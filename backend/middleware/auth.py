@@ -2,8 +2,10 @@
 Middleware de autenticação via JWT do Supabase.
 Uso: adicione `usuario: dict = Depends(verificar_token)` nos endpoints protegidos.
 """
+import hashlib  # [SEC-JWT-CACHE] hashing do token para chave de cache
 import os
 import logging
+import time  # [SEC-JWT-CACHE] controle de TTL do cache
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request
@@ -16,6 +18,23 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 _seguranca = HTTPBearer(auto_error=False)
+
+# ---------------------------------------------------------------------------
+# [SEC-JWT-CACHE] Cache em memória de resultados de validação de token.
+#
+# Por quê: o SDK Supabase valida tokens via REST (`auth.get_user(token)`),
+# o que significa uma chamada HTTP ao Supabase Auth a CADA request autenticado.
+# Sob carga isso eleva latência e pode acionar rate-limit do próprio Supabase.
+#
+# Estratégia:
+#   • Chave  = SHA-256(token) — nunca armazena o token bruto em memória.
+#   • TTL    = 5 minutos — curto o suficiente para que tokens revogados
+#              sejam rejeitados rapidamente na próxima janela.
+#   • Purge  = limpeza lazy das entradas expiradas após cada cache miss,
+#              evitando crescimento ilimitado do dict sem precisar de thread.
+# ---------------------------------------------------------------------------
+_TOKEN_CACHE: dict[str, tuple[dict, float]] = {}
+_TOKEN_CACHE_TTL: float = 300.0  # segundos
 
 # Endpoints que não exigem autenticação
 ROTAS_PUBLICAS = {"/health", "/docs", "/openapi.json", "/redoc"}
@@ -91,6 +110,18 @@ async def verificar_token(
 
     token = credenciais.credentials
 
+    # [SEC-JWT-CACHE] Verificar cache antes de chamar o Supabase Auth.
+    # A chave é o SHA-256 do token — o token bruto nunca é armazenado.
+    _token_hash = hashlib.sha256(token.encode()).hexdigest()
+    _agora = time.time()
+    if _token_hash in _TOKEN_CACHE:
+        _payload_cached, _ts = _TOKEN_CACHE[_token_hash]
+        if (_agora - _ts) < _TOKEN_CACHE_TTL:
+            logger.debug("Token validado via cache (sem chamada ao Supabase)")
+            return _payload_cached
+        # TTL expirado — remover entrada obsoleta
+        del _TOKEN_CACHE[_token_hash]
+
     try:
         from supabase import create_client
         url = os.getenv("SUPABASE_URL", "")
@@ -109,11 +140,29 @@ async def verificar_token(
                 detail={"erro": "Token inválido ou expirado", "codigo": 401},
             )
 
-        return {
+        usuario = {
             "sub": resposta.user.id,
             "email": resposta.user.email,
             "role": resposta.user.role,
         }
+
+        # [SEC-JWT-CACHE] Armazenar resultado válido no cache.
+        # Purge lazy: remove todas as entradas expiradas quando o cache
+        # ultrapassar 500 entradas, evitando crescimento ilimitado.
+        _TOKEN_CACHE[_token_hash] = (usuario, _agora)
+        if len(_TOKEN_CACHE) > 500:
+            _expirados = [
+                k for k, (_, ts) in _TOKEN_CACHE.items()
+                if (_agora - ts) >= _TOKEN_CACHE_TTL
+            ]
+            for k in _expirados:
+                del _TOKEN_CACHE[k]
+            logger.debug(
+                "[SEC-JWT-CACHE] Purge lazy: %d entradas expiradas removidas",
+                len(_expirados),
+            )
+
+        return usuario
     except HTTPException:
         raise
     except Exception as exc:

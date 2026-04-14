@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libproj-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# [SEC-05] Criar grupo e usuário sem privilégios — o processo nunca roda como root.
+# Isso limita o raio de explosão de uma RCE: mesmo que o processo seja comprometido,
+# o atacante não terá acesso de root ao container.
 RUN addgroup --system geoadmin && adduser --system --ingroup geoadmin geoadmin
 
 COPY requirements.txt .
@@ -19,13 +22,23 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=geoadmin:geoadmin . .
+# [SEC-05] Garantir que todos os diretórios de dados pertencem ao usuário não-root
+# antes de efetuar a troca de contexto com USER.
 RUN mkdir -p /app/uploads /app/data && chown -R geoadmin:geoadmin /app
 
+# [SEC-05] Trocar para usuário sem privilégios — todas as instruções posteriores
+# (incluindo CMD/ENTRYPOINT) serão executadas como 'geoadmin', não como root.
 USER geoadmin
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+# [SEC-13] HEALTHCHECK garante que orquestradores (Cloud Run, Docker Compose, K8s)
+# detectem falhas e reiniciem o container automaticamente.
+# - start-period=40s: aguarda o FastAPI inicializar completamente antes de pontuar
+# - timeout=10s: margem razoável para resposta sob carga
+# - interval=30s / retries=3: 3 falhas consecutivas = container unhealthy
+# Usa urllib da stdlib — sem dependência de curl na imagem slim.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
 
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

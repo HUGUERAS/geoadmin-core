@@ -14,15 +14,21 @@ POST /projetos/{id}/areas                  -> cria area do projeto
 PATCH /projetos/{id}/areas/{area_id}       -> atualiza area do projeto
 GET  /projetos/{id}/confrontacoes          -> detecta confrontacoes entre areas
 GET  /projetos/{id}/confrontacoes/cartas   -> gera ZIP de cartas de confrontacao
+GET  /projetos/{id}/documentos             -> painel documental com checklist dinamico
+POST /projetos/{id}/pacote-final           -> ZIP com todos os documentos gerados (rate 3/min)
 """
 
 from __future__ import annotations
 
+import io
+import logging
+import zipfile
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import Response, StreamingResponse
+from middleware.limiter import limiter
 from pydantic import BaseModel, Field
 
 from integracoes.arquivos_projeto import (
@@ -851,6 +857,137 @@ def _checklist_documental_dict_v1(checklist: dict[str, Any] | None) -> dict[str,
     return resultado
 
 
+_logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Checklist documental dinâmico
+# ---------------------------------------------------------------------------
+
+# Rótulos legíveis para exibição de pendências
+_CHECKLIST_LABELS: dict[str, str] = {
+    "formulario_ok": "Formulário preenchido pelo cliente",
+    "documentos_recebidos": "Documentos recebidos do cliente",
+    "areas_definidas": "Áreas do projeto definidas",
+    "geometria_ok": "Perímetro técnico validado",
+    "protocolo_ok": "Protocolo gerado",
+}
+
+# Itens que precisam estar OK para liberar o pacote final
+_CHECKLIST_ITENS_CRITICOS = {"formulario_ok", "areas_definidas", "geometria_ok"}
+
+
+def _montar_checklist_dinamico_projeto(projeto_id: str, sb) -> dict[str, bool]:
+    """
+    Calcula o checklist documental consultando diretamente o estado real das tabelas.
+
+    Chaves retornadas:
+    - formulario_ok        → projeto_clientes com magic_link_token_usado_em preenchido
+    - documentos_recebidos → arquivos_projeto com origem='cliente'
+    - areas_definidas      → ao menos 1 registro em areas_projeto
+    - geometria_ok         → ao menos 1 registro em perimetros
+    - protocolo_ok         → documentos_gerados com tipo ILIKE '%protocolo%'
+
+    Cada chave recebe False em caso de falha na query, nunca levanta exceção.
+    """
+    checklist: dict[str, bool] = {}
+
+    # ── formulario_ok ────────────────────────────────────────────────────────
+    try:
+        res = (
+            sb.table("projeto_clientes")
+            .select("magic_link_token_usado_em")
+            .eq("projeto_id", projeto_id)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        checklist["formulario_ok"] = any(
+            p.get("magic_link_token_usado_em") for p in (res.data or [])
+        )
+    except Exception as exc:
+        _logger.warning(
+            "checklist_dinamico: falha em formulario_ok para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        checklist["formulario_ok"] = False
+
+    # ── documentos_recebidos ─────────────────────────────────────────────────
+    try:
+        res = (
+            sb.table("arquivos_projeto")
+            .select("id")
+            .eq("projeto_id", projeto_id)
+            .eq("origem", "cliente")
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        checklist["documentos_recebidos"] = len(res.data or []) > 0
+    except Exception as exc:
+        _logger.warning(
+            "checklist_dinamico: falha em documentos_recebidos para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        checklist["documentos_recebidos"] = False
+
+    # ── areas_definidas ──────────────────────────────────────────────────────
+    try:
+        res = (
+            sb.table("areas_projeto")
+            .select("id")
+            .eq("projeto_id", projeto_id)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        checklist["areas_definidas"] = len(res.data or []) > 0
+    except Exception as exc:
+        _logger.warning(
+            "checklist_dinamico: falha em areas_definidas para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        checklist["areas_definidas"] = False
+
+    # ── geometria_ok ─────────────────────────────────────────────────────────
+    try:
+        res = (
+            sb.table("perimetros")
+            .select("id")
+            .eq("projeto_id", projeto_id)
+            .execute()
+        )
+        checklist["geometria_ok"] = len(res.data or []) > 0
+    except Exception as exc:
+        _logger.warning(
+            "checklist_dinamico: falha em geometria_ok para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        checklist["geometria_ok"] = False
+
+    # ── protocolo_ok ─────────────────────────────────────────────────────────
+    # A coluna real é 'tipo' (não 'tipo_documento'). O filtro ILIKE permanece
+    # correto para futuras extensões do CHECK constraint.
+    try:
+        res = (
+            sb.table("documentos_gerados")
+            .select("id")
+            .eq("projeto_id", projeto_id)
+            .ilike("tipo", "%protocolo%")
+            .execute()
+        )
+        checklist["protocolo_ok"] = len(res.data or []) > 0
+    except Exception as exc:
+        _logger.warning(
+            "checklist_dinamico: falha em protocolo_ok para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        checklist["protocolo_ok"] = False
+
+    return checklist
+
+
 def _documentos_painel_v1(documentos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     itens: list[dict[str, Any]] = []
     for doc in documentos:
@@ -1028,21 +1165,48 @@ def _montar_resumo_operacional_v1(projeto: dict[str, Any]) -> dict[str, Any]:
 
 
 def _montar_painel_documental_v1(projeto: dict[str, Any]) -> dict[str, Any]:
-    checklist = projeto.get("checklist_documental") or {}
+    """
+    Monta o payload PainelDocumentalProjetoV1.
+
+    Prioriza o checklist dinâmico (_checklist_dinamico) quando presente no projeto,
+    calculado diretamente das tabelas pelo _montar_checklist_dinamico_projeto().
+    Caso ausente, usa o checklist estático legado (checklist_documental).
+    """
+    # ── checklist: dinâmico tem prioridade ──────────────────────────────────
+    checklist_dinamico: dict[str, bool] | None = projeto.get("_checklist_dinamico")
+
+    if checklist_dinamico is not None:
+        checklist_dict = checklist_dinamico
+        pendencias = [
+            _CHECKLIST_LABELS.get(chave, chave)
+            for chave, ok in checklist_dict.items()
+            if not ok
+        ]
+        pronto_para_pacote = all(
+            checklist_dict.get(item, False) for item in _CHECKLIST_ITENS_CRITICOS
+        )
+    else:
+        # Fallback: formato legado {"itens": [...]} vindo de montar_checklist_projeto
+        checklist = projeto.get("checklist_documental") or {}
+        checklist_dict = _checklist_documental_dict_v1(checklist)
+        pendencias = [
+            item.get("label")
+            for item in (checklist.get("itens") or [])
+            if not item.get("ok") and item.get("label")
+        ]
+        pronto_para_pacote = (
+            bool((projeto.get("formulario") or {}).get("formulario_ok"))
+            and _documentos_total_projeto(projeto) > 0
+        )
+
     documentos = projeto.get("documentos") or []
-    checklist_dict = _checklist_documental_dict_v1(checklist)
-    pendencias = [
-        item.get("label")
-        for item in (checklist.get("itens") or [])
-        if not item.get("ok") and item.get("label")
-    ]
     payload = PainelDocumentalProjetoV1(
         projeto_id=str(projeto.get("id")),
         checklist_documental=checklist_dict,
         documentos=_documentos_painel_v1(documentos),
         protocolos=_protocolos_v1(projeto),
-        pendencias=pendencias,
-        pronto_para_pacote_final=bool((projeto.get("formulario") or {}).get("formulario_ok")) and _documentos_total_projeto(projeto) > 0,
+        pendencias=[p for p in pendencias if p],
+        pronto_para_pacote_final=pronto_para_pacote,
     )
     return payload.model_dump(mode="json")
 
@@ -1298,6 +1462,15 @@ def _enriquecer_projeto(sb, projeto_id: str) -> dict[str, Any]:
     projeto["confrontacoes_resumo"] = _safe(_resumo_confrontacoes, confrontacoes, confrontantes, default={}, label="_resumo_confrontacoes")
     projeto["prontidao_piloto"] = _safe(_prontidao_piloto, projeto, default={}, label="_prontidao_piloto")
     projeto["resumo_operacional_v1"] = _safe(_montar_resumo_operacional_v1, projeto, default=None, label="_montar_resumo_operacional_v1")
+    # Checklist dinâmico: calculado a partir do estado real das tabelas.
+    # Armazenado em _checklist_dinamico para uso exclusivo de _montar_painel_documental_v1.
+    projeto["_checklist_dinamico"] = _safe(
+        _montar_checklist_dinamico_projeto,
+        projeto_id,
+        sb,
+        default=None,
+        label="_montar_checklist_dinamico_projeto",
+    )
     projeto["painel_documental_v1"] = _safe(_montar_painel_documental_v1, projeto, default=None, label="_montar_painel_documental_v1")
     projeto["projeto_oficial_v1"] = _safe(_montar_projeto_oficial_v1, projeto, default=None, label="_montar_projeto_oficial_v1")
     return projeto
@@ -1435,6 +1608,145 @@ def listar_protocolos_projeto(projeto_id: str):
         "pendencias": painel.get("pendencias") or [],
         "pronto_para_pacote_final": bool(painel.get("pronto_para_pacote_final")),
     }
+
+
+@router.post("/{projeto_id}/pacote-final", summary="Gerar pacote final com todos os documentos do projeto")
+@limiter.limit("3/minute")
+async def gerar_pacote_final(projeto_id: str, request: Request):
+    """
+    Agrega todos os documentos gerados do projeto em um ZIP único e retorna para download.
+
+    - Busca todos os registros de ``documentos_gerados`` para o projeto.
+    - Para cada documento com ``storage_path`` preenchido, tenta baixar do Supabase Storage.
+      Em caso de falha, inclui um arquivo texto de placeholder com os metadados.
+    - Registra evento interno em ``eventos_magic_link``
+      (tipo_evento='legado', canal='interno', payload_json inclui tipo_real='pacote_final_emitido').
+    - Retorna ``StreamingResponse`` com Content-Type ``application/zip``.
+
+    HTTP 422 se o projeto não tiver documentos gerados para empacotar.
+    Rate limit: 3 requisições/minuto por IP.
+    """
+    sb = _get_supabase()
+
+    # 1. Verificar existência do projeto
+    _projeto_ou_404(sb, projeto_id)
+
+    # 2. Buscar documentos gerados — colunas explícitas, sem select("*")
+    try:
+        res = (
+            sb.table("documentos_gerados")
+            .select("id, tipo, storage_path, gerado_em")
+            .eq("projeto_id", projeto_id)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        docs = res.data or []
+    except Exception as exc:
+        _logger.error(
+            "pacote_final: falha ao buscar documentos_gerados para projeto %s: %s",
+            projeto_id,
+            exc,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail={"erro": "Falha ao consultar documentos do projeto.", "codigo": 500},
+        )
+
+    if not docs:
+        raise HTTPException(
+            status_code=422,
+            detail={"detail": "Projeto não tem documentos gerados para empacotar."},
+        )
+
+    # 3. Criar ZIP em memória
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for doc in docs:
+            doc_id = str(doc.get("id") or "")
+            tipo = str(doc.get("tipo") or "documento")
+            storage_path: str | None = doc.get("storage_path")
+            nome_arquivo = f"{tipo}_{doc_id[:8]}.pdf"
+            conteudo: bytes | None = None
+
+            if storage_path:
+                # storage_path esperado: "bucket_name/caminho/para/arquivo.ext"
+                try:
+                    partes = storage_path.lstrip("/").split("/", 1)
+                    bucket = partes[0]
+                    caminho = partes[1] if len(partes) > 1 else storage_path
+                    conteudo = sb.storage.from_(bucket).download(caminho)
+                except Exception as exc_dl:
+                    _logger.warning(
+                        "pacote_final: falha ao baixar '%s' (storage_path=%s) para projeto %s: %s",
+                        nome_arquivo,
+                        storage_path,
+                        projeto_id,
+                        exc_dl,
+                    )
+
+            if conteudo:
+                zf.writestr(nome_arquivo, conteudo)
+            else:
+                # Placeholder quando o arquivo não está acessível via storage
+                placeholder = (
+                    f"Documento: {tipo}\n"
+                    f"ID: {doc_id}\n"
+                    f"Gerado em: {doc.get('gerado_em') or 'desconhecido'}\n"
+                    f"Arquivo indisponível para download direto.\n"
+                    f"Recupere o arquivo manualmente usando o storage_path: {storage_path or 'N/A'}\n"
+                )
+                zf.writestr(f"{tipo}_{doc_id[:8]}.txt", placeholder.encode("utf-8"))
+
+        # Manifesto do pacote
+        manifesto_linhas = [
+            f"Pacote final — projeto: {projeto_id}",
+            f"Gerado em: {datetime.now(timezone.utc).isoformat()}",
+            f"Total de documentos: {len(docs)}",
+            "",
+            "Documentos incluídos:",
+        ]
+        for doc in docs:
+            manifesto_linhas.append(
+                f"  - {doc.get('tipo', 'N/A')} | id={doc.get('id', 'N/A')} | gerado_em={doc.get('gerado_em', 'N/A')}"
+            )
+        zf.writestr("_manifesto.txt", "\n".join(manifesto_linhas).encode("utf-8"))
+
+    buffer.seek(0)
+
+    # 4. Registrar evento interno
+    # tipo_evento='legado' + canal='interno' pois 'pacote_final_emitido' não está
+    # no CHECK constraint de eventos_magic_link. O tipo real fica em payload_json.
+    try:
+        sb.table("eventos_magic_link").insert(
+            {
+                "projeto_id": projeto_id,
+                "tipo_evento": "legado",
+                "canal": "interno",
+                "payload_json": {
+                    "tipo_real": "pacote_final_emitido",
+                    "total_docs": len(docs),
+                },
+            }
+        ).execute()
+    except Exception as exc_evt:
+        _logger.warning(
+            "pacote_final: falha ao registrar evento para projeto %s: %s",
+            projeto_id,
+            exc_evt,
+        )
+
+    nome_zip = f"pacote_final_{projeto_id[:8]}.zip"
+    _logger.info(
+        "pacote_final: ZIP gerado com %d documento(s) para projeto %s",
+        len(docs),
+        projeto_id,
+    )
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{nome_zip}"'},
+    )
 
 
 @router.patch("/{projeto_id}", summary="Atualizar metadados do projeto")
