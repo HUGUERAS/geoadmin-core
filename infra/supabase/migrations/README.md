@@ -24,7 +24,30 @@ producao quando este repositorio foi criado por copia controlada.
 | 022 | Eventos magic link |
 | 023 | Eventos cartograficos |
 | 024 | Confrontacoes revisadas |
-| 025 | Magic link canonico |
+| 025 | Magic link canonico (backfill projeto_clientes + views) |
+| 026 | Magic link token_usado_em [SEC-02] |
+| 027 | Reconciliacao e baseline estrutural |
+
+## Historico de origem
+
+As migrations 001-013 foram aplicadas no repositorio de origem
+(GeoAdmin-Pro monorepo) antes da criacao do geoadmin-core.
+O projeto oficial vinculado e: jrlrlsotwsiidglcbifo
+
+Para reconciliar o historico local vs remoto:
+
+```bash
+# 1. Listar estado atual (local e remoto)
+npx supabase migration list --workdir infra
+
+# 2. Reparar com a lista correta (consultar responsavel antes de executar)
+npx supabase migration repair --workdir infra --status applied <migration_id>
+
+# 3. Regenerar tipos apos reconciliacao
+npx supabase gen types typescript --linked --schema public --workdir infra
+```
+
+NUNCA rodar db push / db pull sem antes confirmar o alinhamento.
 
 ## Convencao
 

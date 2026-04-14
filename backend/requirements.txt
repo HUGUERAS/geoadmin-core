@@ -11,4 +11,5 @@ pyshp==2.3.1
 python-multipart==0.0.19
 httpx==0.28.1
 defusedxml==0.7.1
+filetype==1.2.0  # [SEC-10] detecção de MIME real via magic bytes
 

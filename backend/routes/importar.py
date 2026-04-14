@@ -18,6 +18,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query, Depends
 from middleware.auth import verificar_token
 from pydantic import BaseModel
+from utils.upload import (  # [SEC-04][SEC-10]
+    LIMITE_DOCUMENTOS_MB,
+    validar_upload as _validar_upload_seguro,
+)
 
 router = APIRouter(prefix="/importar", tags=["Importação"], dependencies=[Depends(verificar_token)])
 logger = logging.getLogger("geoadmin.importar")
@@ -52,19 +56,13 @@ async def importar_landstar(
     from main import get_supabase
     from integracoes.parser_landstar import parse_arquivo
 
-    # ── Validar tamanho do arquivo (limite de 10MB) ─────────────────────────────
-    TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024  # 10MB
-    conteudo_bytes = await arquivo.read()
-
-    if len(conteudo_bytes) > TAMANHO_MAXIMO_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail={
-                "erro": f"Arquivo excede o limite de 10MB (tamanho: {len(conteudo_bytes) / (1024 * 1024):.2f}MB)",
-                "codigo": 413,
-                "limite_bytes": TAMANHO_MAXIMO_BYTES,
-            }
-        )
+    # [SEC-04][SEC-10] Ler em streaming com limite de 10 MB e validar MIME real.
+    # LandStar exporta arquivos texto (.txt/.csv); HTTPException levantada automaticamente.
+    conteudo_bytes = await _validar_upload_seguro(
+        arquivo,
+        ["text/plain", "text/csv"],
+        max_mb=LIMITE_DOCUMENTOS_MB,
+    )  # [SEC-04][SEC-10]
 
     # ── Ler e parsear o arquivo ────────────────────────────────────────────────
     try:

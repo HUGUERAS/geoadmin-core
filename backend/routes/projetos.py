@@ -36,6 +36,13 @@ from integracoes.arquivos_projeto import (
     promover_arquivo_base_oficial,
     salvar_arquivo_projeto,
 )
+from utils.upload import (  # [SEC-04][SEC-10]
+    LIMITE_DOCUMENTOS_MB,
+    LIMITE_GEOESPACIAL_MB,
+    TIPOS_ARQUIVO_PROJETO,
+    TIPOS_GEO_IMPORTACAO,
+    validar_upload as _validar_upload_seguro,
+)
 from integracoes.areas_projeto import (
     aplicar_revisoes_confrontacao,
     detectar_confrontacoes,
@@ -1478,10 +1485,13 @@ async def enviar_arquivo_projeto(
 ):
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
-    try:
-        conteudo = await _ler_upload_limitado(arquivo)
-    except UploadValidationError as exc:
-        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
+
+    # [SEC-04][SEC-10] Validar tamanho (10 MB) e MIME real via magic bytes
+    # antes de qualquer gravação.  HTTPException 413/415/422 é levantada
+    # automaticamente se a validação falhar.
+    conteudo = await _validar_upload_seguro(
+        arquivo, TIPOS_ARQUIVO_PROJETO, max_mb=LIMITE_DOCUMENTOS_MB
+    )  # [SEC-04][SEC-10]
 
     try:
         registro = salvar_arquivo_projeto(
@@ -1581,10 +1591,12 @@ async def importar_areas_arquivo(
 ):
     sb = _get_supabase()
     _projeto_ou_404(sb, projeto_id)
-    try:
-        conteudo = await _ler_upload_limitado(arquivo)
-    except UploadValidationError as exc:
-        raise HTTPException(exc.status_code, detalhe_upload_invalido(exc))
+
+    # [SEC-04][SEC-10] Arquivo geoespacial: limite 50 MB e validação MIME real.
+    # HTTPException 413/415/422 propagada automaticamente pelo FastAPI.
+    conteudo = await _validar_upload_seguro(
+        arquivo, TIPOS_GEO_IMPORTACAO, max_mb=LIMITE_GEOESPACIAL_MB
+    )  # [SEC-04][SEC-10]
 
     formato_arquivo = (formato or (arquivo.filename or '').split('.')[-1]).lower()
     try:

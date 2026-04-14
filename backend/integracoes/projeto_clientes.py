@@ -559,7 +559,14 @@ def gerar_magic_link_participante(
         try:
             (
                 sb.table('projeto_clientes')
-                .update({'magic_link_token': token, 'magic_link_expira': expira.isoformat()})
+                .update({
+                    'magic_link_token': token,
+                    'magic_link_expira': expira.isoformat(),
+                    # [SEC-02] Reseta o registro de consumo ao emitir novo token,
+                    # permitindo que o cliente utilize o link recém-gerado mesmo
+                    # que um link anterior já tenha sido consumido.
+                    'magic_link_token_usado_em': None,
+                })
                 .eq('id', participante['id'])
                 .execute()
             )
@@ -568,25 +575,34 @@ def gerar_magic_link_participante(
 
     participante['magic_link_token'] = token
     participante['magic_link_expira'] = expira.isoformat()
+    # [SEC-02] Garante que o participante retornado reflita o reset de consumo
+    participante['magic_link_token_usado_em'] = None
     return participante
 
 
 def obter_vinculo_por_token(sb, token: str) -> dict[str, Any] | None:
     try:
+        # [SEC-09] maybe_single() garante que exatamente UM vínculo corresponde ao token.
+        # • 0 correspondências → retorna None (token inexistente; tratado pelo chamador).
+        # • >1 correspondências → lança exceção, bloqueando acesso ambíguo cross-client:
+        #   um token jamais deve referenciar mais de um par (projeto_id, cliente_id).
+        #   Anteriormente .limit(1) retornava a primeira linha em ordem arbitrária do BD,
+        #   o que poderia expor dados de outro cliente em caso de colisão/inconsistência.
         resposta = (
             sb.table('projeto_clientes')
-            .select('id, projeto_id, cliente_id, papel, principal, recebe_magic_link, ordem, area_id, magic_link_token, magic_link_expira')
+            # [SEC-02] magic_link_token_usado_em incluído para detecção de reuso
+            .select('id, projeto_id, cliente_id, papel, principal, recebe_magic_link, ordem, area_id, magic_link_token, magic_link_expira, magic_link_token_usado_em')
             .eq('magic_link_token', token)
             .is_('deleted_at', 'null')
-            .limit(1)
+            .maybe_single()  # [SEC-09] unicidade obrigatória — impede cross-client por colisão
             .execute()
         )
     except Exception as exc:
         if 'projeto_clientes' in str(exc).lower():
             return None
         raise
-    dados = _dados(resposta)
-    return dados[0] if dados else None
+    # [SEC-09] .maybe_single() retorna resposta.data como dict | None, não como lista
+    return resposta.data if resposta else None
 
 
 def invalidar_magic_link_participante(
@@ -601,7 +617,14 @@ def invalidar_magic_link_participante(
     try:
         consulta = (
             sb.table('projeto_clientes')
-            .update({'magic_link_token': None, 'magic_link_expira': None})
+            .update({
+                'magic_link_token': None,
+                'magic_link_expira': None,
+                # [SEC-02] Registra o momento exato do consumo para impedir
+                # reuso do mesmo link — mesmo que token ainda não seja NULL
+                # por corrida de escrita, esta coluna bloqueia na validação.
+                'magic_link_token_usado_em': datetime.now(timezone.utc).isoformat(),
+            })
             .is_('deleted_at', 'null')
         )
         if projeto_cliente_id:

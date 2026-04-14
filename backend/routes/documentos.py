@@ -10,6 +10,7 @@ POST /projetos/{id}/gerar-documentos     -> gera ZIP com os 7 docs GPRF
 GET  /projetos/{id}/documentos           -> lista docs gerados
 """
 
+import hashlib  # [SEC-11] hash do JWT para chave de rate limit por sessão
 import json
 import logging
 import os
@@ -20,6 +21,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from middleware.auth import verificar_token
+from middleware.limiter import limiter  # [SEC-11] rate limiting nos endpoints críticos
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
@@ -28,7 +30,13 @@ from integracoes.arquivos_projeto import (
     UploadValidationError,
     detalhe_upload_invalido,
     validar_lote_uploads,
-    validar_upload_formulario,
+)
+from utils.upload import (  # [SEC-04][SEC-10]
+    LIMITE_DOCUMENTOS_MB,
+    LIMITE_GEOESPACIAL_MB,
+    TIPOS_FORMULARIO,
+    TIPOS_GEO_FORMULARIO,
+    validar_upload as _validar_upload_seguro,
 )
 from integracoes.projeto_clientes import (
     garantir_participante_principal_projeto,
@@ -49,6 +57,21 @@ from routes.perimetros import buscar_perimetro_ativo
 
 logger = logging.getLogger("geoadmin.documentos")
 router = APIRouter(tags=["Documentos GPRF"], dependencies=[Depends(verificar_token)])
+
+
+# [SEC-11] Chave de rate limit para rotas autenticadas: usa hash do JWT Bearer,
+# garantindo isolamento por sessão sem expor o token. Retorna None para chamadas
+# internas Python (sem contexto HTTP), sinalizando ao limiter para pular a checagem.
+def _chave_por_usuario_autenticado(request: "Request | None", **kwargs) -> "str | None":
+    if request is None:
+        return None  # Chamada interna (ex: gerar_magic_links_lote) → sem rate limit
+    auth = request.headers.get("authorization", "")
+    if auth.lower().startswith("bearer "):
+        token = auth.split(" ", 1)[1]
+        # Hash curto do token identifica a sessão sem armazenar o JWT bruto
+        return "jwt:" + hashlib.sha256(token.encode()).hexdigest()[:20]
+    # Fallback para IP se a rota for acessada sem Bearer (ex: ambiente de dev)
+    return request.client.host if request.client else None
 
 
 class GerarMagicLinksLotePayload(BaseModel):
@@ -326,8 +349,20 @@ def _atualizar_cliente_formulario(sb, cliente_id: str, dados: DadosFormulario) -
 
 
 def _validar_token(sb, token: str) -> tuple[dict[str, Any], str | None, dict[str, Any] | None]:
+    # [SEC-09] obter_vinculo_por_token usa .maybe_single() — garante que o token
+    # é resolvido para exatamente UM par (projeto_id, cliente_id). Qualquer ambiguidade
+    # no banco (colisão ou inconsistência) levanta exceção antes de chegar aqui.
     vinculo = obter_vinculo_por_token(sb, token)
     if vinculo:
+        # [SEC-02] Rejeita tokens já consumidos antes de qualquer outra verificação.
+        # Retorna 410 Gone (recurso permanentemente indisponível) com mensagem
+        # amigável para que o cliente saiba que precisa solicitar um novo link.
+        if vinculo.get("magic_link_token_usado_em"):
+            raise HTTPException(410, {
+                "erro": "Este link já foi utilizado. Entre em contato com o escritório para um novo link.",
+                "codigo": 410,
+            })
+
         expira = vinculo.get("magic_link_expira")
         if expira and datetime.fromisoformat(str(expira).replace("Z", "+00:00")) < datetime.now(timezone.utc):
             try:
@@ -340,6 +375,9 @@ def _validar_token(sb, token: str) -> tuple[dict[str, Any], str | None, dict[str
                 logger.warning("Falha ao invalidar magic link expirado: %s", exc)
             raise HTTPException(401, {"erro": "[ERRO-602] Link expirado. Solicite um novo link.", "codigo": 602})
 
+        # [SEC-09] Carrega o cliente usando o cliente_id extraído DO PRÓPRIO vínculo do
+        # token — nunca de parâmetro externo — garantindo que token → cliente → projeto
+        # formam uma cadeia de propriedade consistente e não manipulável pelo portal.
         cliente_res = (
             sb.table("clientes")
             .select("id, nome, formulario_ok, formulario_em")
@@ -350,6 +388,20 @@ def _validar_token(sb, token: str) -> tuple[dict[str, Any], str | None, dict[str
         cliente = cliente_res.data
         if not cliente:
             raise HTTPException(401, {"erro": "[ERRO-601] Token inválido.", "codigo": 601})
+
+        # [SEC-09] Checagem de consistência: confirma que o cliente retornado pertence
+        # ao vínculo do token. Embora a query acima já filtre por vinculo["cliente_id"],
+        # esta verificação explícita detecta qualquer inconsistência de dados no banco
+        # e impede que um token acesse dados de um cliente diferente do seu par original.
+        if str(cliente.get("id")) != str(vinculo.get("cliente_id")):
+            logger.warning(
+                "SEC-09: inconsistência de ownership no token — "
+                "vinculo.cliente_id=%s cliente.id=%s",
+                vinculo.get("cliente_id"),
+                cliente.get("id"),
+            )
+            raise HTTPException(401, {"erro": "[ERRO-601] Token inválido.", "codigo": 601})
+
         return cliente, vinculo.get("projeto_id"), vinculo
 
     raise HTTPException(401, {"erro": "[ERRO-601] Token inválido ou descontinuado. Solicite um novo link.", "codigo": 601})
@@ -395,17 +447,30 @@ def _participante_base(participantes: list[dict[str, Any]], *, projeto_cliente_i
 
 
 def _contexto_token(sb, token: str) -> dict[str, Any]:
+    # [SEC-09] _validar_token já garante que token → (projeto_id, cliente_id) é único
+    # e consistente. Aqui apenas consumimos o projeto_id do vínculo — nunca de
+    # parâmetro externo — para impedir que um token acesse contexto de outro projeto.
     cliente, projeto_id, vinculo = _validar_token(sb, token)
     projeto = None
     if projeto_id:
         projeto = (
             sb.table("vw_projetos_completo")
             .select("id, projeto_nome, municipio, estado, status")
-            .eq("id", projeto_id)
+            .eq("id", projeto_id)  # [SEC-09] projeto_id vem exclusivamente do vínculo do token
             .maybe_single()
             .execute()
             .data
         )
+        # [SEC-09] Confirma que o projeto retornado corresponde ao projeto_id do vínculo.
+        # Detecta qualquer inconsistência na view antes de expor dados ao portal público.
+        if projeto and str(projeto.get("id")) != str(projeto_id):
+            logger.warning(
+                "SEC-09: inconsistência de projeto no contexto — "
+                "vinculo.projeto_id=%s projeto.id=%s",
+                projeto_id,
+                projeto.get("id"),
+            )
+            raise HTTPException(401, {"erro": "[ERRO-601] Token inválido.", "codigo": 601})
     area = _carregar_area_contexto(sb, vinculo.get("area_id") if vinculo else None)
     lote = None
     if area:
@@ -521,10 +586,21 @@ async def _extrair_payload_request(request: Request) -> tuple[dict[str, Any], li
         if chave == "croqui_svg":
             continue
         if hasattr(valor, "filename"):
-            conteudo = await valor.read()
+            # [SEC-04] Arquivo de geometria aceita até 50 MB; demais até 10 MB.
+            # [SEC-10] MIME real validado via magic bytes — não só extensão.
+            # _validar_upload_seguro levanta HTTPException 413/415/422 se inválido.
+            if chave == "arquivo_geometria":
+                tipos_ok = TIPOS_GEO_FORMULARIO
+                max_upload_mb = LIMITE_GEOESPACIAL_MB  # [SEC-04]
+            else:
+                tipos_ok = TIPOS_FORMULARIO
+                max_upload_mb = LIMITE_DOCUMENTOS_MB   # [SEC-04]
+
+            conteudo = await _validar_upload_seguro(
+                valor, tipos_ok, max_upload_mb, permitir_vazio=True
+            )  # [SEC-04][SEC-10]
             if not conteudo:
-                continue
-            validar_upload_formulario(valor.filename or chave, conteudo)
+                continue  # campo de arquivo opcional não preenchido — ignorar
             total_uploads += 1
             total_bytes += len(conteudo)
             validar_lote_uploads(total_arquivos=total_uploads, total_bytes=total_bytes)
@@ -629,6 +705,7 @@ def _sincronizar_confrontantes_formulario(sb, projeto_id: str, cliente_id: str, 
 
 
 @router.post("/projetos/{projeto_id}/magic-link", summary="Gerar link do formulário para o cliente")
+@limiter.limit("10/minute", key_func=_chave_por_usuario_autenticado)  # [SEC-11] 10 req/min por sessão autenticada
 def gerar_magic_link(
     projeto_id: str,
     cliente_id: str | None = None,
@@ -637,6 +714,7 @@ def gerar_magic_link(
     canal: str = "whatsapp",
     autor: str | None = None,
     supabase=None,
+    request: Request = None,  # [SEC-11] FastAPI injeta em chamadas HTTP; None em chamadas internas Python
 ):
     sb = supabase or _get_supabase()
 
@@ -730,7 +808,13 @@ def gerar_magic_link(
 
 
 @router.post("/projetos/{projeto_id}/magic-links/lote", summary="Gerar magic links em lote por participante/lote")
-def gerar_magic_links_lote(projeto_id: str, payload: GerarMagicLinksLotePayload, supabase=None):
+@limiter.limit("3/minute", key_func=_chave_por_usuario_autenticado)  # [SEC-11] 3 req/min por sessão autenticada
+def gerar_magic_links_lote(
+    projeto_id: str,
+    payload: GerarMagicLinksLotePayload,
+    supabase=None,
+    request: Request = None,  # [SEC-11] FastAPI injeta em chamadas HTTP; None em chamadas internas Python
+):
     sb = supabase or _get_supabase()
     try:
         projeto = sb.table("vw_projetos_completo").select("id, projeto_nome").eq("id", projeto_id).single().execute().data
@@ -799,7 +883,8 @@ def listar_historico_magic_links(projeto_id: str, projeto_cliente_id: str | None
 
 
 @router.get("/formulario/cliente/contexto", summary="Obter contexto do magic link")
-def contexto_formulario_cliente(token: str = Query(...)):
+@limiter.limit("20/minute")  # [SEC-11] 20 req/min por IP — rota pública sem auth
+def contexto_formulario_cliente(request: Request, token: str = Query(...)):
     sb = _get_supabase()
     return _contexto_token(sb, token)
 
@@ -817,6 +902,7 @@ def formulario_cliente(token: str = Query(...)):
 
 
 @router.post("/formulario/cliente", summary="Receber dados preenchidos pelo cliente")
+@limiter.limit("5/minute")  # [SEC-11] 5 req/min por IP — rota pública sem auth
 async def receber_formulario(request: Request, token: str = Query(...), supabase=None):
     sb = supabase or _get_supabase()
     cliente, projeto_id, vinculo = _validar_token(sb, token)
