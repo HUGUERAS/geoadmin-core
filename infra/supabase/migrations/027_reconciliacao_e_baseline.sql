@@ -57,13 +57,11 @@ SET atualizado_em = COALESCE(atualizado_em, criado_em, NOW())
 WHERE atualizado_em IS NULL;
 
 -- Trigger de atualização automática
-CREATE OR REPLACE FUNCTION public.set_tecnico_atualizado_em
-()
+CREATE OR REPLACE FUNCTION public.set_tecnico_atualizado_em()
 RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-    NEW.atualizado_em = NOW
-();
+    NEW.atualizado_em = NOW();
 RETURN NEW;
 END;
 $$;
