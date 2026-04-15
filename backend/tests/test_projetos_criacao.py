@@ -67,7 +67,7 @@ def test_criar_projeto_reverte_quando_etapa_posterior_falha(monkeypatch):
     payload = projetos_mod.ProjetoCreate(nome="Projeto Teste")
 
     with pytest.raises(HTTPException) as excinfo:
-        projetos_mod.criar_projeto(payload)
+        projetos_mod.criar_projeto(payload, usuario={"sub": "user-test", "role": "authenticated"})
 
     assert excinfo.value.status_code == 500
     assert chamadas_reversao == ["proj-1"]

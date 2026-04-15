@@ -74,6 +74,7 @@ def test_atualizar_projeto_persiste_tipo_processo_validado(monkeypatch):
     resultado = projetos_mod.atualizar_projeto(
         'projeto-1',
         projetos_mod.ProjetoUpdate(tipo_processo='seapa'),
+        usuario={"sub": "user-test", "role": "authenticated"},
     )
 
     assert resultado['tipo_processo'] == 'SEAPA'

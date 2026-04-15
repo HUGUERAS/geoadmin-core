@@ -15,10 +15,10 @@ from typing import Any
 logger = logging.getLogger("geoadmin.arquivos_projeto")
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-UPLOADS_DIR = ROOT_DIR / "uploads" / "arquivos_projeto"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 SUPABASE_STORAGE_PREFIX = "supabase://"
+# [P0.4] LOCAL_STORAGE_PREFIX é mantido apenas para leitura de arquivos legados
+# durante a migração administrativa. Novas gravações usam apenas Supabase Storage.
 LOCAL_STORAGE_PREFIX = "local://"
 DEFAULT_BUCKET = "arquivos-projeto"
 
@@ -266,8 +266,9 @@ def _storage_path_supabase(bucket: str, objeto: str) -> str:
     return f"{SUPABASE_STORAGE_PREFIX}{bucket}/{objeto}"
 
 
-def _storage_path_local(caminho: Path) -> str:
-    return f"{LOCAL_STORAGE_PREFIX}{caminho}"
+# [P0.4] _storage_path_local e _salvar_local foram removidos: novos arquivos
+# são gravados exclusivamente no Supabase Storage. A leitura de caminhos
+# local:// ainda é suportada por _ler_bytes_arquivo para migração de legado.
 
 
 def _parse_storage_path(storage_path: str) -> tuple[str, str] | None:
@@ -295,15 +296,6 @@ def _garantir_bucket(sb, bucket: str) -> None:
         if "already" in texto or "duplicate" in texto or "exists" in texto:
             return
         raise
-
-
-def _salvar_local(projeto_id: str, arquivo_id: str, nome_original: str, conteudo: bytes) -> str:
-    nome_salvo = f"{arquivo_id}-{_slug_nome(nome_original)}"
-    pasta = UPLOADS_DIR / projeto_id
-    pasta.mkdir(parents=True, exist_ok=True)
-    caminho = pasta / nome_salvo
-    caminho.write_bytes(conteudo)
-    return _storage_path_local(caminho)
 
 
 def _salvar_supabase(sb, projeto_id: str, arquivo_id: str, nome_original: str, conteudo: bytes, mime_type: str) -> str:

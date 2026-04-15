@@ -80,6 +80,7 @@ from schemas.contratos_v1 import (
 )
 from fastapi import Depends
 from middleware.auth import verificar_token
+from middleware.autorizacao import verificar_acesso_projeto, usuario_sub
 
 router = APIRouter(prefix="/projetos", tags=["Projetos"], dependencies=[Depends(verificar_token)])
 
@@ -1509,11 +1510,13 @@ def listar_projetos(limite: int = 50, deslocamento: int = 0):
 
 
 @router.post("", summary="Criar novo projeto", status_code=201)
-def criar_projeto(payload: ProjetoCreate):
+def criar_projeto(payload: ProjetoCreate, usuario: dict = Depends(verificar_token)):
     sb = _get_supabase()
     participantes = _participantes_payload(payload)
     cliente_id = _cliente_principal_do_payload(sb, participantes, payload)
     tipo_processo = _validar_tipo_processo(payload.tipo_processo)
+    # [P1.2] Registrar o usuário criador para futura autorização por objeto.
+    sub = usuario_sub(usuario)
     dados = {
         "nome": payload.nome,
         "zona_utm": payload.zona_utm,
@@ -1523,6 +1526,7 @@ def criar_projeto(payload: ProjetoCreate):
         "estado": payload.estado,
         "cliente_id": cliente_id,
         "tipo_processo": tipo_processo,
+        "criado_por_user_id": sub,
     }
     dados = {chave: valor for chave, valor in dados.items() if valor is not None}
     res = _inserir_projeto_compativel(sb, dados)
@@ -1558,12 +1562,15 @@ def criar_projeto(payload: ProjetoCreate):
 
 
 @router.get("/{projeto_id}", summary="Buscar projeto com dados operacionais")
-def buscar_projeto(projeto_id: str):
+def buscar_projeto(projeto_id: str, usuario: dict = Depends(verificar_token)):
     import logging as _log
     _logger = _log.getLogger(__name__)
     sb = _get_supabase()
     try:
-        return _enriquecer_projeto(sb, projeto_id)
+        projeto = _enriquecer_projeto(sb, projeto_id)
+        # [P1.2] Verificar se o usuário tem acesso a este projeto.
+        verificar_acesso_projeto(projeto, usuario)
+        return projeto
     except HTTPException:
         raise
     except Exception as exc:
@@ -1764,9 +1771,11 @@ async def gerar_pacote_final(projeto_id: str, request: Request):
 
 
 @router.patch("/{projeto_id}", summary="Atualizar metadados do projeto")
-def atualizar_projeto(projeto_id: str, payload: ProjetoUpdate):
+def atualizar_projeto(projeto_id: str, payload: ProjetoUpdate, usuario: dict = Depends(verificar_token)):
     sb = _get_supabase()
-    _projeto_ou_404(sb, projeto_id)
+    projeto = _projeto_ou_404(sb, projeto_id)
+    # [P1.2] Verificar se o usuário tem acesso para modificar este projeto.
+    verificar_acesso_projeto(projeto, usuario)
 
     if payload.tipo_processo is not None:
         payload.tipo_processo = _validar_tipo_processo(payload.tipo_processo)

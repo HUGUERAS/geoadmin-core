@@ -137,10 +137,10 @@ def test_salvar_e_exportar_arquivos_projeto_via_supabase_storage():
         assert manifesto[0]["storage_path"].startswith("supabase://arquivos-projeto/")
 
 
-def test_salvar_arquivo_projeto_falha_quando_storage_indisponivel(monkeypatch, tmp_path: Path):
+def test_salvar_arquivo_projeto_falha_quando_storage_indisponivel():
+    # [P0.4] UPLOADS_DIR foi removido — novas gravações usam exclusivamente Supabase Storage.
+    # Quando o upload falha, deve levantar RuntimeError sem fallback local.
     sb = FakeSupabase(quebrar_upload=True)
-    uploads_dir = tmp_path / "uploads"
-    monkeypatch.setattr(arquivos_mod, "UPLOADS_DIR", uploads_dir)
 
     with pytest.raises(RuntimeError, match="storage indisponivel"):
         arquivos_mod.salvar_arquivo_projeto(
@@ -151,8 +151,6 @@ def test_salvar_arquivo_projeto_falha_quando_storage_indisponivel(monkeypatch, t
             origem="cliente",
             classificacao="documento_croqui",
         )
-
-    assert not any(uploads_dir.rglob("*"))
 
 
 def test_validar_upload_rejeita_svg_do_usuario():
