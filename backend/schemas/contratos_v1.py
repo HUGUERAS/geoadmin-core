@@ -158,6 +158,7 @@ class VerticeProjetoV1(ModeloContratoV1):
     norte: float
     este: float
     cota: float | None = None
+    confrontante_id: str | None = None
 
 
 class PerimetroAtivoV1(ModeloContratoV1):
@@ -229,6 +230,7 @@ class ResumoProjetoOperacionalV1(ModeloContratoV1):
     pronto_para_emitir: bool = False
     aguardando_cliente: bool = False
     possui_notificacao_aberta: bool = False
+    status_geometrico: Literal["sem_geometria", "referencia_recebida", "em_revisao", "divergente", "pronto_para_documento", "aprovado"] = "sem_geometria"
 
 
 class DocumentoPainelV1(ModeloContratoV1):
@@ -278,4 +280,3 @@ class EstadoPortalClienteV1(ModeloContratoV1):
     pendencias: list[PendenciaPortalClienteV1] = Field(default_factory=list)
     arquivos_recebidos: list[ArquivoPortalClienteV1] = Field(default_factory=list)
     ajuda_contato: str | None = None
-

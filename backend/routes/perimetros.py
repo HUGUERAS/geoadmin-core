@@ -12,6 +12,7 @@ class Vertice(BaseModel):
     lon: float
     lat: float
     nome: Optional[str] = None
+    confrontante_id: Optional[str] = None
 
 
 class PerimetroCreate(BaseModel):

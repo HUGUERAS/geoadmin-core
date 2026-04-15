@@ -19,6 +19,7 @@ Resultado esperado:
 
 - `.venv/` criado
 - dependências do backend instaladas
+- `pytest` disponível para a suíte do backend
 - dependências do mobile instaladas
 
 ## 3. Validar backend/.env
@@ -106,6 +107,7 @@ npm start
 
 ## 11. Bloqueios conhecidos
 
-- se o bootstrap acusar `Python 3.14`, trocar a versão do Python antes de seguir
-- se o backend não subir por credencial, revisar `backend/.env`
-- se a web abrir mas a API falhar, testar o gateway apontando explicitamente para o backend remoto
+ - se houver `.venv` criada com `Python 3.14`, o bootstrap agora recria o ambiente usando `py -3.13` ou `py -3.12` quando disponíveis
+ - se não houver Python 3.12/3.13 instalado, instalar uma dessas versões antes de seguir
+ - se o backend não subir por credencial, revisar `backend/.env`
+ - se a web abrir mas a API falhar, testar o gateway apontando explicitamente para o backend remoto

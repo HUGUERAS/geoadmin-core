@@ -160,6 +160,7 @@ export interface VerticeProjetoV1 {
   norte: number
   este: number
   cota?: number | null
+  confrontante_id?: string | null
 }
 
 export interface PerimetroAtivoV1 {
@@ -231,6 +232,7 @@ export interface ResumoProjetoOperacionalV1 {
   pronto_para_emitir: boolean
   aguardando_cliente: boolean
   possui_notificacao_aberta: boolean
+  status_geometrico?: 'sem_geometria' | 'referencia_recebida' | 'em_revisao' | 'divergente' | 'pronto_para_documento' | 'aprovado'
 }
 
 export interface DocumentoPainelV1 {

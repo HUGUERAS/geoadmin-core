@@ -6,9 +6,23 @@ $distDir = Join-Path $mobileDir "dist"
 $venvPython = Join-Path $repoRoot ".venv\\Scripts\\python.exe"
 $gatewayScript = Join-Path $repoRoot "scripts\\dev_web_gateway.py"
 
+function Assert-SupportedVenv {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$PythonExe
+  )
+
+  $venvVersion = & $PythonExe --version 2>&1
+  if ($venvVersion -match 'Python 3\.14') {
+    throw "A .venv atual usa $venvVersion, que nao e suportado pela stack local. Rode scripts/bootstrap_local.ps1 para recriar o ambiente com Python 3.12.x ou 3.13.x."
+  }
+}
+
 if (-not (Test-Path $venvPython)) {
   throw "Ambiente virtual ausente. Rode scripts/bootstrap_local.ps1 primeiro."
 }
+
+Assert-SupportedVenv -PythonExe $venvPython
 
 Push-Location $mobileDir
 try {

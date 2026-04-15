@@ -1146,6 +1146,19 @@ def _montar_resumo_operacional_v1(projeto: dict[str, Any]) -> dict[str, Any]:
     aguardando_cliente = not bool(_nome_cliente_projeto(projeto)) or int(resumo_lotes.get("sem_participante") or 0) > 0
     pendentes = int(resumo_lotes.get("pendentes") or 0)
     tipo_fluxo = _tipo_fluxo_v1(projeto)
+    
+    # Calculo do status geometrico
+    total_pontos = int(projeto.get("total_pontos") or 0)
+    geometria_ref = projeto.get("geometria_referencia")
+    status_proc = _status_projeto_v1(projeto.get("status"))
+    
+    if total_pontos > 0:
+        status_geo = "aprovado" if status_proc in {"aprovado", "finalizado", "protocolado"} else "pronto_para_documento"
+    elif geometria_ref:
+        status_geo = "referencia_recebida"
+    else:
+        status_geo = "sem_geometria"
+
     payload = ResumoProjetoOperacionalV1(
         id=str(projeto.get("id")),
         nome=_nome_projeto(projeto),
@@ -1160,6 +1173,7 @@ def _montar_resumo_operacional_v1(projeto: dict[str, Any]) -> dict[str, Any]:
         pronto_para_emitir=_pronto_para_emitir_v1(projeto, resumo_lotes),
         aguardando_cliente=aguardando_cliente,
         possui_notificacao_aberta=bool(projeto.get("numero_notificacao") or projeto.get("notificacao_aberta")),
+        status_geometrico=status_geo,
     )
     return payload.model_dump(mode="json")
 

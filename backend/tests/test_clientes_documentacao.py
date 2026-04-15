@@ -79,9 +79,21 @@ class FakeUploadFile:
     def __init__(self, filename: str, content: bytes):
         self.filename = filename
         self._content = content
+        self._cursor = 0
 
-    async def read(self):
-        return self._content
+    async def read(self, size: int = -1):
+        if self._cursor >= len(self._content):
+            return b""
+
+        if size < 0:
+            inicio = self._cursor
+            self._cursor = len(self._content)
+            return self._content[inicio:]
+
+        inicio = self._cursor
+        fim = min(inicio + size, len(self._content))
+        self._cursor = fim
+        return self._content[inicio:fim]
 
 
 def test_montar_resumos_clientes_e_checklist():

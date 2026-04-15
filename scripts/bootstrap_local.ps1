@@ -22,31 +22,102 @@ function Invoke-CheckedCommand {
   }
 }
 
-Write-Host "== GeoAdmin Core: bootstrap local =="
+function Get-VersionString {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$FilePath,
+    [Parameter(Mandatory = $false)]
+    [string[]]$Arguments = @()
+  )
 
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-  throw "Python nao encontrado no PATH."
+  $nativePreferenceAnterior = $PSNativeCommandUseErrorActionPreference
+  $PSNativeCommandUseErrorActionPreference = $false
+  try {
+    $saida = & $FilePath @Arguments --version 2>&1
+    if ($LASTEXITCODE -ne 0) {
+      return $null
+    }
+  }
+  finally {
+    $PSNativeCommandUseErrorActionPreference = $nativePreferenceAnterior
+  }
+
+  return ($saida | Out-String).Trim()
 }
+
+function Resolve-SupportedPython {
+  $candidatos = @()
+
+  if (Get-Command python -ErrorAction SilentlyContinue) {
+    $versaoPython = Get-VersionString -FilePath "python"
+    if ($versaoPython) {
+      $candidatos += [PSCustomObject]@{
+        FilePath = "python"
+        Arguments = @()
+        Version = $versaoPython
+      }
+    }
+  }
+
+  if (Get-Command py -ErrorAction SilentlyContinue) {
+    $nativePreferenceAnterior = $PSNativeCommandUseErrorActionPreference
+    $PSNativeCommandUseErrorActionPreference = $false
+    try {
+      $pyLista = & py -0p 2>&1
+    }
+    finally {
+      $PSNativeCommandUseErrorActionPreference = $nativePreferenceAnterior
+    }
+
+    if ($LASTEXITCODE -eq 0) {
+      $linhasPy = ($pyLista | Out-String).Trim() -split "\r?\n"
+      foreach ($versaoSuportada in @("3.13", "3.12")) {
+        $linhaEncontrada = $linhasPy | Where-Object { $_ -match [regex]::Escape($versaoSuportada) } | Select-Object -First 1
+        if ($linhaEncontrada -and $linhaEncontrada -match '([A-Za-z]:\\.*python\.exe)\s*$') {
+          $candidatos += [PSCustomObject]@{
+            FilePath = $matches[1]
+            Arguments = @()
+            Version = "Python $versaoSuportada"
+          }
+        }
+      }
+    }
+  }
+
+  if (-not $candidatos) {
+    throw "Python nao encontrado. Instale Python 3.12.x ou 3.13.x antes de rodar o bootstrap."
+  }
+
+  foreach ($candidato in $candidatos) {
+    if ($candidato.Version -match 'Python 3\.(12|13)') {
+      return $candidato
+    }
+  }
+
+  $versoesEncontradas = ($candidatos | ForEach-Object { $_.Version } | Sort-Object -Unique) -join ", "
+  throw "Nenhum Python suportado encontrado. Versoes detectadas: $versoesEncontradas. Instale Python 3.12.x ou 3.13.x."
+}
+
+Write-Host "== GeoAdmin Core: bootstrap local =="
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
   throw "npm nao encontrado no PATH."
 }
 
-$pythonVersion = python --version 2>&1
-if ($pythonVersion -match 'Python 3\\.14') {
-  throw "Python 3.14 nao e suportado pela stack atual do backend por causa do pyproj. Use Python 3.12.x ou 3.13.x para o GeoAdmin Core."
-}
+$pythonRuntime = Resolve-SupportedPython
+Write-Host "Usando interpretador $($pythonRuntime.Version) via $($pythonRuntime.FilePath) $($pythonRuntime.Arguments -join ' ')"
 
 if (Test-Path $pythonExe) {
   $venvVersion = & $pythonExe --version 2>&1
-  if ($venvVersion -match 'Python 3\\.14') {
-    throw "A .venv atual foi criada com Python 3.14 e nao serve para o backend. Remova .venv e rode novamente com Python 3.12.x ou 3.13.x."
+  if ($venvVersion -match 'Python 3\.14') {
+    Write-Warning "A .venv atual foi criada com Python 3.14 e sera recriada com uma versao suportada."
+    Remove-Item -LiteralPath $venvPath -Recurse -Force
   }
 }
 
 if (-not (Test-Path $venvPath)) {
   Write-Host "Criando ambiente virtual em $venvPath"
-  Invoke-CheckedCommand -FilePath "python" -Arguments @("-m", "venv", $venvPath)
+  Invoke-CheckedCommand -FilePath $pythonRuntime.FilePath -Arguments ($pythonRuntime.Arguments + @("-m", "venv", $venvPath))
 }
 
 Write-Host "Atualizando pip"
