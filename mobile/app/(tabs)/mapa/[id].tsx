@@ -671,19 +671,12 @@ export default function MapaProjetoScreen() {
 
     const doSave = async () => {
       try {
-        // Convert editVerts to GeoJSON polygon for geometria_final
-        const coordinates = editVerts.map(v => [v.lon, v.lat])
-        coordinates.push(coordinates[0]) // Close the polygon
-        const geoJsonGeometria = {
-          type: 'Polygon',
-          coordinates: [coordinates],
-        }
-
+        // Send editVerts as geometria_final array of {lon, lat} vertices
         const res = await fetch(`${API_URL}/projetos/${id}/areas/${areaAtiva}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            geometria_final: geoJsonGeometria,
+            geometria_final: editVerts,
           }),
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
