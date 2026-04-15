@@ -11,10 +11,10 @@ import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
 import { API_URL } from '../../../constants/Api'
 
-type Ponto    = { id: string; nome: string; altitude_m: number; lon: number; lat: number }
-type Vertice  = { lon: number; lat: number; nome: string }
-type Layers   = { pontos: boolean; poligono: boolean; rotulos: boolean }
-type Mode     = 'mapa' | 'cad'
+type Ponto = { id: string; nome: string; altitude_m: number; lon: number; lat: number }
+type Vertice = { lon: number; lat: number; nome: string }
+type Layers = { pontos: boolean; poligono: boolean; rotulos: boolean }
+type Mode = 'mapa' | 'cad'
 type EditTool = 'mover' | 'adicionar' | 'deletar'
 type NomeFerramenta =
   | 'polilinha'
@@ -39,7 +39,7 @@ function computeTransform(pontos: { lon: number; lat: number }[], svgW: number, 
   const minLon = Math.min(...lons), maxLon = Math.max(...lons)
   const minLat = Math.min(...lats), maxLat = Math.max(...lats)
   const rangeX = maxLon - minLon || 0.0001, rangeY = maxLat - minLat || 0.0001
-  const scale  = Math.min((svgW - 2 * pad) / rangeX, (svgH - 2 * pad) / rangeY)
+  const scale = Math.min((svgW - 2 * pad) / rangeX, (svgH - 2 * pad) / rangeY)
   const drawW = rangeX * scale, drawH = rangeY * scale
   const offX = (svgW - drawW) / 2, offY = (svgH - drawH) / 2
   const toX = (lon: number) => offX + (lon - minLon) * scale
@@ -58,20 +58,20 @@ function niceInterval(range: number, ticks = 5) {
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6378137, r = Math.PI / 180
   const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLon/2)**2
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2
   return R * 2 * Math.asin(Math.sqrt(a))
 }
 
 function azimute(lat1: number, lon1: number, lat2: number, lon2: number) {
   const r = Math.PI / 180, dLon = (lon2 - lon1) * r
-  const φ1 = lat1*r, φ2 = lat2*r
-  const y = Math.sin(dLon)*Math.cos(φ2)
-  const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(dLon)
-  let az = Math.atan2(y, x)*180/Math.PI
+  const φ1 = lat1 * r, φ2 = lat2 * r
+  const y = Math.sin(dLon) * Math.cos(φ2)
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(dLon)
+  let az = Math.atan2(y, x) * 180 / Math.PI
   if (az < 0) az += 360
-  const g = Math.floor(az), mf = (az-g)*60, m = Math.floor(mf)
-  const s = Math.round((mf-m)*60)
-  return `${g}°${String(m).padStart(2,'0')}'${String(s).padStart(2,'0')}"`
+  const g = Math.floor(az), mf = (az - g) * 60, m = Math.floor(mf)
+  const s = Math.round((mf - m) * 60)
+  return `${g}°${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}"`
 }
 
 function calcArea(verts: Vertice[]): number {
@@ -137,7 +137,7 @@ function pontosVisiveis(pontos: Ponto[], polygonVerts: Vertice[]): Ponto[] {
 function dmsParaDecimal(dms: string): number {
   const match = dms.match(/(\d+)°(\d+)'([\d.]+)"/)
   if (!match) return parseFloat(dms)
-  return +match[1] + +match[2]/60 + +match[3]/3600
+  return +match[1] + +match[2] / 60 + +match[3] / 3600
 }
 
 function decimalParaDms(dec: number): string {
@@ -145,7 +145,7 @@ function decimalParaDms(dec: number): string {
   const mf = (dec - g) * 60
   const m = Math.floor(mf)
   const s = (mf - m) * 60
-  return `${g}°${String(m).padStart(2,'0')}'${s.toFixed(1).padStart(4,'0')}"`
+  return `${g}°${String(m).padStart(2, '0')}'${s.toFixed(1).padStart(4, '0')}"`
 }
 
 function intersecaoLocal(p1: Vertice, az1: number, p2: Vertice, az2: number): { lat: number; lon: number } | null {
@@ -172,69 +172,69 @@ function distPontoLinhaLocal(p: Vertice, a: Vertice, b: Vertice): { dist: number
   const ax = a.lon * cosLat, ay = a.lat * kLat
   const bx = b.lon * cosLat, by = b.lat * kLat
   const dx = bx - ax, dy = by - ay
-  const len2 = dx*dx + dy*dy
-  if (len2 < 1e-12) return { dist: Math.hypot(px-ax, py-ay), dentroSegmento: true }
-  const t = ((px-ax)*dx + (py-ay)*dy) / len2
-  const fx = ax + t*dx, fy = ay + t*dy
+  const len2 = dx * dx + dy * dy
+  if (len2 < 1e-12) return { dist: Math.hypot(px - ax, py - ay), dentroSegmento: true }
+  const t = ((px - ax) * dx + (py - ay) * dy) / len2
+  const fx = ax + t * dx, fy = ay + t * dy
   return {
-    dist: Math.sqrt((px-fx)**2 + (py-fy)**2),
+    dist: Math.sqrt((px - fx) ** 2 + (py - fy) ** 2),
     dentroSegmento: t >= 0 && t <= 1,
   }
 }
 
 function latLonParaUTM(lat: number, lon: number): { norte: number; este: number; fuso: number } {
   const fuso = Math.floor((lon + 180) / 6) + 1
-  const a = 6378137.0, f = 1/298.257223563
+  const a = 6378137.0, f = 1 / 298.257223563
   const b = a * (1 - f)
-  const e2 = (a*a - b*b) / (a*a)
+  const e2 = (a * a - b * b) / (a * a)
   const latR = lat * Math.PI / 180
   const lonR = lon * Math.PI / 180
   const lon0 = ((fuso - 1) * 6 - 180 + 3) * Math.PI / 180
-  const N = a / Math.sqrt(1 - e2 * Math.sin(latR)**2)
-  const T = Math.tan(latR)**2
-  const C = e2 / (1 - e2) * Math.cos(latR)**2
+  const N = a / Math.sqrt(1 - e2 * Math.sin(latR) ** 2)
+  const T = Math.tan(latR) ** 2
+  const C = e2 / (1 - e2) * Math.cos(latR) ** 2
   const A = Math.cos(latR) * (lonR - lon0)
-  const M = a * ((1 - e2/4 - 3*e2*e2/64) * latR
-    - (3*e2/8 + 3*e2*e2/32) * Math.sin(2*latR)
-    + (15*e2*e2/256) * Math.sin(4*latR))
-  const este = 0.9996 * N * (A + (1-T+C)*A**3/6) + 500000
-  const norte = 0.9996 * (M + N*Math.tan(latR)*(A**2/2 + (5-T+9*C)*A**4/24)) + (lat < 0 ? 10000000 : 0)
+  const M = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64) * latR
+    - (3 * e2 / 8 + 3 * e2 * e2 / 32) * Math.sin(2 * latR)
+    + (15 * e2 * e2 / 256) * Math.sin(4 * latR))
+  const este = 0.9996 * N * (A + (1 - T + C) * A ** 3 / 6) + 500000
+  const norte = 0.9996 * (M + N * Math.tan(latR) * (A ** 2 / 2 + (5 - T + 9 * C) * A ** 4 / 24)) + (lat < 0 ? 10000000 : 0)
   return { norte: Math.round(norte * 1000) / 1000, este: Math.round(este * 1000) / 1000, fuso }
 }
 
 function vxNecessarios(ferr: NomeFerramenta): number {
   switch (ferr) {
-    case 'linha':       return 2
-    case 'inverso':    return 2
-    case 'polilinha':  return 0
-    case 'pontos':     return 0
+    case 'linha': return 2
+    case 'inverso': return 2
+    case 'polilinha': return 0
+    case 'pontos': return 0
     case 'nomenclatura': return 0
     case 'irradiacao': return 1
     case 'intersecao': return 2
-    case 'distpl':     return 3
-    case 'deflexao':   return 2
-    case 'mediaPts':   return -1 // variável
-    case 'conversao':  return 1
-    case 'area':       return 0
-    case 'rotacao':    return 0
+    case 'distpl': return 3
+    case 'deflexao': return 2
+    case 'mediaPts': return -1 // variável
+    case 'conversao': return 1
+    case 'area': return 0
+    case 'rotacao': return 0
     case 'subdivisao': return 0
-    default:           return 0
+    default: return 0
   }
 }
 
 const FERRAMENTAS: { id: NomeFerramenta; icone: string; label: string }[] = [
-  { id: 'polilinha',  icone: '⌁', label: 'Polilinha' },
-  { id: 'linha',      icone: '／', label: 'Linha' },
-  { id: 'pontos',     icone: '◫', label: 'Pontos' },
+  { id: 'polilinha', icone: '⌁', label: 'Polilinha' },
+  { id: 'linha', icone: '／', label: 'Linha' },
+  { id: 'pontos', icone: '◫', label: 'Pontos' },
   { id: 'nomenclatura', icone: '🏷', label: 'Nomenclatura' },
-  { id: 'area',       icone: '⬟', label: 'Área' },
+  { id: 'area', icone: '⬟', label: 'Área' },
   { id: 'irradiacao', icone: '📡', label: 'Irradiação' },
   { id: 'intersecao', icone: '✕', label: 'Interseção' },
-  { id: 'distpl',     icone: '⊥', label: 'Dist. P-L' },
-  { id: 'deflexao',   icone: '↗', label: 'Deflexão' },
-  { id: 'mediaPts',   icone: '⊕', label: 'Média Pts' },
-  { id: 'conversao',  icone: '🔄', label: 'Conversão' },
-  { id: 'rotacao',    icone: '↻', label: 'Rotação' },
+  { id: 'distpl', icone: '⊥', label: 'Dist. P-L' },
+  { id: 'deflexao', icone: '↗', label: 'Deflexão' },
+  { id: 'mediaPts', icone: '⊕', label: 'Média Pts' },
+  { id: 'conversao', icone: '🔄', label: 'Conversão' },
+  { id: 'rotacao', icone: '↻', label: 'Rotação' },
   { id: 'subdivisao', icone: '✂', label: 'Subdivisão' },
 ]
 
@@ -304,8 +304,8 @@ window.addEventListener('message',function(e){try{var d=JSON.parse(e.data);updat
 // ── WebView satellite view ────────────────────────────────────────────────────
 
 function MapaWebView({ pontos, poligono, layers }: { pontos: Ponto[]; poligono: Vertice[]; layers: Layers }) {
-  const webRef  = useRef<any>(null)
-  const ready   = useRef(false)
+  const webRef = useRef<any>(null)
+  const ready = useRef(false)
 
   const inject = useCallback((pts: Ponto[], poly: Vertice[], lyr: Layers) => {
     if (!ready.current || !webRef.current) return
@@ -430,10 +430,10 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
         const x = toX(p.lon), y = toY(p.lat)
         return (
           <G key={p.id}>
-            <Line x1={x-5} y1={y} x2={x+5} y2={y} stroke={C.primary} strokeWidth={2} />
-            <Line x1={x} y1={y-5} x2={x} y2={y+5} stroke={C.primary} strokeWidth={2} />
+            <Line x1={x - 5} y1={y} x2={x + 5} y2={y} stroke={C.primary} strokeWidth={2} />
+            <Line x1={x} y1={y - 5} x2={x} y2={y + 5} stroke={C.primary} strokeWidth={2} />
             {layers.rotulos && (
-              <SvgText x={x+7} y={y-4} fontSize={9} fill={C.text} fontWeight="bold">{p.nome}</SvgText>
+              <SvgText x={x + 7} y={y - 4} fontSize={9} fill={C.text} fontWeight="bold">{p.nome}</SvgText>
             )}
           </G>
         )
@@ -516,46 +516,48 @@ export default function MapaProjetoScreen() {
   useEffect(() => { setTopInset(insets.top) }, [insets.top])
   const headerPaddingTop = Math.max(topInset + 12, 20)
   const { id, tool } = useLocalSearchParams<{ id: string; tool?: NomeFerramenta }>()
-  const router  = useRouter()
+  const router = useRouter()
 
-  const [projeto,     setProjeto]  = useState<any>(null)
-  const [pontos,      setPontos]   = useState<Ponto[]>([])
+  const [projeto, setProjeto] = useState<any>(null)
+  const [pontos, setPontos] = useState<Ponto[]>([])
   const [polygonVerts, setPolygonVerts] = useState<Vertice[]>([])
-  const [loading,     setLoading]  = useState(true)
-  const [mode,        setMode]     = useState<Mode>('mapa')
-  const [layers,      setLayers]   = useState<Layers>({ pontos: true, poligono: true, rotulos: true })
-  const [showLayers,  setShowLayers] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [mode, setMode] = useState<Mode>('mapa')
+  const [layers, setLayers] = useState<Layers>({ pontos: true, poligono: true, rotulos: true })
+  const [showLayers, setShowLayers] = useState(false)
 
-  const [editMode,    setEditMode] = useState(false)
-  const [editTool,    setEditTool] = useState<EditTool>('mover')
-  const [editVerts,   setEditVerts] = useState<Vertice[]>([])
-  const [origVerts,   setOrigVerts] = useState<Vertice[]>([])
+  const [areaAtiva, setAreaAtiva] = useState<string | null>(null)
+
+  const [editMode, setEditMode] = useState(false)
+  const [editTool, setEditTool] = useState<EditTool>('mover')
+  const [editVerts, setEditVerts] = useState<Vertice[]>([])
+  const [origVerts, setOrigVerts] = useState<Vertice[]>([])
   const [editHistory, setEditHist] = useState<Vertice[][]>([])
   const undoStack = useRef<Vertice[][]>([])
 
   // ferramentas integradas
-  const [ferrAtiva,          setFerrAtiva]          = useState<NomeFerramenta | null>(null)
-  const [ferrPickerVisible,  setFerrPickerVisible]  = useState(false)
-  const [ferrModalVisible,   setFerrModalVisible]   = useState(false)
-  const [vxSelecionados,     setVxSelecionados]     = useState<number[]>([])
+  const [ferrAtiva, setFerrAtiva] = useState<NomeFerramenta | null>(null)
+  const [ferrPickerVisible, setFerrPickerVisible] = useState(false)
+  const [ferrModalVisible, setFerrModalVisible] = useState(false)
+  const [vxSelecionados, setVxSelecionados] = useState<number[]>([])
 
   // estados dos inputs de cada ferramenta
-  const [irrAzimute,   setIrrAzimute]   = useState('')
-  const [irrDist,      setIrrDist]      = useState('')
-  const [irrNome,      setIrrNome]      = useState('')
-  const [intAz1,       setIntAz1]       = useState('')
-  const [intAz2,       setIntAz2]       = useState('')
-  const [deflAngulo,   setDeflAngulo]   = useState('')
-  const [deflLado,     setDeflLado]     = useState<'D' | 'E'>('D')
-  const [rotAngulo,    setRotAngulo]    = useState('')
-  const [rotOrigemAuto,setRotOrigemAuto] = useState(true)
+  const [irrAzimute, setIrrAzimute] = useState('')
+  const [irrDist, setIrrDist] = useState('')
+  const [irrNome, setIrrNome] = useState('')
+  const [intAz1, setIntAz1] = useState('')
+  const [intAz2, setIntAz2] = useState('')
+  const [deflAngulo, setDeflAngulo] = useState('')
+  const [deflLado, setDeflLado] = useState<'D' | 'E'>('D')
+  const [rotAngulo, setRotAngulo] = useState('')
+  const [rotOrigemAuto, setRotOrigemAuto] = useState(true)
   const [rotOrigemLat, setRotOrigemLat] = useState('')
   const [rotOrigemLon, setRotOrigemLon] = useState('')
-  const [subArea,      setSubArea]      = useState('')
-  const [subUnidade,   setSubUnidade]   = useState<'ha' | 'm2'>('ha')
+  const [subArea, setSubArea] = useState('')
+  const [subUnidade, setSubUnidade] = useState<'ha' | 'm2'>('ha')
 
   // resultados
-  const [resultado,    setResultado]    = useState<any>(null)
+  const [resultado, setResultado] = useState<any>(null)
   const autoToolKeyRef = useRef<string | null>(null)
 
   const visiblePoints = useMemo(
@@ -569,10 +571,16 @@ export default function MapaProjetoScreen() {
       .then(data => {
         const pontosProjeto = (data.pontos || []).filter((p: any) => p.lon != null && p.lat != null)
         const perimetroAtivo = (data.perimetro_ativo?.vertices || []).filter((v: any) => v.lon != null && v.lat != null)
+        const areas = data.areas_projeto || []
 
         setProjeto(data)
         setPontos(pontosProjeto)
         setPolygonVerts(perimetroAtivo.length > 0 ? perimetroAtivo : pontosParaVertices(pontosProjeto))
+
+        // Option A: Auto-resolve areaAtiva if exactly 1 area exists
+        if (areas.length === 1) {
+          setAreaAtiva(String(areas[0].area_id))
+        }
       })
       .catch(() => Alert.alert('Erro', 'Não foi possível carregar o projeto.'))
       .finally(() => setLoading(false))
@@ -585,8 +593,8 @@ export default function MapaProjetoScreen() {
     const minLon = Math.min(...lons), maxLon = Math.max(...lons)
     const minLat = Math.min(...lats), maxLat = Math.max(...lats)
     return {
-      latitude:      (minLat + maxLat) / 2,
-      longitude:     (minLon + maxLon) / 2,
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLon + maxLon) / 2,
       latitudeDelta: Math.max((maxLat - minLat) * 1.4, 0.002),
       longitudeDelta: Math.max((maxLon - minLon) * 1.4, 0.002),
     }
@@ -605,21 +613,7 @@ export default function MapaProjetoScreen() {
     undoStack.current = []
     setEditTool('mover')
     setEditMode(true)
-    try {
-      await fetch(`${API_URL}/perimetros/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projeto_id: id,
-          nome: (projeto?.projeto_nome || id) + ' — original',
-          tipo: 'original',
-          vertices: verts,
-        }),
-      })
-    } catch (err: any) {
-      Alert.alert('Aviso', 'Não foi possível registrar o perímetro original: ' + (err?.message || 'erro desconhecido'))
-    }
-  }, [polygonVerts, projeto, id])
+  }, [polygonVerts])
 
   const pushHist = useCallback((verts: Vertice[]) => {
     setEditHist(prev => [...prev.slice(-49), verts.map(v => ({ ...v }))])
@@ -670,48 +664,52 @@ export default function MapaProjetoScreen() {
   }, [])
 
   const salvarEdit = useCallback(() => {
+    if (!areaAtiva) {
+      Alert.alert('Erro', 'Nenhuma área selecionada.')
+      return
+    }
+
     const doSave = async () => {
       try {
-        const res = await fetch(`${API_URL}/perimetros/`, {
-          method: 'POST',
+        // Convert editVerts to GeoJSON polygon for geometria_final
+        const coordinates = editVerts.map(v => [v.lon, v.lat])
+        coordinates.push(coordinates[0]) // Close the polygon
+        const geoJsonGeometria = {
+          type: 'Polygon',
+          coordinates: [coordinates],
+        }
+
+        const res = await fetch(`${API_URL}/projetos/${id}/areas/${areaAtiva}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            projeto_id: id,
-            nome: (projeto?.projeto_nome || id) + ' — editado',
-            tipo: 'editado',
-            vertices: editVerts,
+            geometria_final: geoJsonGeometria,
           }),
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const salvo = await res.json().catch(() => null)
-        const proximosVertices = (salvo?.vertices || editVerts).map((v: Vertice) => ({ ...v }))
+        const proximosVertices = editVerts.map((v: Vertice) => ({ ...v }))
 
         setPolygonVerts(proximosVertices)
         setProjeto((atual: any) => atual ? {
           ...atual,
-          perimetro_ativo: salvo
-            ? { ...salvo, vertices: proximosVertices }
-            : atual.perimetro_ativo,
+          perimetro_ativo: salvo?.perimetro_ativo || atual.perimetro_ativo,
         } : atual)
         setOrigVerts(proximosVertices.map((v: Vertice) => ({ ...v })))
         setEditVerts(proximosVertices.map((v: Vertice) => ({ ...v })))
         setEditHist([])
         undoStack.current = []
+        setMode('mapa')
         setEditMode(false)
-        Alert.alert('Salvo!', `Perímetro salvo com sucesso — ${editVerts.length} vértices.`)
+
+        Alert.alert('Sucesso', 'Geometria final salva.')
       } catch (err: any) {
-        Alert.alert('Erro', 'Falha ao salvar o perímetro: ' + (err?.message || 'erro desconhecido'))
+        Alert.alert('Erro', 'Não foi possível salvar: ' + (err?.message || 'erro desconhecido'))
       }
     }
-    Alert.alert(
-      'Salvar perímetro',
-      'Deseja salvar as alterações no perímetro deste projeto?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Salvar', onPress: () => doSave() },
-      ]
-    )
-  }, [id, projeto, editVerts])
+
+    doSave()
+  }, [editVerts, areaAtiva, id])
 
   const cancelarEdit = useCallback(() => {
     Alert.alert('Cancelar edição', 'Descartar alterações?', [
@@ -846,7 +844,7 @@ export default function MapaProjetoScreen() {
 
     if (ferrAtiva === 'area') {
       const areaM2 = calcArea(editVerts)
-      const perim  = calcPerimetro(editVerts)
+      const perim = calcPerimetro(editVerts)
       setResultado({ areaM2, areaHa: areaM2 / 10000, perim })
       return
     }
@@ -854,7 +852,7 @@ export default function MapaProjetoScreen() {
     if (ferrAtiva === 'inverso' || ferrAtiva === 'linha') {
       const [p1, p2] = selecionados
       const dist = haversine(p1.lat, p1.lon, p2.lat, p2.lon)
-      const az   = azimute(p1.lat, p1.lon, p2.lat, p2.lon)
+      const az = azimute(p1.lat, p1.lon, p2.lat, p2.lon)
       const azInv = azimute(p2.lat, p2.lon, p1.lat, p1.lon)
       setResultado({ dist, az, azInv })
       return
@@ -906,9 +904,9 @@ export default function MapaProjetoScreen() {
       const n = selecionados.length
       const mLat = selecionados.reduce((s, v) => s + v.lat, 0) / n
       const mLon = selecionados.reduce((s, v) => s + v.lon, 0) / n
-      const dpLat = n > 1 ? Math.sqrt(selecionados.reduce((s, v) => s + (v.lat - mLat)**2, 0) / (n-1)) * 111320 : 0
-      const dpLon = n > 1 ? Math.sqrt(selecionados.reduce((s, v) => s + (v.lon - mLon)**2, 0) / (n-1)) * 111320 * Math.cos(mLat * Math.PI/180) : 0
-      const dp = Math.sqrt(dpLat**2 + dpLon**2)
+      const dpLat = n > 1 ? Math.sqrt(selecionados.reduce((s, v) => s + (v.lat - mLat) ** 2, 0) / (n - 1)) * 111320 : 0
+      const dpLon = n > 1 ? Math.sqrt(selecionados.reduce((s, v) => s + (v.lon - mLon) ** 2, 0) / (n - 1)) * 111320 * Math.cos(mLat * Math.PI / 180) : 0
+      const dp = Math.sqrt(dpLat ** 2 + dpLon ** 2)
       setResultado({ lat: mLat, lon: mLon, dp, n })
       return
     }
@@ -1101,9 +1099,9 @@ export default function MapaProjetoScreen() {
             <Text style={{ color: C.primary, fontSize: 9, fontWeight: '700', letterSpacing: 1 }}>EDITANDO</Text>
           </View>
           {([
-            ['mover',     '↔'],
+            ['mover', '↔'],
             ['adicionar', '+'],
-            ['deletar',   '✕'],
+            ['deletar', '✕'],
           ] as [EditTool, string][]).map(([t, icon]) => (
             <TouchableOpacity key={t}
               style={[s.etool, editTool === t && { backgroundColor: C.primary }]}
@@ -1203,9 +1201,9 @@ export default function MapaProjetoScreen() {
             </TouchableOpacity>
           </View>
           {([
-            ['pontos',   '🔵 Pontos visíveis'],
+            ['pontos', '🔵 Pontos visíveis'],
             ['poligono', '🟧 Polígono'],
-            ['rotulos',  '🏷 Rótulos'],
+            ['rotulos', '🏷 Rótulos'],
           ] as [keyof Layers, string][]).map(([key, label]) => (
             <TouchableOpacity key={key} style={s.layerRow} onPress={() => toggleLayer(key)}>
               <View style={[s.check, layers[key] && { backgroundColor: C.primary, borderColor: C.primary }]}>
@@ -1293,17 +1291,17 @@ export default function MapaProjetoScreen() {
                     const v = editVerts[idx]
                     const labels = ['P1', 'P2', 'P3', 'P', 'A', 'B']
                     const label = ferrAtiva === 'distpl'
-                      ? ['P', 'A', 'B'][pos] || `V${pos+1}`
-                      : `V${pos+1} (${v.nome || `#${idx+1}`})`
+                      ? ['P', 'A', 'B'][pos] || `V${pos + 1}`
+                      : `V${pos + 1} (${v.nome || `#${idx + 1}`})`
                     return (
                       <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                         <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#378ADD', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
                           <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
-                            {ferrAtiva === 'distpl' ? ['P','A','B'][pos] || pos+1 : pos+1}
+                            {ferrAtiva === 'distpl' ? ['P', 'A', 'B'][pos] || pos + 1 : pos + 1}
                           </Text>
                         </View>
                         <Text style={{ color: C.text, fontSize: 13 }}>
-                          {v.nome || `Vértice ${idx+1}`} — {v.lat.toFixed(6)}, {v.lon.toFixed(6)}
+                          {v.nome || `Vértice ${idx + 1}`} — {v.lat.toFixed(6)}, {v.lon.toFixed(6)}
                         </Text>
                       </View>
                     )
@@ -1620,35 +1618,35 @@ export default function MapaProjetoScreen() {
 }
 
 const s = StyleSheet.create({
-  fill:        { flex: 1 },
-  centro:      { alignItems: 'center', justifyContent: 'center' },
-  header:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 0.5 },
-  backBtn:     { marginRight: 12 },
-  titulo:      { fontSize: 18, fontWeight: '700' },
-  sub:         { fontSize: 12, marginTop: 1 },
-  toolbar:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 0.5, gap: 8 },
-  modeGroup:   { flex: 1, flexDirection: 'row', gap: 6 },
-  modeBtn:     { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8 },
-  layerBtn:    { padding: 8, borderRadius: 8 },
-  editBtn:     { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
-  emptyMsg:    { marginTop: 12, fontSize: 15 },
-  layerPanel:  { position: 'absolute', right: 12, borderWidth: 0.5, borderRadius: 10, padding: 12, gap: 10 },
-  layerRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  check:       { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#555', alignItems: 'center', justifyContent: 'center' },
+  fill: { flex: 1 },
+  centro: { alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 0.5 },
+  backBtn: { marginRight: 12 },
+  titulo: { fontSize: 18, fontWeight: '700' },
+  sub: { fontSize: 12, marginTop: 1 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 0.5, gap: 8 },
+  modeGroup: { flex: 1, flexDirection: 'row', gap: 6 },
+  modeBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8 },
+  layerBtn: { padding: 8, borderRadius: 8 },
+  editBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  emptyMsg: { marginTop: 12, fontSize: 15 },
+  layerPanel: { position: 'absolute', right: 12, borderWidth: 0.5, borderRadius: 10, padding: 12, gap: 10 },
+  layerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  check: { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#555', alignItems: 'center', justifyContent: 'center' },
   editToolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderBottomWidth: 0.5, gap: 4 },
-  editTag:     { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, borderWidth: 1, marginRight: 4 },
-  etool:       { paddingHorizontal: 9, paddingVertical: 6, borderRadius: 7, borderWidth: 1, borderColor: '#333330' },
+  editTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, borderWidth: 1, marginRight: 4 },
+  etool: { paddingHorizontal: 9, paddingVertical: 6, borderRadius: 7, borderWidth: 1, borderColor: '#333330' },
   coordOverlay: { position: 'absolute', bottom: 8, left: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 8, padding: 8, alignItems: 'center' },
-  coordText:    { fontFamily: Platform.OS === 'android' ? 'monospace' : 'Courier', fontSize: 13, color: '#ffffff', letterSpacing: 0.2 },
-  coordMuted:   { fontSize: 11, color: '#9c9a92', marginTop: 2 },
+  coordText: { fontFamily: Platform.OS === 'android' ? 'monospace' : 'Courier', fontSize: 13, color: '#ffffff', letterSpacing: 0.2 },
+  coordMuted: { fontSize: 11, color: '#9c9a92', marginTop: 2 },
   // ferramentas
   selecaoOverlay: { position: 'absolute', top: 8, left: 8, right: 8, backgroundColor: '#378ADD22', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#378ADD', alignItems: 'center' },
-  selecaoTxt:     { color: '#378ADD', fontSize: 13, fontWeight: '700' },
-  ferrGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 4 },
-  ferrItem:       { width: '30%', aspectRatio: 1, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  ferrItemTxt:    { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-  ferrModal:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  ferrSheet:      { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
+  selecaoTxt: { color: '#378ADD', fontSize: 13, fontWeight: '700' },
+  ferrGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 4 },
+  ferrItem: { width: '30%', aspectRatio: 1, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  ferrItemTxt: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  ferrModal: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  ferrSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
   ferrSheetTitle: { fontSize: 18, fontWeight: '700' },
-  input:          { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, backgroundColor: 'transparent' },
+  input: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, backgroundColor: 'transparent' },
 })

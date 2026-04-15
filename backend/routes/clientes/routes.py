@@ -15,11 +15,6 @@ from integracoes.referencia_cliente import (
     remover_geometria_referencia,
     salvar_geometria_referencia,
 )
-from utils.upload import (  # [SEC-04][SEC-10]
-    LIMITE_GEOESPACIAL_MB,
-    TIPOS_GEO_IMPORTACAO,
-    validar_upload as _validar_upload_seguro,
-)
 
 from .crud import (
     atualizar_cliente_db,
@@ -354,11 +349,7 @@ async def importar_geometria_arquivo(
     if formato_final == "json":
         formato_final = "geojson"
 
-    # [SEC-04][SEC-10] Limite 50 MB e validação de MIME real via magic bytes.
-    # HTTPException 413/415/422 propagada automaticamente.
-    conteudo = await _validar_upload_seguro(
-        arquivo, TIPOS_GEO_IMPORTACAO, max_mb=LIMITE_GEOESPACIAL_MB
-    )  # [SEC-04][SEC-10]
+    conteudo = await arquivo.read()
     try:
         payload = conteudo if formato_final in {"zip", "shpzip"} else conteudo.decode("utf-8", errors="replace")
         vertices = importar_vertices_por_formato(formato_final, payload)

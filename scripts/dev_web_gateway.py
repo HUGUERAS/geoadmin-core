@@ -114,7 +114,18 @@ class GatewayHandler(BaseHTTPRequestHandler):
     def _servir_arquivo(self) -> None:
         caminho = self.path.split("?", 1)[0]
         caminho_normalizado = posixpath.normpath(caminho).lstrip("/")
-        candidato = self._resolver_arquivo_web(caminho_normalizado)
+        if caminho_normalizado in ("", "."):
+            caminho_normalizado = "index.html"
+
+        candidato = self.diretorio_web / Path(caminho_normalizado)
+        if candidato.is_dir():
+            candidato = candidato / "index.html"
+
+        if not candidato.exists() and not candidato.suffix:
+            candidato = self.diretorio_web / caminho_normalizado / "index.html"
+
+        if not candidato.exists():
+            candidato = self.diretorio_web / "index.html"
 
         try:
             conteudo = candidato.read_bytes()

@@ -10,41 +10,23 @@ POST /projetos/{id}/gerar-documentos     -> gera ZIP com os 7 docs GPRF
 GET  /projetos/{id}/documentos           -> lista docs gerados
 """
 
-import hashlib  # [SEC-11] hash do JWT para chave de rate limit por sessão
 import json
 import logging
 import os
-import re  # [SEC-03] remoção de tags perigosas em SVG
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-import defusedxml.ElementTree as _defused_ET  # [SEC-03] parser seguro contra XXE / billion-laughs
-
 from fastapi import APIRouter, HTTPException, Query, Request, Depends
 from middleware.auth import verificar_token
-from middleware.limiter import limiter  # [SEC-11] rate limiting nos endpoints críticos
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field, ValidationError
 
 from integracoes.areas_projeto import anexar_arquivos_area, salvar_area_projeto
-from integracoes.arquivos_projeto import (
-    UploadValidationError,
-    detalhe_upload_invalido,
-    validar_lote_uploads,
-)
-from utils.upload import (  # [SEC-04][SEC-10]
-    LIMITE_DOCUMENTOS_MB,
-    LIMITE_GEOESPACIAL_MB,
-    TIPOS_FORMULARIO,
-    TIPOS_GEO_FORMULARIO,
-    validar_upload as _validar_upload_seguro,
-)
 from integracoes.projeto_clientes import (
     garantir_participante_principal_projeto,
     gerar_magic_link_participante,
-    invalidar_magic_link_participante,
     listar_eventos_magic_link,
     listar_participantes_projeto,
     obter_vinculo_por_token,
@@ -62,21 +44,6 @@ logger = logging.getLogger("geoadmin.documentos")
 router = APIRouter(tags=["Documentos GPRF"], dependencies=[Depends(verificar_token)])
 
 
-# [SEC-11] Chave de rate limit para rotas autenticadas: usa hash do JWT Bearer,
-# garantindo isolamento por sessão sem expor o token. Retorna None para chamadas
-# internas Python (sem contexto HTTP), sinalizando ao limiter para pular a checagem.
-def _chave_por_usuario_autenticado(request: "Request | None", **kwargs) -> "str | None":
-    if request is None:
-        return None  # Chamada interna (ex: gerar_magic_links_lote) → sem rate limit
-    auth = request.headers.get("authorization", "")
-    if auth.lower().startswith("bearer "):
-        token = auth.split(" ", 1)[1]
-        # Hash curto do token identifica a sessão sem armazenar o JWT bruto
-        return "jwt:" + hashlib.sha256(token.encode()).hexdigest()[:20]
-    # Fallback para IP se a rota for acessada sem Bearer (ex: ambiente de dev)
-    return request.client.host if request.client else None
-
-
 class GerarMagicLinksLotePayload(BaseModel):
     projeto_cliente_ids: list[str] = Field(default_factory=list)
     area_ids: list[str] = Field(default_factory=list)
@@ -91,9 +58,6 @@ class DadosFormulario(BaseModel):
     nome: str
     cpf: str
     rg: str
-    # [Fase-4] Campos de identificação do RG — opcionais; salvos se a coluna existir
-    rg_orgao_emissor: Optional[str] = ""
-    rg_data_emissao: Optional[str] = ""
     estado_civil: str
     profissao: Optional[str] = ""
     telefone: str

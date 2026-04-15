@@ -160,7 +160,6 @@ export interface VerticeProjetoV1 {
   norte: number
   este: number
   cota?: number | null
-  confrontante_id?: string | null
 }
 
 export interface PerimetroAtivoV1 {
