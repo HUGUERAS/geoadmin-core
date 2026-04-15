@@ -1,0 +1,81 @@
+name: Deploy Web (Firebase)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID || vars.GCP_PROJECT_ID }}
+      EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required GitHub configuration
+        shell: bash
+        run: |
+          required_vars=(
+            FIREBASE_PROJECT_ID
+            EXPO_PUBLIC_API_BASE_URL
+          )
+          for key in "${required_vars[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing configuration: $key"
+              exit 1
+            fi
+          done
+
+          required_secrets=(
+            GCP_WORKLOAD_IDENTITY_PROVIDER
+            GCP_SERVICE_ACCOUNT
+          )
+          for key in "${required_secrets[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing GitHub secret: $key"
+              exit 1
+            fi
+          done
+        env:
+          GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Build Expo web
+        working-directory: mobile
+        run: npm run build:web
+
+      - name: Publish to Firebase Hosting
+        run: npx firebase-tools deploy --only hosting --project "${FIREBASE_PROJECT_ID}" --non-interactive
+
+      - name: Publish deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## Firebase Deploy"
+            echo
+            echo "- Projeto: \`${FIREBASE_PROJECT_ID}\`"
+            echo "- API: \`${EXPO_PUBLIC_API_BASE_URL}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
