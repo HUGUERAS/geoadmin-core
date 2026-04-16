@@ -389,7 +389,7 @@ const s = StyleSheet.create({
   },
   buscaInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
   lista: { paddingBottom: 28 },
-  centro: { alignItems: 'center', justifyContent: 'center', padding: 24 },
+  centro: { alignItems: 'center', justifyContent: 'center', padding: 20 },
   msg: { fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 22, paddingHorizontal: 18 },
   btnRetry: { marginTop: 16, borderWidth: 1, borderRadius: 8, paddingHorizontal: 20, paddingVertical: 14 },
   bannerOffline: { backgroundColor: '#B8860B', paddingVertical: 6, paddingHorizontal: 14, marginBottom: 8 },

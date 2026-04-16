@@ -238,7 +238,7 @@ const s = StyleSheet.create({
   },
   buscaInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
   lista: { padding: 14, paddingBottom: 24 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   msg: { fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 22 },
   btnRetry: { marginTop: 16, borderWidth: 1, borderRadius: 8, paddingHorizontal: 20, paddingVertical: 14 },
   emptyBox: {
