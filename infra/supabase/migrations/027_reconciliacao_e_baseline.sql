@@ -45,11 +45,8 @@
 -- -----------------------------------------------------------------
 
 ALTER TABLE tecnico
-    ADD COLUMN
-IF NOT EXISTS atualizado_em  TIMESTAMPTZ DEFAULT NOW
-(),
-ADD COLUMN
-IF NOT EXISTS deleted_at     TIMESTAMPTZ;
+    ADD COLUMN IF NOT EXISTS atualizado_em  TIMESTAMPTZ DEFAULT NOW(),
+    ADD COLUMN IF NOT EXISTS deleted_at     TIMESTAMPTZ;
 
 -- Preencher atualizado_em para linhas existentes (idempotente via COALESCE)
 UPDATE tecnico

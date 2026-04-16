@@ -23,8 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # [SEC-05] Copy only application files, excluding sensitive content via .dockerignore
 # to prevent secrets, version control, and test data from being included in the image.
-COPY --chown=geoadmin:geoadmin main.py gunicorn_conf.py ./
-COPY --chown=geoadmin:geoadmin src ./src
+COPY --chown=geoadmin:geoadmin . .
 # [SEC-05] Garantir que todos os diretórios de dados pertencem ao usuário não-root
 # antes de efetuar a troca de contexto com USER.
 RUN mkdir -p /app/uploads /app/data && chown -R geoadmin:geoadmin /app
@@ -46,24 +45,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
 
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PORT=8080
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    proj-bin \
-    libproj-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# [SEC-05] Criar grupo e usuário sem privilégios — o processo nunca roda como root.
-# Isso limita o raio de explosão de uma RCE: mesmo que o processo seja comprometido,
-# o atacante não terá acesso de root ao container.
-RUN addgroup --system geoadmin && adduser --system --ingroup geoadmin geoadmin
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
