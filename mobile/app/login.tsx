@@ -147,7 +147,7 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
     gap: 12,
   },
   card: {
@@ -155,7 +155,7 @@ const s = StyleSheet.create({
     maxWidth: 420,
     borderRadius: 24,
     borderWidth: 1,
-    padding: 24,
+    padding: 20,
     gap: 16,
   },
   logoRow: {

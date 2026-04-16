@@ -1034,7 +1034,7 @@ const s = StyleSheet.create({
   projetoTitulo: { fontSize: 15, fontWeight: '700' },
   projetoAcoes: { flexDirection: 'row', gap: 10 },
   projetoAcoesWrap: { flexWrap: 'wrap' },
-  projetoAcaoBtn: { minWidth: 148, flexGrow: 1 },
+  projetoAcaoBtn: { minWidth: 130, flexGrow: 1 },
   btnSecundario: { flex: 1, minHeight: 46, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   btnSecundarioTxt: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
   formatoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
