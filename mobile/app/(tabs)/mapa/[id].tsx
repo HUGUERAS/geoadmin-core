@@ -867,7 +867,7 @@ export default function MapaProjetoScreen() {
       'Deseja salvar as alterações no perímetro deste projeto?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Salvar', onPress: () => doSave() },
+        { text: 'Salvar', onPress: () => { void doSave() } },
       ]
     )
   }, [id, projeto, editVerts])
