@@ -125,6 +125,7 @@ Invoke-CheckedCommand -FilePath $pythonExe -Arguments @("-m", "pip", "install", 
 
 Write-Host "Instalando dependencias do backend"
 Invoke-CheckedCommand -FilePath $pipExe -Arguments @("install", "-r", (Join-Path $repoRoot "backend\\requirements.txt"))
+Invoke-CheckedCommand -FilePath $pipExe -Arguments @("install", "-r", (Join-Path $repoRoot "backend\\requirements-dev.txt"))
 
 if (-not (Test-Path $backendEnv) -and (Test-Path $backendEnvExample)) {
   Copy-Item -LiteralPath $backendEnvExample -Destination $backendEnv

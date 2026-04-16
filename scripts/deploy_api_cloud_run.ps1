@@ -112,7 +112,7 @@ try {
 
     Invoke-GCloud -Arguments @("auth", "configure-docker", "$Region-docker.pkg.dev", "--quiet")
 
-    Set-Content -Path $secretFile -Value $SupabaseKey -NoNewline
+    Set-Content -Path $secretFile -Value $SupabaseKey -NoNewline -Encoding utf8
 
     try {
         Invoke-GCloud -Arguments @(

@@ -34,6 +34,7 @@ echo "Atualizando pip"
 
 echo "Instalando dependencias do backend"
 "$PIP_EXE" install -r "$REPO_ROOT/backend/requirements.txt"
+"$PIP_EXE" install -r "$REPO_ROOT/backend/requirements-dev.txt"
 
 if [ ! -f "$BACKEND_ENV" ] && [ -f "$BACKEND_ENV_EXAMPLE" ]; then
   cp "$BACKEND_ENV_EXAMPLE" "$BACKEND_ENV"

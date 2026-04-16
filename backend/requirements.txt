@@ -13,6 +13,5 @@ python-multipart==0.0.19
 httpx==0.28.1
 defusedxml==0.7.1
 filetype==1.2.0  # [SEC-10] detecção de MIME real via magic bytes
-PyJWT[crypto]>=2.7.0  # [P1.1] validação local de JWT sem roundtrip ao Supabase Auth
-pytest==8.3.5
+PyJWT[crypto]==2.7.0  # [P1.1] validação local de JWT sem roundtrip ao Supabase Auth
 
