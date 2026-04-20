@@ -1,0 +1,15 @@
+name: Validate Deploy Config
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deploy configuration
+        run: python3 scripts/validate_deploy_config.py

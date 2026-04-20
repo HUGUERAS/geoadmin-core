@@ -20,12 +20,12 @@ Este documento define a baseline operacional mínima para o `GeoAdmin Core` roda
 
 ### Python
 
-- backend exige `Python 3.12.x` ou `Python 3.13.x`
-- `Python 3.14.2` falhou na instalação de `pyproj==3.7.1` por ausência de wheel compatível e tentativa de build local sem `PROJ`
+- backend aceita `Python 3.12.x`, `Python 3.13.x` ou `Python 3.14.x`
+- `pyproj` foi atualizado para `3.7.2`, eliminando o bloqueio anterior de wheel no Windows
 
 Inferência operacional:
 
-- até a stack de dependências mudar, `Python 3.14` não entra na baseline oficial do backend
+- a baseline oficial do backend agora inclui `Python 3.14`
 
 ### Node / npm
 
@@ -44,9 +44,9 @@ Inferência operacional:
 - [backend/main.py](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\main.py)
 - [backend/requirements.txt](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\requirements.txt)
 - [backend/.env.example](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\.env.example)
+- [backend/Dockerfile](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\Dockerfile)
+- [backend/.gcloudignore](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\.gcloudignore)
 - `backend/.env` local, não versionado
-- [backend/Procfile](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\Procfile)
-- [backend/railway.json](C:\Users\User\.codex\worktrees\db9b\geoadmin-core\backend\railway.json)
 
 ### Mobile / Web
 
@@ -73,16 +73,22 @@ Inferência operacional:
 
 ## Linha oficial atual
 
-Enquanto o `GeoAdmin Core` ainda não tem seu próprio backend publicado:
+Linha oficial de produção:
+
+- `Vercel` para a web publicada
+- `Cloud Run` para a API publicada
+- `Supabase` como banco, auth e storage oficiais
+
+No desenvolvimento local:
 
 - o backend local usa o `Supabase` oficial configurado em `backend/.env`
 - a web local pode apontar para:
   - backend local em `http://127.0.0.1:8001`
-  - ou backend remoto atual do Railway, de forma explícita
+  - ou backend remoto oficial, de forma explícita
 
 ## Restrições atuais conhecidas
 
 - a trilha de migrations ainda precisa ser reconciliada
 - a autenticação ainda valida token via chamada remota ao Supabase por requisição
 - o rate limit ainda é em memória
-- `Python 3.14` não faz parte da baseline válida do backend no estado atual
+- `Python 3.12`, `3.13` e `3.14` fazem parte da baseline válida do backend no estado atual

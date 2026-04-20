@@ -30,6 +30,8 @@ O documento principal de arquitetura do produto é:
 - [HARDENING_MINIMO_CORE.md](docs/HARDENING_MINIMO_CORE.md)
 - [PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md](docs/PLANO_EXECUCAO_CLOUD_RUN_VERCEL_SUPABASE.md)
 - [CHECKLIST_DEPLOY_API_CLOUD_RUN.md](docs/CHECKLIST_DEPLOY_API_CLOUD_RUN.md)
+- [MAPA_PROMOCAO_AMBIENTES.md](docs/MAPA_PROMOCAO_AMBIENTES.md)
+- [CONTEXTO_PROJETO.md](docs/CONTEXTO_PROJETO.md)
 
 ## Partida rápida local
 
@@ -42,6 +44,16 @@ Depois:
 - backend local: `.\scripts\start_backend.ps1`
 - web local: `.\scripts\start_web_gateway.ps1`
 - expo: `.\scripts\start_expo.ps1`
+
+## Validacao de deploy
+
+Antes de publicar, rode:
+
+```powershell
+python .\scripts\validate_deploy_config.py
+```
+
+Essa auditoria valida a configuracao ativa de `Cloud Run`, `Vercel` e `EAS`, e falha se encontrar residuos de infraestrutura antiga ou guards obrigatorios faltando.
 
 ## Escopo do núcleo
 

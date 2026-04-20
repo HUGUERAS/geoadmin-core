@@ -39,11 +39,13 @@ Ao final da migracao:
 
 ### Cloud Run
 
+- `PUBLIC_APP_URL`
 - `SUPABASE_URL`
 - `SUPABASE_KEY`
 - `SUPABASE_BUCKET_ARQUIVOS_PROJETO`
 - `ALLOWED_ORIGINS`
 - `ALLOWED_HOSTS`
+- `AUTH_OBRIGATORIO=true`
 - `EXPOSE_API_DOCS=false`
 - `DEBUG_ERRORS=false`
 
@@ -75,6 +77,7 @@ Escopo:
 - publicar no `Artifact Registry`
 - subir `Cloud Run`
 - configurar variaveis e segredos
+- configurar `PUBLIC_APP_URL` para os magic links
 - validar `/health`
 
 Responsavel sugerido:
@@ -165,6 +168,7 @@ Dependencias:
 - autenticar `gcloud`
 - publicar primeira imagem do backend
 - subir `Cloud Run` em modo publico controlado
+- validar que o runtime oficial nao carrega `AUTH_PERMITIR_BYPASS_IMPLANTACAO`
 
 ### Supabase
 
@@ -175,6 +179,7 @@ Dependencias:
 ### Vercel / GitHub
 
 - garantir `VERCEL_TOKEN`
+- definir `PUBLIC_APP_URL` no backend com a URL pública do frontend
 - definir `EXPO_PUBLIC_API_BASE_URL` com a URL publica do `Cloud Run`
 - reexecutar workflow `Deploy Web (Vercel)`
 - confirmar que a web publicada nao carrega mais fallback para `Railway`
@@ -190,6 +195,7 @@ Dependencias:
 - `mobile/lib/api.ts` agora aceita fallback automatico so em runtime local (`Expo Go`, emulador Android e gateway web local)
 - web publicada sem `EXPO_PUBLIC_API_BASE_URL` passa a falhar com erro explicito em vez de voltar para a `Railway`
 - build mobile publicado sem `EXPO_PUBLIC_API_BASE_URL` passa a falhar com erro explicito em vez de chamar `localhost`
+- a trilha oficial da API exige `AUTH_OBRIGATORIO=true` e bloqueia bypass de implantacao
 
 ## Comandos base
 
@@ -210,7 +216,7 @@ gcloud run deploy geoadmin-api `
   --region REGION `
   --platform managed `
   --allow-unauthenticated `
-  --set-env-vars SUPABASE_URL=...,SUPABASE_BUCKET_ARQUIVOS_PROJETO=arquivos-projeto,ALLOWED_ORIGINS=https://SEU-WEB.vercel.app,ALLOWED_HOSTS=localhost,127.0.0.1,*.run.app,EXPOSE_API_DOCS=false,DEBUG_ERRORS=false `
+  --set-env-vars SUPABASE_URL=...,SUPABASE_BUCKET_ARQUIVOS_PROJETO=arquivos-projeto,PUBLIC_APP_URL=https://SEU-WEB.vercel.app,ALLOWED_ORIGINS=https://SEU-WEB.vercel.app,ALLOWED_HOSTS=localhost,127.0.0.1,*.run.app,EXPOSE_API_DOCS=false,DEBUG_ERRORS=false,AUTH_OBRIGATORIO=true `
   --set-secrets SUPABASE_KEY=SUPABASE_KEY:latest
 ```
 
@@ -220,4 +226,6 @@ gcloud run deploy geoadmin-api `
 - `GET /projetos` responde na web publicada
 - `GET /projetos/{id}` responde na web publicada
 - `preview APK` aponta para a mesma API
+- magic links do backend apontam para a web publica correta
 - nenhuma chamada de producao depende de `Railway`
+- o runtime oficial nao contem `AUTH_PERMITIR_BYPASS_IMPLANTACAO`

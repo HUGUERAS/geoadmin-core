@@ -564,7 +564,12 @@ def _cliente_principal_do_payload(sb, participantes: list[dict[str, Any]], paylo
 
 
 
-def _gerar_magic_links_iniciais(sb, projeto_id: str, participantes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _gerar_magic_links_iniciais(
+    sb,
+    projeto_id: str,
+    participantes: list[dict[str, Any]],
+    request: Request | None = None,
+) -> list[dict[str, Any]]:
     if not participantes:
         return []
 
@@ -578,6 +583,7 @@ def _gerar_magic_links_iniciais(sb, projeto_id: str, participantes: list[dict[st
                 projeto_id,
                 cliente_id=participante.get("cliente_id"),
                 projeto_cliente_id=participante.get("id"),
+                request=request,
                 supabase=sb,
             )
         except Exception:
@@ -647,6 +653,91 @@ def _resumo_lotes(areas: list[dict[str, Any]]) -> dict[str, Any]:
         "por_status_documental": totais_documentais,
     }
 
+
+
+def _resumo_confrontacoes(
+    confrontacoes: list[dict[str, Any]],
+    confrontantes: list[dict[str, Any]],
+) -> dict[str, Any]:
+    confirmadas = 0
+    descartadas = 0
+    pendentes = 0
+    internas = 0
+    sobreposicoes = 0
+    divisas = 0
+
+    for confronto in confrontacoes:
+        status = str(
+            confronto.get("status_revisao")
+            or confronto.get("status")
+            or "detectada"
+        ).strip().lower()
+        tipo_relacao = str(confronto.get("tipo_relacao") or "interna").strip().lower()
+        tipo = str(confronto.get("tipo") or "").strip().lower()
+
+        if tipo_relacao == "interna":
+            internas += 1
+        if tipo == "sobreposicao":
+            sobreposicoes += 1
+        elif tipo == "divisa":
+            divisas += 1
+
+        if status in {"confirmada", "confirmado"}:
+            confirmadas += 1
+        elif status in {"descartada", "descartado", "ignorada", "cancelada", "cancelado"}:
+            descartadas += 1
+        else:
+            pendentes += 1
+
+    return {
+        "total": len(confrontacoes),
+        "confirmadas": confirmadas,
+        "pendentes": pendentes,
+        "descartadas": descartadas,
+        "internas": internas,
+        "externas": len(confrontantes),
+        "sobreposicoes": sobreposicoes,
+        "divisas": divisas,
+    }
+
+
+def _prontidao_piloto(projeto: dict[str, Any]) -> dict[str, Any]:
+    resumo_lotes = projeto.get("resumo_lotes") or {}
+    total = int(resumo_lotes.get("total") or 0)
+    if total <= 0:
+        return {
+            "status": "preparacao",
+            "formularios_recebidos": 0,
+            "base_oficial_total": 0,
+            "confrontacoes_confirmadas": 0,
+            "percentual": 0,
+        }
+
+    por_status_documental = resumo_lotes.get("por_status_documental") or {}
+    formularios_recebidos = sum(
+        int(quantidade or 0)
+        for status, quantidade in por_status_documental.items()
+        if str(status or "").strip().lower() in {"formulario_ok", "confrontantes_ok", "documentacao_ok", "peca_pronta"}
+    )
+    com_participante = max(total - int(resumo_lotes.get("sem_participante") or 0), 0)
+    prontos = int(resumo_lotes.get("prontos") or 0)
+    confrontacoes_confirmadas = int(((projeto.get("confrontacoes_resumo") or {}).get("confirmadas")) or 0)
+
+    percentual = round((((com_participante / total) + (formularios_recebidos / total) + (prontos / total)) / 3) * 100)
+    if prontos == total and total > 0:
+        status = "pronto_para_piloto"
+    elif percentual >= 35:
+        status = "operacao_assistida"
+    else:
+        status = "preparacao"
+
+    return {
+        "status": status,
+        "formularios_recebidos": formularios_recebidos,
+        "base_oficial_total": total,
+        "confrontacoes_confirmadas": confrontacoes_confirmadas,
+        "percentual": max(0, min(percentual, 100)),
+    }
 
 
 def _resumo_lotes_lista(sb, projeto_ids: list[str]) -> dict[str, dict[str, Any]]:
@@ -1227,7 +1318,7 @@ def listar_projetos(limite: int = 50, deslocamento: int = 0):
 
 
 @router.post("", summary="Criar novo projeto", status_code=201)
-def criar_projeto(payload: ProjetoCreate):
+def criar_projeto(payload: ProjetoCreate, request: Request = None):
     sb = _get_supabase()
     participantes = _participantes_payload(payload)
     cliente_id = _cliente_principal_do_payload(sb, participantes, payload)
@@ -1255,7 +1346,12 @@ def criar_projeto(payload: ProjetoCreate):
         if cliente_principal_id and cliente_principal_id != cliente_id:
             _atualizar_projeto_compativel(sb, projeto_id, {"cliente_id": cliente_principal_id})
 
-        magic_links = _gerar_magic_links_iniciais(sb, projeto_id, participantes_salvos or participantes)
+        magic_links = _gerar_magic_links_iniciais(
+            sb,
+            projeto_id,
+            participantes_salvos or participantes,
+            request=request,
+        )
         projeto = _enriquecer_projeto(sb, projeto_id)
         if magic_links:
             projeto["magic_links"] = magic_links

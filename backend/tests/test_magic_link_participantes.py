@@ -287,3 +287,25 @@ def test_gerar_magic_links_lote_rejeita_participante_sem_destino(monkeypatch):
 
     assert excinfo.value.status_code == 422
     assert excinfo.value.detail["participantes"][0]["projeto_cliente_id"] == "pc-1"
+
+
+def test_resolver_app_url_prefere_url_da_requisicao(monkeypatch):
+    monkeypatch.delenv("FORMULARIO_CLIENTE_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FORM_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FORM_BASE_URL", raising=False)
+    monkeypatch.delenv("BACKEND_PUBLIC_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_API_URL", raising=False)
+    monkeypatch.delenv("API_URL_PUBLICA", raising=False)
+
+    request = SimpleNamespace(base_url="https://api.geoadmin.example/")
+
+    assert documentos_mod._resolver_app_url(request) == "https://api.geoadmin.example"
+
+
+def test_resolver_app_url_usa_backend_publico_quando_nao_ha_request(monkeypatch):
+    monkeypatch.delenv("FORMULARIO_CLIENTE_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FORM_URL", raising=False)
+    monkeypatch.delenv("PUBLIC_FORM_BASE_URL", raising=False)
+    monkeypatch.setenv("BACKEND_PUBLIC_URL", "https://api.geoadmin.example/")
+
+    assert documentos_mod._resolver_app_url() == "https://api.geoadmin.example"

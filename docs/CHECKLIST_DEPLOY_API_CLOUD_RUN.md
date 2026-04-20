@@ -18,12 +18,26 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 - `GCP_ARTIFACT_REGISTRY_REPOSITORY`
 - `CLOUD_RUN_SERVICE`
 - `CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT`
+- `PUBLIC_APP_URL`
 - `SUPABASE_URL`
 - `SUPABASE_BUCKET_ARQUIVOS_PROJETO`
 - `ALLOWED_ORIGINS`
 - `ALLOWED_HOSTS`
 - `CLOUD_RUN_MIN_INSTANCES` opcional
 - `CLOUD_RUN_MAX_INSTANCES` opcional
+
+## Guardrails obrigatorios da trilha oficial
+
+- `AUTH_OBRIGATORIO=true`
+- `EXPOSE_API_DOCS=false`
+- `DEBUG_ERRORS=false`
+- `AUTH_PERMITIR_BYPASS_IMPLANTACAO` nao pode existir no runtime oficial
+
+Observacao:
+
+- `--allow-unauthenticated` no Cloud Run continua aceitavel como exposicao de rede da API publica
+- isso nao substitui autenticacao da aplicacao
+- o backend oficial nao pode ser promovido com bypass de autenticacao
 
 ## GitHub secrets necessarios
 
@@ -54,19 +68,22 @@ Publicar o backend oficial do `GeoAdmin Core` no `Google Cloud Run`, mantendo `S
 5. Criar ou validar a service account de runtime do `Cloud Run`
 6. Preencher as `vars` e `secrets` do repositório
 7. Rodar o workflow manual `Deploy API (Cloud Run)`
+8. Confirmar no servico implantado que `AUTH_OBRIGATORIO=true` e que nao existe `AUTH_PERMITIR_BYPASS_IMPLANTACAO`
 
 ## Tarefas do responsavel de aplicacao
 
 1. Confirmar `SUPABASE_URL`
 2. Confirmar bucket `SUPABASE_BUCKET_ARQUIVOS_PROJETO`
-3. Definir `ALLOWED_ORIGINS` com:
+3. Definir `PUBLIC_APP_URL` com:
+   - domínio final da web no `Vercel`
+4. Definir `ALLOWED_ORIGINS` com:
    - dominio final do Vercel
    - preview relevante, se necessario
-4. Definir `ALLOWED_HOSTS` com:
+5. Definir `ALLOWED_HOSTS` com:
    - `localhost`
    - `127.0.0.1`
-   - `*.run.app`
-   - outros hosts oficiais, se necessario
+   - `*.run.app` ou domínio customizado da API
+   - outros hosts oficiais da API, se necessario
 
 ## Execucao local com gcloud
 
@@ -76,11 +93,12 @@ $env:GCP_REGION="us-central1"
 $env:GCP_ARTIFACT_REGISTRY_REPOSITORY="geoadmin"
 $env:CLOUD_RUN_SERVICE="geoadmin-api"
 $env:CLOUD_RUN_RUNTIME_SERVICE_ACCOUNT="geoadmin-api@seu-project-id.iam.gserviceaccount.com"
+$env:PUBLIC_APP_URL="https://SEU-WEB.vercel.app"
 $env:SUPABASE_URL="https://SEU_PROJECT_ID.supabase.co"
 $env:SUPABASE_KEY="SUA_SERVICE_ROLE_KEY"
 $env:SUPABASE_BUCKET_ARQUIVOS_PROJETO="arquivos-projeto"
 $env:ALLOWED_ORIGINS="https://SEU-WEB.vercel.app"
-$env:ALLOWED_HOSTS="localhost,127.0.0.1,*.run.app,*.vercel.app"
+$env:ALLOWED_HOSTS="localhost,127.0.0.1,*.run.app"
 
 powershell -ExecutionPolicy Bypass -File .\scripts\deploy_api_cloud_run.ps1
 ```
@@ -92,6 +110,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\deploy_api_cloud_run.ps1
 3. `GET /projetos/{id}`
 4. upload basico em rota que use storage
 5. geracao documental
+6. confirmar que o runtime do Cloud Run nao contem `AUTH_PERMITIR_BYPASS_IMPLANTACAO`
+7. confirmar que `AUTH_OBRIGATORIO=true`
 
 ## Observacao de automacao
 
@@ -99,4 +119,4 @@ O workflow e o script local fazem smoke test em `/health` logo apos o deploy. Se
 
 ## Observacao
 
-Esse fluxo mantem `Supabase` como camada de persistencia oficial. Ele troca apenas o host da API para uma casa escalavel e definitiva.
+Esse fluxo mantem `Supabase` como camada de persistencia oficial. Ele troca apenas o host da API para uma casa escalavel e definitiva e exige `PUBLIC_APP_URL` para que os magic links apontem para a web correta.
