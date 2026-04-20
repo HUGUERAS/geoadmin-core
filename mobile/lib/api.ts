@@ -133,7 +133,8 @@ export function getApiBaseUrl(): string {
     return 'http://127.0.0.1:8000';
   }
 
-  return getRequiredProductionApiBaseUrl('builds mobile publicados via EAS/APK');
+  // URL oficial do Cloud Run — usada em builds de produção sem variável de ambiente
+  return 'https://geoadmin-api-800479022570.us-central1.run.app';
 }
 
 function formatErrorDetail(detail: JsonValue | undefined): string {
