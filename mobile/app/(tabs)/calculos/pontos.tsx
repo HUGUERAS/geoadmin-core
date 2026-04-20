@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native'
-import * as Clipboard from 'expo-clipboard'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
+import { copiarTexto } from '../../../lib/clipboard'
 
 type Ponto = { id: string; nome: string; norte: string; este: string; cota: string }
 
@@ -46,9 +46,14 @@ export default function PontosScreen() {
       return
     }
     const cabecalho = 'Nome\tNorte\tEste\tCota'
-    Clipboard.setStringAsync([cabecalho, ...linhas].join('\n'))
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
+    copiarTexto([cabecalho, ...linhas].join('\n'))
+      .then(() => {
+        setCopiado(true)
+        setTimeout(() => setCopiado(false), 2000)
+      })
+      .catch(() => {
+        Alert.alert('Clipboard indisponivel', 'Nao foi possivel copiar os pontos neste ambiente.')
+      })
   }
 
   const preenchidos = pontos.filter(p => p.norte && p.este).length

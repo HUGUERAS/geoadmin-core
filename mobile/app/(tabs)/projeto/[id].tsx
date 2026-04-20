@@ -8,12 +8,9 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
-  Clipboard,
   Platform,
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import * as DocumentPicker from 'expo-document-picker'
-import * as Linking from 'expo-linking'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
 import { StatusBadge } from '../../../components/StatusBadge'
@@ -21,6 +18,9 @@ import { SyncBadge } from '../../../components/SyncBadge'
 import { contarPendentes, initDB, cacheProjetoDetalhe, getCachedProjetoDetalhe, contarErros, resetarErros, salvarUltimoProjetoMapa } from '../../../lib/db'
 import { sincronizar } from '../../../lib/sync'
 import { apiGet, apiPost, apiPostFormData, getApiBaseUrl } from '../../../lib/api'
+import { copiarTexto } from '../../../lib/clipboard'
+import { abrirUrl, podeAbrirUrl } from '../../../lib/links'
+import { ArquivoSelecionado, selecionarDocumento } from '../../../lib/seletor-arquivos'
 import type { PainelDocumentalProjetoV1, ProjetoDetalheApiV1 } from '../../../types/contratos-v1'
 
 type ProximaEtapa = {
@@ -52,7 +52,7 @@ function inferirMimeTypeArquivo(nome: string, mimeType?: string | null) {
   return 'application/octet-stream'
 }
 
-async function anexarArquivoNoFormData(formData: FormData, asset: DocumentPicker.DocumentPickerAsset) {
+async function anexarArquivoNoFormData(formData: FormData, asset: ArquivoSelecionado) {
   if (Platform.OS === 'web') {
     if ((asset as any).file) {
       formData.append('arquivo', (asset as any).file, asset.name)
@@ -332,7 +332,7 @@ export default function DetalheProjetoScreen() {
   const gerarMagicLink = async () => {
     try {
       const data = await apiPost<any>(`/projetos/${id}/magic-link`, {})
-      Clipboard.setString(data.mensagem_whatsapp || data.link)
+      await copiarTexto(data.mensagem_whatsapp || data.link)
       Alert.alert('Link copiado', 'A mensagem pronta para WhatsApp foi copiada. Cole no chat do cliente para destravar o formulário.')
     } catch {
       Alert.alert('Erro', 'Não foi possível gerar o link agora.')
@@ -361,12 +361,12 @@ export default function DetalheProjetoScreen() {
 
   const abrirUrlOperacional = async (url: string, sucesso: string) => {
     try {
-      const suportado = await Linking.canOpenURL(url)
+      const suportado = await podeAbrirUrl(url)
       if (!suportado) throw new Error('URL nao suportada')
-      await Linking.openURL(url)
+      await abrirUrl(url)
       Alert.alert('Fluxo iniciado', sucesso)
     } catch {
-      Clipboard.setString(url)
+      await copiarTexto(url).catch(() => undefined)
       Alert.alert('Link copiado', 'Não foi possível abrir automaticamente. O link foi copiado para uso no navegador do escritório.')
     }
   }
@@ -385,7 +385,7 @@ export default function DetalheProjetoScreen() {
 
   const importarArquivoLotes = async () => {
     try {
-      const resultado = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true, base64: false })
+      const resultado = await selecionarDocumento({ type: '*/*', copyToCacheDirectory: true, base64: false })
       if (resultado.canceled || !resultado.assets?.length) return
       const asset = resultado.assets[0]
       setImportandoLotes(true)
@@ -429,7 +429,7 @@ export default function DetalheProjetoScreen() {
         somente_habilitados: true,
       })
       if (resposta?.links?.length) {
-        Clipboard.setString(resposta.links[0].mensagem_whatsapp || resposta.links[0].link)
+        await copiarTexto(resposta.links[0].mensagem_whatsapp || resposta.links[0].link).catch(() => undefined)
       }
       await carregarProjeto()
       Alert.alert('Links gerados', `${resposta.total || 0} magic link(s) preparados. A primeira mensagem foi copiada para o clipboard.`)

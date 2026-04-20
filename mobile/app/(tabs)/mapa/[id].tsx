@@ -315,9 +315,11 @@ function MapaWebView({ pontos, poligono, layers }: { pontos: Ponto[]; poligono: 
 
 function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVertices, origVertices,
   onVertexDrag, onVertexDelete, onMidpointAdd, onDragStart,
-  onVertexTap, selecaoAtiva, vxSelecionados }: any) {
-  const { width: W, height: H } = Dimensions.get('window')
-  const svgH = H - 56 - 50 - 50
+  onVertexTap, selecaoAtiva, vxSelecionados, viewportWidth, viewportHeight }: any) {
+  const { width: fallbackW, height: fallbackH } = Dimensions.get('window')
+  const svgW = Math.max(viewportWidth || fallbackW, 1)
+  const svgH = Math.max(viewportHeight || fallbackH, 1)
+  const canvasPad = Math.max(24, Math.min(svgW, svgH) * 0.08)
   const TOUCH_R = 20
 
   const allPts = useMemo(
@@ -325,8 +327,8 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
     [editMode, editVertices, origVertices, pontos, polygonVerts]
   )
   const xform = useMemo(
-    () => computeTransform(allPts.length ? allPts : pontos, W, svgH),
-    [allPts, W, svgH]
+    () => computeTransform(allPts.length ? allPts : pontos, svgW, svgH, canvasPad),
+    [allPts, pontos, svgW, svgH, canvasPad]
   )
   const { toX, toY, fromX, fromY, minLon, maxLon, minLat, maxLat } = xform
 
@@ -382,7 +384,7 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
       : ''
 
   return (
-    <Svg width={W} height={svgH} {...panResponder.panHandlers}>
+    <Svg width={svgW} height={svgH} {...panResponder.panHandlers}>
       <G>
         {lonGrid.map(lon => (
           <Line key={`gx${lon}`} x1={toX(lon)} y1={0} x2={toX(lon)} y2={svgH}
@@ -393,7 +395,7 @@ function CadView({ pontos, polygonVerts, layers, C, editMode, editTool, editVert
             fontSize={8} fill="#666" textAnchor="middle">{lon.toFixed(5)}</SvgText>
         ))}
         {latGrid.map(lat => (
-          <Line key={`gy${lat}`} x1={0} y1={toY(lat)} x2={W} y2={toY(lat)}
+          <Line key={`gy${lat}`} x1={0} y1={toY(lat)} x2={svgW} y2={toY(lat)}
             stroke="#333330" strokeWidth={0.5} />
         ))}
         {latGrid.map(lat => (
@@ -495,6 +497,7 @@ export default function MapaProjetoScreen() {
   const [topInset, setTopInset] = useState(0)
   useEffect(() => { setTopInset(insets.top) }, [insets.top])
   const headerPaddingTop = Math.max(topInset + 12, 20)
+  const modalPaddingBottom = Math.max(insets.bottom + 16, 20)
   const { id, tool } = useLocalSearchParams<{ id: string; tool?: NomeFerramenta }>()
   const router  = useRouter()
 
@@ -505,6 +508,9 @@ export default function MapaProjetoScreen() {
   const [mode,        setMode]     = useState<Mode>('mapa')
   const [layers,      setLayers]   = useState<Layers>({ pontos: true, poligono: true, rotulos: true })
   const [showLayers,  setShowLayers] = useState(false)
+  const [headerHeight, setHeaderHeight] = useState(0)
+  const [toolbarHeight, setToolbarHeight] = useState(0)
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
 
   const [editMode,    setEditMode] = useState(false)
   const [editTool,    setEditTool] = useState<EditTool>('mover')
@@ -994,6 +1000,7 @@ export default function MapaProjetoScreen() {
 
   const selecaoAtiva = ferrAtiva !== null && vxNecessarios(ferrAtiva) !== 0
   const hasGeometry = visiblePoints.length > 0 || polygonVerts.length > 0
+  const layerPanelTop = (headerHeight || headerPaddingTop + 44) + (toolbarHeight || 54) + 12
 
   if (loading) return (
     <View style={[s.fill, s.centro, { backgroundColor: C.background }]}>
@@ -1004,7 +1011,10 @@ export default function MapaProjetoScreen() {
   return (
     <View style={[s.fill, { backgroundColor: C.background }]}>
       {/* Header */}
-      <View style={[s.header, { backgroundColor: C.card, borderBottomColor: C.cardBorder, paddingTop: headerPaddingTop }]}>
+      <View
+        style={[s.header, { backgroundColor: C.card, borderBottomColor: C.cardBorder, paddingTop: headerPaddingTop }]}
+        onLayout={({ nativeEvent }) => setHeaderHeight(nativeEvent.layout.height)}
+      >
         <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
           <Feather name="arrow-left" size={22} color={C.text} />
         </TouchableOpacity>
@@ -1020,7 +1030,10 @@ export default function MapaProjetoScreen() {
 
       {/* Toolbar */}
       {!editMode ? (
-        <View style={[s.toolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}>
+        <View
+          style={[s.toolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}
+          onLayout={({ nativeEvent }) => setToolbarHeight(nativeEvent.layout.height)}
+        >
           <View style={s.modeGroup}>
             {(['mapa', 'cad'] as Mode[]).map(m => (
               <TouchableOpacity key={m} style={[s.modeBtn, mode === m && { backgroundColor: C.primary }]}
@@ -1031,56 +1044,72 @@ export default function MapaProjetoScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          <TouchableOpacity style={[s.editBtn, { borderColor: C.primary }]} onPress={entrarEdit}>
-            <Text style={{ color: C.primary, fontSize: 12, fontWeight: '700' }}>✏️ Editar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.layerBtn, showLayers && { backgroundColor: C.card }]}
-            onPress={() => setShowLayers(v => !v)}>
-            <Feather name="layers" size={18} color={showLayers ? C.primary : C.muted} />
-          </TouchableOpacity>
+          <View style={s.toolbarActions}>
+            <TouchableOpacity style={[s.editBtn, { borderColor: C.primary }]} onPress={entrarEdit}>
+              <Text style={{ color: C.primary, fontSize: 12, fontWeight: '700' }}>✏️ Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.layerBtn, showLayers && { backgroundColor: C.background }]}
+              onPress={() => setShowLayers(v => !v)}>
+              <Feather name="layers" size={18} color={showLayers ? C.primary : C.muted} />
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
-        <View style={[s.editToolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}>
-          <View style={[s.editTag, { borderColor: C.primary + '60', backgroundColor: C.primary + '20' }]}>
-            <Text style={{ color: C.primary, fontSize: 9, fontWeight: '700', letterSpacing: 1 }}>EDITANDO</Text>
-          </View>
-          {([
-            ['mover',     '↔'],
-            ['adicionar', '+'],
-            ['deletar',   '✕'],
-          ] as [EditTool, string][]).map(([t, icon]) => (
-            <TouchableOpacity key={t}
-              style={[s.etool, editTool === t && { backgroundColor: C.primary }]}
-              onPress={() => setEditTool(t)}>
-              <Text style={{ color: editTool === t ? C.primaryText : C.muted, fontSize: 12, fontWeight: '700' }}>
-                {icon}
-              </Text>
+        <View
+          style={[s.editToolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}
+          onLayout={({ nativeEvent }) => setToolbarHeight(nativeEvent.layout.height)}
+        >
+          <View style={s.editToolsRow}>
+            <View style={[s.editTag, { borderColor: C.primary + '60', backgroundColor: C.primary + '20' }]}>
+              <Text style={{ color: C.primary, fontSize: 9, fontWeight: '700', letterSpacing: 1 }}>EDITANDO</Text>
+            </View>
+            {([
+              ['mover',     '↔'],
+              ['adicionar', '+'],
+              ['deletar',   '✕'],
+            ] as [EditTool, string][]).map(([t, icon]) => (
+              <TouchableOpacity key={t}
+                style={[s.etool, editTool === t && { backgroundColor: C.primary, borderColor: C.primary }]}
+                onPress={() => setEditTool(t)}>
+                <Text style={{ color: editTool === t ? C.primaryText : C.muted, fontSize: 12, fontWeight: '700' }}>
+                  {icon}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[s.etool, { opacity: undoStack.current.length === 0 ? 0.3 : 1 }]}
+              onPress={desfazer}
+              disabled={undoStack.current.length === 0}>
+              <Feather name="corner-up-left" size={18} color={C.muted} />
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={[s.etool, { opacity: undoStack.current.length === 0 ? 0.3 : 1 }]}
-            onPress={desfazer}
-            disabled={undoStack.current.length === 0}>
-            <Feather name="corner-up-left" size={18} color={C.muted} />
-          </TouchableOpacity>
-          {/* Botão ferramentas ⚙ */}
-          <TouchableOpacity style={[s.etool, { borderColor: C.primary }]}
-            onPress={() => setFerrPickerVisible(true)}
-            accessibilityRole="button" accessibilityLabel="Ferramentas de cálculo">
-            <Text style={{ color: C.primary, fontSize: 13 }}>⚙</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.etool, { marginLeft: 'auto' }]} onPress={cancelarEdit}>
-            <Text style={{ color: C.muted, fontSize: 11 }}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.etool, { backgroundColor: '#1D9E75', borderColor: '#1D9E75' }]}
-            onPress={salvarEdit}>
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>💾</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={[s.etool, { borderColor: C.primary }]}
+              onPress={() => setFerrPickerVisible(true)}
+              accessibilityRole="button" accessibilityLabel="Ferramentas de cálculo">
+              <Text style={{ color: C.primary, fontSize: 13 }}>⚙</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={s.editActionsRow}>
+            <TouchableOpacity style={s.etool} onPress={cancelarEdit}>
+              <Text style={{ color: C.muted, fontSize: 11 }}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.etool, { backgroundColor: '#1D9E75', borderColor: '#1D9E75' }]}
+              onPress={salvarEdit}>
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>💾 Salvar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
       {/* Map area */}
-      <View style={s.fill}>
+      <View
+        style={s.mapArea}
+        onLayout={({ nativeEvent }) => {
+          const { width, height } = nativeEvent.layout
+          setViewportSize((current) =>
+            current.width === width && current.height === height ? current : { width, height }
+          )
+        }}
+      >
         {!hasGeometry ? (
           <View style={[s.fill, s.centro]}>
             <Feather name="map-pin" size={40} color={C.muted} />
@@ -1100,6 +1129,8 @@ export default function MapaProjetoScreen() {
             onVertexTap={handleVertexTap}
             selecaoAtiva={selecaoAtiva}
             vxSelecionados={vxSelecionados}
+            viewportWidth={viewportSize.width}
+            viewportHeight={viewportSize.height}
           />
         )}
 
@@ -1139,7 +1170,7 @@ export default function MapaProjetoScreen() {
 
       {/* Layer panel */}
       {!editMode && showLayers && (
-        <View style={[s.layerPanel, { backgroundColor: C.card, borderColor: C.cardBorder, top: headerPaddingTop + 50 + 12 }]}>
+        <View style={[s.layerPanel, { backgroundColor: C.card, borderColor: C.cardBorder, top: layerPanelTop }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <Text style={{ color: C.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>CAMADAS</Text>
             <TouchableOpacity onPress={() => setShowLayers(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -1165,7 +1196,7 @@ export default function MapaProjetoScreen() {
       <Modal visible={ferrPickerVisible} transparent animationType="slide"
         onRequestClose={() => setFerrPickerVisible(false)}>
         <View style={s.ferrModal}>
-          <View style={[s.ferrSheet, { backgroundColor: C.card }]}>
+          <View style={[s.ferrSheet, { backgroundColor: C.card, paddingBottom: modalPaddingBottom }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <Text style={[s.ferrSheetTitle, { color: C.text }]}>Ferramentas de Cálculo</Text>
               <TouchableOpacity onPress={() => setFerrPickerVisible(false)}>
@@ -1190,7 +1221,7 @@ export default function MapaProjetoScreen() {
       <Modal visible={ferrModalVisible} transparent animationType="slide"
         onRequestClose={limparFerramenta}>
         <View style={s.ferrModal}>
-          <View style={[s.ferrSheet, { backgroundColor: C.card }]}>
+          <View style={[s.ferrSheet, { backgroundColor: C.card, paddingBottom: modalPaddingBottom }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={[s.ferrSheetTitle, { color: C.text }]}>
@@ -1481,16 +1512,20 @@ const s = StyleSheet.create({
   backBtn:     { marginRight: 12 },
   titulo:      { fontSize: 18, fontWeight: '700' },
   sub:         { fontSize: 12, marginTop: 1 },
-  toolbar:     { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 0.5, gap: 8 },
-  modeGroup:   { flex: 1, flexDirection: 'row', gap: 6 },
+  toolbar:     { paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 0.5, gap: 8 },
+  modeGroup:   { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  toolbarActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   modeBtn:     { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 8 },
   layerBtn:    { padding: 8, borderRadius: 8 },
   editBtn:     { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  mapArea:     { flex: 1, position: 'relative' },
   emptyMsg:    { marginTop: 12, fontSize: 15 },
-  layerPanel:  { position: 'absolute', right: 12, borderWidth: 0.5, borderRadius: 10, padding: 12, gap: 10 },
+  layerPanel:  { position: 'absolute', right: 12, left: 12, maxWidth: 280, alignSelf: 'flex-end', borderWidth: 0.5, borderRadius: 10, padding: 12, gap: 10 },
   layerRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   check:       { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, borderColor: '#555', alignItems: 'center', justifyContent: 'center' },
-  editToolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderBottomWidth: 0.5, gap: 4 },
+  editToolbar: { paddingHorizontal: 10, paddingVertical: 6, borderBottomWidth: 0.5, gap: 8 },
+  editToolsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
+  editActionsRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
   editTag:     { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, borderWidth: 1, marginRight: 4 },
   etool:       { paddingHorizontal: 9, paddingVertical: 6, borderRadius: 7, borderWidth: 1, borderColor: '#333330' },
   coordOverlay: { position: 'absolute', bottom: 8, left: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 8, padding: 8, alignItems: 'center' },

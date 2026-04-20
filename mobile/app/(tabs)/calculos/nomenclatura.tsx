@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import * as Clipboard from 'expo-clipboard'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '../../../constants/Colors'
 import { ScreenHeader } from '../../../components/ScreenHeader'
 import { ss } from '@/styles/ss'
 import { CampoInput } from '../../../components/CampoInput'
+import { copiarTexto } from '../../../lib/clipboard'
 
 type Tipo = 'M' | 'P' | 'E' | 'MM'
 
@@ -37,9 +37,14 @@ export default function NomenclaturaScreen() {
 
   const copiar = () => {
     if (nomes.length === 0) return
-    Clipboard.setStringAsync(nomes.join('\n'))
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
+    copiarTexto(nomes.join('\n'))
+      .then(() => {
+        setCopiado(true)
+        setTimeout(() => setCopiado(false), 2000)
+      })
+      .catch(() => {
+        setCopiado(false)
+      })
   }
 
   const tipoAtual = TIPOS.find(t => t.id === tipo)!

@@ -13,13 +13,14 @@ import {
 } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
-import * as Linking from 'expo-linking'
-import * as DocumentPicker from 'expo-document-picker'
 import { Colors } from '../../../constants/Colors'
 import { StatusBadge } from '../../../components/StatusBadge'
 import { ClienteGeometryPreview } from '../../../components/ClienteGeometryPreview'
 import { apiDelete, apiGet, apiPatch, apiPost, apiPostFormData } from '../../../lib/api'
 import { initDB, salvarUltimoProjetoMapa } from '../../../lib/db'
+import { copiarTexto } from '../../../lib/clipboard'
+import { abrirUrl } from '../../../lib/links'
+import { ArquivoSelecionado, selecionarDocumento } from '../../../lib/seletor-arquivos'
 
 type Cliente = {
   id: string
@@ -356,7 +357,7 @@ function inferirMimeTypeArquivo(nome: string, mimeType?: string | null) {
   return 'application/octet-stream'
 }
 
-async function anexarArquivoNoFormData(formData: FormData, asset: DocumentPicker.DocumentPickerAsset) {
+async function anexarArquivoNoFormData(formData: FormData, asset: ArquivoSelecionado) {
   if (Platform.OS === 'web') {
     if (asset.file) {
       formData.append('arquivo', asset.file, asset.name)
@@ -469,14 +470,13 @@ export default function ClienteDetalheScreen() {
       const mensagem = data.mensagem_whatsapp || data.link
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensagem)}`
       try {
-        await Linking.openURL(whatsappUrl)
+        await abrirUrl(whatsappUrl)
         Alert.alert('Magic link pronto', 'Abrimos a mensagem no WhatsApp para voce reenviar ao cliente.')
       } catch {
-        const clipboard = (globalThis as any)?.navigator?.clipboard
-        if (clipboard?.writeText) {
-          await clipboard.writeText(mensagem)
+        try {
+          await copiarTexto(mensagem)
           Alert.alert('Mensagem copiada', 'Cole o texto no WhatsApp do cliente para reenviar o link.')
-        } else {
+        } catch {
           Alert.alert('Magic link pronto', mensagem)
         }
       }
@@ -606,7 +606,7 @@ export default function ClienteDetalheScreen() {
 
   const importarReferenciaArquivo = async () => {
     try {
-      const resultado = await DocumentPicker.getDocumentAsync({
+      const resultado = await selecionarDocumento({
         type: '*/*',
         copyToCacheDirectory: true,
         base64: false,

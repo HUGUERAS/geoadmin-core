@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 type JsonValue =
@@ -50,12 +49,26 @@ function getRequiredProductionApiBaseUrl(context: string): string {
   );
 }
 
+function getExpoConstants(): any | null {
+  try {
+    const modulo = require('expo-constants')
+    return modulo.default ?? modulo
+  } catch {
+    return null
+  }
+}
+
 function extractHostFromExpoConfig(): string | null {
+  const constants = getExpoConstants()
+  if (!constants) {
+    return null
+  }
+
   const expoConfigHost =
-    (Constants.expoConfig as { hostUri?: string } | null)?.hostUri ??
-    (Constants as { manifest2?: { extra?: { expoGo?: { debuggerHost?: string } } } }).manifest2
+    (constants.expoConfig as { hostUri?: string } | null)?.hostUri ??
+    (constants as { manifest2?: { extra?: { expoGo?: { debuggerHost?: string } } } }).manifest2
       ?.extra?.expoGo?.debuggerHost ??
-    (Constants as { manifest?: { debuggerHost?: string } }).manifest?.debuggerHost;
+    (constants as { manifest?: { debuggerHost?: string } }).manifest?.debuggerHost;
 
   if (!expoConfigHost) {
     return null;

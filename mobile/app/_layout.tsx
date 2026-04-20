@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Stack } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
+import { StatusBar } from 'react-native'
 import { Colors } from '../constants/Colors'
 import { initDB } from '../lib/db'
-import * as Font from 'expo-font'
 import {
   Feather,
   MaterialIcons,
@@ -19,21 +18,31 @@ export default function RootLayout() {
 
   useEffect(() => {
     initDB().catch(console.error)
-    Font.loadAsync({
-      ...Feather.font,
-      ...MaterialIcons.font,
-      ...MaterialCommunityIcons.font,
-      ...Ionicons.font,
-      ...FontAwesome.font,
-      ...FontAwesome5.font,
-    })
-      .catch(() => {})
-      .finally(() => setFontsLoaded(true))
+
+    async function carregarFontes() {
+      try {
+        const modulo = require('expo-font')
+        const font = modulo.default ?? modulo
+        await font.loadAsync({
+          ...Feather.font,
+          ...MaterialIcons.font,
+          ...MaterialCommunityIcons.font,
+          ...Ionicons.font,
+          ...FontAwesome.font,
+          ...FontAwesome5.font,
+        })
+      } catch {
+      } finally {
+        setFontsLoaded(true)
+      }
+    }
+
+    carregarFontes().catch(() => setFontsLoaded(true))
   }, [])
 
   return (
     <>
-      <StatusBar style="light" backgroundColor={C.background} />
+      <StatusBar barStyle="light-content" backgroundColor={C.background} />
       <Stack
         screenOptions={{
           headerStyle:      { backgroundColor: C.card },

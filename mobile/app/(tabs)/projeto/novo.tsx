@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import * as DocumentPicker from 'expo-document-picker'
 import { useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors'
 import { apiPost, apiPostFormData } from '../../../lib/api'
+import { ArquivoSelecionado, selecionarDocumento } from '../../../lib/seletor-arquivos'
 
 type PapelParticipante = 'principal' | 'coproprietario' | 'possuidor' | 'herdeiro' | 'representante' | 'outro'
 type OrigemArquivo = 'topografo' | 'cliente' | 'escritorio' | 'sistema'
@@ -126,7 +126,7 @@ function inferirMimeTypeArquivo(nome: string, mimeType?: string | null) {
   return 'application/octet-stream'
 }
 
-async function anexarArquivoNoFormData(formData: FormData, asset: DocumentPicker.DocumentPickerAsset) {
+async function anexarArquivoNoFormData(formData: FormData, asset: ArquivoSelecionado) {
   if (Platform.OS === 'web') {
     if (asset.file) {
       formData.append('arquivo', asset.file, asset.name)
@@ -190,7 +190,7 @@ export default function NovoProjetoScreen() {
 
   const adicionarArquivo = async () => {
     try {
-      const resultado = await DocumentPicker.getDocumentAsync({
+      const resultado = await selecionarDocumento({
         type: '*/*',
         copyToCacheDirectory: true,
         base64: false,
@@ -238,7 +238,7 @@ export default function NovoProjetoScreen() {
       name: arquivo.nome,
       uri: arquivo.uri,
       mimeType: arquivo.mimeType ?? inferirMimeTypeArquivo(arquivo.nome, arquivo.mimeType),
-    } as DocumentPicker.DocumentPickerAsset
+    } as ArquivoSelecionado
 
     const formData = new FormData()
     await anexarArquivoNoFormData(formData, asset)
