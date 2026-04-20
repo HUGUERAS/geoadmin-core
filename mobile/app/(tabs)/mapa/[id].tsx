@@ -678,6 +678,9 @@ export default function MapaProjetoScreen() {
   const [snapAtivo,   setSnapAtivo] = useState(true)
   const undoStack = useRef<Vertice[][]>([])
 
+  // sidebar state
+  const [sidebarAberto, setSidebarAberto] = useState(false)
+
   // ferramentas integradas
   const [ferrAtiva,          setFerrAtiva]          = useState<NomeFerramenta | null>(null)
   const [ferrPickerVisible,  setFerrPickerVisible]  = useState(false)
@@ -867,7 +870,7 @@ export default function MapaProjetoScreen() {
       'Deseja salvar as alterações no perímetro deste projeto?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Salvar', onPress: () => doSave() },
+        { text: 'Salvar', onPress: () => { void doSave() } },
       ]
     )
   }, [id, projeto, editVerts])
@@ -1241,88 +1244,150 @@ export default function MapaProjetoScreen() {
 
   return (
     <View style={[s.fill, { backgroundColor: C.background }]}>
-      {/* Header */}
-      <View style={[s.header, { backgroundColor: C.card, borderBottomColor: C.cardBorder, paddingTop: headerPaddingTop }]}>
-        <TouchableOpacity onPress={voltarTelaAnterior} style={s.backBtn}>
-          <Feather name="arrow-left" size={22} color={C.text} />
+      {/* Botão toggle sidebar — visível apenas quando sidebar fechado */}
+      {!sidebarAberto && (
+        <TouchableOpacity
+          style={[s.sidebarToggle, { backgroundColor: C.card, borderColor: C.cardBorder, top: headerPaddingTop }]}
+          onPress={() => setSidebarAberto(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir sidebar">
+          <Feather name="menu" size={20} color={C.text} />
         </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[s.titulo, { color: C.text }]} numberOfLines={1}>
-            {projeto?.projeto_nome || '...'}
-          </Text>
-          <Text style={[s.sub, { color: C.muted }]}>
-            {`${pontos.length} medidos • ${visiblePoints.length} visíveis • ${polygonVerts.length} vértices`}
-          </Text>
-        </View>
-      </View>
+      )}
 
-      {/* Toolbar */}
-      {!editMode ? (
-        <View style={[s.toolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}>
-          <View style={s.modeGroup}>
-            {(['mapa', 'cad'] as Mode[]).map(m => (
-              <TouchableOpacity key={m} style={[s.modeBtn, mode === m && { backgroundColor: C.primary }]}
-                onPress={() => setMode(m)}>
-                <Text style={{ color: mode === m ? C.primaryText : C.muted, fontWeight: '600', fontSize: 13 }}>
-                  {m === 'mapa' ? '🗺 Satélite' : '📐 CAD'}
-                </Text>
+      {/* Sidebar */}
+      {sidebarAberto && (
+        <View style={[s.sidebar, { backgroundColor: C.card, borderColor: C.cardBorder, paddingTop: headerPaddingTop }]}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Header info — botão fechar e voltar separados para evitar sobreposição */}
+            <View style={s.sidebarHeader}>
+              <TouchableOpacity onPress={voltarTelaAnterior} style={s.sidebarBackBtn}>
+                <Feather name="arrow-left" size={20} color={C.text} />
               </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity style={[s.editBtn, { borderColor: C.primary }]} onPress={entrarEdit}>
-            <Text style={{ color: C.primary, fontSize: 12, fontWeight: '700' }}>✏️ Editar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.layerBtn, showLayers && { backgroundColor: C.card }]}
-            onPress={() => setShowLayers(v => !v)}>
-            <Feather name="layers" size={18} color={showLayers ? C.primary : C.muted} />
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={[s.editToolbar, { backgroundColor: C.card, borderBottomColor: C.cardBorder }]}>
-          <View style={[s.editTag, { borderColor: C.primary + '60', backgroundColor: C.primary + '20' }]}>
-            <Text style={{ color: C.primary, fontSize: 9, fontWeight: '700', letterSpacing: 1 }}>EDITANDO</Text>
-          </View>
-          {([
-            ['mover',     '↔'],
-            ['adicionar', '+'],
-            ['deletar',   '✕'],
-            ['cortar',    '✂'],
-            ['juntar',    '⤢'],
-          ] as [EditTool, string][]).map(([t, icon]) => (
-            <TouchableOpacity key={t}
-              style={[s.etool, editTool === t && { backgroundColor: C.primary }]}
-              onPress={() => {
-                setEditTool(t)
-                setVxSelecionados([])
-              }}>
-              <Text style={{ color: editTool === t ? C.primaryText : C.muted, fontSize: 12, fontWeight: '700' }}>
-                {icon}
-              </Text>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={[s.etool, { opacity: undoStack.current.length === 0 ? 0.3 : 1 }]}
-            onPress={desfazer}
-            disabled={undoStack.current.length === 0}>
-            <Feather name="corner-up-left" size={18} color={C.muted} />
-          </TouchableOpacity>
-          {/* Botão ferramentas ⚙ */}
-          <TouchableOpacity style={[s.etool, { borderColor: C.primary }]}
-            onPress={() => setFerrPickerVisible(true)}
-            accessibilityRole="button" accessibilityLabel="Ferramentas de cálculo">
-            <Text style={{ color: C.primary, fontSize: 13 }}>⚙</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.etool, { marginLeft: 'auto' }]} onPress={cancelarEdit}>
-            <Text style={{ color: C.muted, fontSize: 11 }}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.etool, { backgroundColor: '#1D9E75', borderColor: '#1D9E75' }]}
-            onPress={salvarEdit}>
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>💾</Text>
-          </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.sidebarTitulo, { color: C.text }]} numberOfLines={2}>
+                  {projeto?.projeto_nome || '...'}
+                </Text>
+                <Text style={[s.sidebarSub, { color: C.muted }]}>
+                  {`${pontos.length} medidos`}
+                </Text>
+                <Text style={[s.sidebarSub, { color: C.muted }]}>
+                  {`${visiblePoints.length} visíveis`}
+                </Text>
+                <Text style={[s.sidebarSub, { color: C.muted }]}>
+                  {`${polygonVerts.length} vértices`}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setSidebarAberto(false)}
+                style={s.sidebarCloseBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar sidebar">
+                <Feather name="x" size={20} color={C.muted} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Toolbar */}
+            {!editMode ? (
+              <View style={s.sidebarSection}>
+                <Text style={[s.sectionLabel, { color: C.muted }]}>MODO DE VISUALIZAÇÃO</Text>
+                <View style={s.sidebarModeGroup}>
+                  {(['mapa', 'cad'] as Mode[]).map(m => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[s.sidebarModeBtn, mode === m && { backgroundColor: C.primary }]}
+                      onPress={() => setMode(m)}>
+                      <Text style={{ color: mode === m ? C.primaryText : C.muted, fontWeight: '600', fontSize: 13 }}>
+                        {m === 'mapa' ? '🗺 Satélite' : '📐 CAD'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity style={[s.sidebarBtn, { borderColor: C.primary }]} onPress={entrarEdit}>
+                  <Feather name="edit-2" size={16} color={C.primary} />
+                  <Text style={{ color: C.primary, fontSize: 13, fontWeight: '700' }}>Editar Perímetro</Text>
+                </TouchableOpacity>
+
+                <Text style={[s.sectionLabel, { color: C.muted, marginTop: 16 }]}>CAMADAS</Text>
+                {([
+                  ['pontos',   '🔵 Pontos visíveis'],
+                  ['poligono', '🟧 Polígono'],
+                  ['rotulos',  '🏷 Rótulos'],
+                ] as [keyof Layers, string][]).map(([key, label]) => (
+                  <TouchableOpacity key={key} style={s.sidebarLayerRow} onPress={() => toggleLayer(key)}>
+                    <View style={[s.check, layers[key] && { backgroundColor: C.primary, borderColor: C.primary }]}>
+                      {layers[key] && <Feather name="check" size={10} color={C.primaryText} />}
+                    </View>
+                    <Text style={{ color: C.text, fontSize: 13 }}>{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={s.sidebarSection}>
+                <View style={[s.editTagSidebar, { borderColor: C.primary + '60', backgroundColor: C.primary + '20' }]}>
+                  <Text style={{ color: C.primary, fontSize: 10, fontWeight: '700', letterSpacing: 1 }}>MODO EDIÇÃO</Text>
+                </View>
+
+                <Text style={[s.sectionLabel, { color: C.muted }]}>FERRAMENTAS</Text>
+                {([
+                  ['mover',     '↔', 'Mover'],
+                  ['adicionar', '+', 'Adicionar'],
+                  ['deletar',   '✕', 'Deletar'],
+                  ['cortar',    '✂', 'Cortar'],
+                  ['juntar',    '⤢', 'Juntar'],
+                ] as [EditTool, string, string][]).map(([t, icon, name]) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[s.sidebarToolBtn, editTool === t && { backgroundColor: C.primary, borderColor: C.primary }]}
+                    onPress={() => {
+                      setEditTool(t)
+                      setVxSelecionados([])
+                    }}>
+                    <Text style={{ color: editTool === t ? C.primaryText : C.text, fontSize: 16, marginRight: 8 }}>
+                      {icon}
+                    </Text>
+                    <Text style={{ color: editTool === t ? C.primaryText : C.text, fontSize: 13, fontWeight: '600', flex: 1 }}>
+                      {name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+
+                <TouchableOpacity
+                  style={[s.sidebarBtn, { borderColor: C.muted, opacity: undoStack.current.length === 0 ? 0.3 : 1, marginTop: 12 }]}
+                  onPress={desfazer}
+                  disabled={undoStack.current.length === 0}>
+                  <Feather name="corner-up-left" size={16} color={C.muted} />
+                  <Text style={{ color: C.muted, fontSize: 13, fontWeight: '600' }}>Desfazer</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[s.sidebarBtn, { borderColor: C.primary, marginTop: 8 }]}
+                  onPress={() => setFerrPickerVisible(true)}>
+                  <Feather name="tool" size={16} color={C.primary} />
+                  <Text style={{ color: C.primary, fontSize: 13, fontWeight: '600' }}>Ferramentas de Cálculo</Text>
+                </TouchableOpacity>
+
+                <View style={s.sidebarActionsRow}>
+                  <TouchableOpacity
+                    style={[s.sidebarActionBtn, { borderColor: C.danger }]}
+                    onPress={cancelarEdit}>
+                    <Text style={{ color: C.danger, fontSize: 12, fontWeight: '700' }}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[s.sidebarActionBtn, { backgroundColor: C.success, borderColor: C.success }]}
+                    onPress={salvarEdit}>
+                    <Feather name="save" size={14} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700', marginLeft: 4 }}>Salvar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </ScrollView>
         </View>
       )}
 
-      {/* Map area */}
+      {/* Map area - fullscreen */}
       <View style={s.fill}>
         {!hasGeometry ? (
           <View style={[s.fill, s.centro]}>
@@ -1378,7 +1443,7 @@ export default function MapaProjetoScreen() {
 
         {/* Overlay de seleção de vértices */}
         {editMode && selecaoAtiva && (
-          <View style={s.selecaoOverlay}>
+          <View style={[s.selecaoOverlay, sidebarAberto && { left: 288 }]}>
             <Text style={s.selecaoTxt}>
               {editTool === 'cortar'
                 ? `Corte: selecione 2 vértices para remover o trecho menor`
@@ -1419,30 +1484,6 @@ export default function MapaProjetoScreen() {
           </View>
         )}
       </View>
-
-      {/* Layer panel */}
-      {!editMode && showLayers && (
-        <View style={[s.layerPanel, { backgroundColor: C.card, borderColor: C.cardBorder, top: headerPaddingTop + 50 + 12 }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={{ color: C.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>CAMADAS</Text>
-            <TouchableOpacity onPress={() => setShowLayers(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Feather name="x" size={16} color={C.muted} />
-            </TouchableOpacity>
-          </View>
-          {([
-            ['pontos',   '🔵 Pontos visíveis'],
-            ['poligono', '🟧 Polígono'],
-            ['rotulos',  '🏷 Rótulos'],
-          ] as [keyof Layers, string][]).map(([key, label]) => (
-            <TouchableOpacity key={key} style={s.layerRow} onPress={() => toggleLayer(key)}>
-              <View style={[s.check, layers[key] && { backgroundColor: C.primary, borderColor: C.primary }]}>
-                {layers[key] && <Feather name="check" size={10} color={C.primaryText} />}
-              </View>
-              <Text style={{ color: C.text, fontSize: 14 }}>{label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
 
       {/* ── Modal picker de ferramentas ── */}
       <Modal visible={ferrPickerVisible} transparent animationType="slide"
@@ -1760,6 +1801,136 @@ export default function MapaProjetoScreen() {
 const s = StyleSheet.create({
   fill:        { flex: 1 },
   centro:      { alignItems: 'center', justifyContent: 'center' },
+
+  // sidebar
+  sidebarToggle: {
+    position: 'absolute',
+    left: 12,
+    zIndex: 1000,
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  sidebar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 280,
+    zIndex: 999,
+    borderRightWidth: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  sidebarHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingBottom: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#183445',
+    marginBottom: 16,
+  },
+  sidebarCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sidebarBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sidebarTitulo: { fontSize: 16, fontWeight: '700', lineHeight: 22 },
+  sidebarSub: { fontSize: 11, marginTop: 2 },
+  sidebarSection: { gap: 8 },
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+    marginTop: 8,
+  },
+  sidebarModeGroup: { flexDirection: 'row', gap: 6, marginBottom: 8 },
+  sidebarModeBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 0.5,
+    borderColor: '#183445',
+  },
+  sidebarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  sidebarLayerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  editTagSidebar: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sidebarToolBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: '#183445',
+    marginBottom: 4,
+  },
+  sidebarActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 16,
+  },
+  sidebarActionBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+
+  // old styles (deprecated but kept for reference)
   header:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 0.5 },
   backBtn:     { marginRight: 12 },
   titulo:      { fontSize: 18, fontWeight: '700' },
@@ -1781,7 +1952,7 @@ const s = StyleSheet.create({
   coordMuted:   { fontSize: 11, color: '#9c9a92', marginTop: 2 },
   cadControls:  { position: 'absolute', top: 10, right: 10, borderWidth: 1, borderRadius: 12, padding: 8, gap: 8 },
   cadControlRow:{ flexDirection: 'row', gap: 6 },
-  cadControlBtn:{ minWidth: 52, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  cadControlBtn:{ minWidth: 48, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   cadControlTxt:{ fontSize: 12, fontWeight: '700' },
   cadSnapBtn:   { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },
   cadSnapTxt:   { fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
@@ -1789,7 +1960,7 @@ const s = StyleSheet.create({
   selecaoOverlay: { position: 'absolute', top: 8, left: 8, right: 8, backgroundColor: '#378ADD22', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#378ADD', alignItems: 'center' },
   selecaoTxt:     { color: '#378ADD', fontSize: 13, fontWeight: '700' },
   ferrGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 4 },
-  ferrItem:       { width: '30%', aspectRatio: 1, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  ferrItem:       { flex: 1, minWidth: '28%', maxWidth: '32%', aspectRatio: 1, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
   ferrItemTxt:    { fontSize: 11, fontWeight: '600', textAlign: 'center' },
   ferrModal:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   ferrSheet:      { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },

@@ -561,7 +561,7 @@ const s = StyleSheet.create({
   field: { gap: 6 },
   row: { flexDirection: 'row', gap: 10 },
   flex: { flex: 1 },
-  ufField: { width: 78 },
+  ufField: { minWidth: 78, flex: 1, maxWidth: 100 },
   label: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '700' },
   input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontSize: 14 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
