@@ -1,2 +1,0 @@
-[     492ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8001/formulario/cliente?token=__TOKEN__:0
-[     513ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8001/favicon.ico:0

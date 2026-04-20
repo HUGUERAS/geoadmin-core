@@ -1,4 +1,0 @@
-@geoadmin-orquestrador por onde começo?
-@geoadmin-security aplica SEC-02
-@geoadmin-mobile-ui cria a tela clientes/[id].tsx
-@geoadmin-backend-api cria POST /projetos/{id}/pacote-final
