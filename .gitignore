@@ -83,3 +83,6 @@ infra/supabase/.temp/
 .playwright-cli/
 *.out.log
 *.err.log
+
+# Senhas locais — nunca commitar
+scripts/.secrets.local
